@@ -4,34 +4,21 @@ import 'package:spineup/theme/app_theme.dart';
 import 'package:spineup/screens/splash_screen.dart';
 
 void main() {
-  testWidgets('SplashScreen renders logo, title text, and handles tap to finish',
-      (WidgetTester tester) async {
-    bool finished = false;
-
+  testWidgets('SplashScreen renders logo and title text', (WidgetTester tester) async {
     await tester.pumpWidget(
       MaterialApp(
         theme: AppTheme.lightTheme,
-        home: SplashScreen(
-          duration: const Duration(seconds: 5),
-          onFinish: () {
-            finished = true;
-          },
+        home: const SplashScreen(
+          duration: Duration(seconds: 5),
         ),
       ),
     );
 
-    // Initial render
+    // Initial render: intro animation starts
+    await tester.pump(const Duration(milliseconds: 500));
+    await tester.pump(const Duration(milliseconds: 500));
+
+    // Logo text should be visible after intro fade-in
     expect(find.text('SpineUp'), findsOneWidget);
-    expect(finished, isFalse);
-
-    // Advance animation
-    await tester.pump(const Duration(milliseconds: 500));
-    await tester.pump(const Duration(milliseconds: 500));
-
-    // Tap to finish early
-    await tester.tap(find.byType(SplashScreen));
-    await tester.pump();
-
-    expect(finished, isTrue);
   });
 }

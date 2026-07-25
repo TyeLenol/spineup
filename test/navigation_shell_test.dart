@@ -16,13 +16,13 @@ void main() {
     expect(find.text('Community'), findsOneWidget); // Nav item label
 
     // Tap My Journey tab
-    await tester.tap(find.byIcon(Icons.show_chart));
+    await tester.tap(find.byIcon(Icons.show_chart_outlined));
     await tester.pumpAndSettle();
 
     expect(find.text('My Journey'), findsNWidgets(2)); // Nav item label + body text
 
     // Tap Community tab
-    await tester.tap(find.byIcon(Icons.people));
+    await tester.tap(find.byIcon(Icons.people_outline_rounded));
     await tester.pumpAndSettle();
 
     expect(find.text('Community'), findsNWidgets(2)); // Nav item label + body text
