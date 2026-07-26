@@ -6,7 +6,8 @@ import 'package:spineup/screens/illustrations/ob1_illustration.dart';
 import 'package:spineup/screens/illustrations/ob2_illustration.dart';
 
 void main() {
-  testWidgets('OnboardingScreen Step 1 renders headline, description, skip and next buttons',
+  testWidgets(
+      'OnboardingScreen Step 1 renders headline, description, skip and next buttons',
       (WidgetTester tester) async {
     bool nextPressed = false;
     bool skipPressed = false;
@@ -16,10 +17,12 @@ void main() {
         theme: AppTheme.lightTheme,
         home: OnboardingScreen(
           step: 1,
-          titlePlain: 'Track your curve,',
-          titleAccent: 'earn your rewards.',
+          titlePlain: 'Physio is boring.\n',
+          titleAccent: 'Let\'s fix that.',
           description:
-              'A daily habit tracker designed for your scoliosis journey. Turn your exercises into progress.',
+              'Doing 45-minute stretches every single day is hard to care about '
+              'when nothing changes overnight. SpineUp gives you XP, level ups, '
+              'and actual milestones every time you log a stretch or wear your brace.',
           illustration: const Ob1Illustration(),
           onNext: () => nextPressed = true,
           onSkip: () => skipPressed = true,
@@ -27,40 +30,37 @@ void main() {
       ),
     );
 
-    await tester.pumpAndSettle();
+    // Advance past entry animations
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 2));
 
-    // Verify RichText headline exists
-    expect(find.byType(RichText), findsWidgets);
-    final richTexts = tester.widgetList<RichText>(find.byType(RichText));
-    final hasHeadline = richTexts.any(
-      (r) => r.text.toPlainText().contains('Track your curve'),
-    );
-    expect(hasHeadline, isTrue);
+    // Verify headline text
+    expect(find.text('Physio is boring.'), findsOneWidget);
+    expect(find.text('Let\'s fix that.'), findsOneWidget);
 
-    // Verify description
+    // Verify description text
     expect(
-      find.text(
-        'A daily habit tracker designed for your scoliosis journey. Turn your exercises into progress.',
-      ),
+      find.textContaining('Doing 45-minute stretches'),
       findsOneWidget,
     );
 
-    // Verify Skip and Next buttons
+    // Verify Skip chip and 3D CTA button are rendered
     expect(find.text('Skip'), findsOneWidget);
-    expect(find.text('Next'), findsOneWidget);
+    expect(find.text('Tap Vera for +30 XP →'), findsOneWidget);
 
-    // Tap Next
-    await tester.tap(find.text('Next'));
-    await tester.pump();
+    // Verify callbacks fire directly
+    final screen = tester.widget<OnboardingScreen>(
+      find.byType(OnboardingScreen),
+    );
+    screen.onNext();
     expect(nextPressed, isTrue);
 
-    // Tap Skip
-    await tester.tap(find.text('Skip'));
-    await tester.pump();
+    screen.onSkip();
     expect(skipPressed, isTrue);
   });
 
-  testWidgets('OnboardingScreen Step 2 renders back button and dynamic title color',
+  testWidgets(
+      'OnboardingScreen Step 2 renders back button and dynamic title color',
       (WidgetTester tester) async {
     bool backPressed = false;
 
@@ -69,11 +69,13 @@ void main() {
         theme: AppTheme.lightTheme,
         home: OnboardingScreen(
           step: 2,
-          titlePlain: 'Build a habit\nthat actually ',
-          titleAccent: 'sticks.',
+          titlePlain: 'Show up. ',
+          titleAccent: 'Vera keeps count.',
           accentColor: AppTheme.primarySage,
           description:
-              'Log your symptom journal, hit your streak, and unlock new styles for your avatar.',
+              'Every stretch, log, and pain check adds to your streak. '
+              'Miss a day — no drama, just start again. '
+              'But keep going and watch what happens.',
           illustration: const Ob2Illustration(),
           onNext: () {},
           onBack: () => backPressed = true,

@@ -1,6 +1,6 @@
-import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import '../../theme/app_theme.dart';
+import '../../widgets/vera_character.dart';
 
 class Ob2Illustration extends StatefulWidget {
   const Ob2Illustration({super.key});
@@ -11,253 +11,301 @@ class Ob2Illustration extends StatefulWidget {
 
 class _Ob2IllustrationState extends State<Ob2Illustration>
     with TickerProviderStateMixin {
-  late AnimationController _controller;
-  late AnimationController _idleController;
+  late AnimationController _entryCtrl;
+  late AnimationController _floatCtrl;
+  late AnimationController _pulseCtrl;
 
-  late Animation<double> _cardScale;
-  late Animation<double> _badgeScale;
-  late Animation<double> _blobAnim;
+  // Entry animations
+  late Animation<double> _veraEntry;
+  late Animation<double> _towerEntry; // grows from bottom
+  late Animation<double> _pillEntry;
 
-  // Idle floating offsets
-  late Animation<double> _cardIdleY;
-  late Animation<double> _badgeIdleY;
+  // Idle float
+  late Animation<double> _veraFloat;
+  late Animation<double> _pillFloat;
+
+  // Crown pulse on top block
+  late Animation<double> _crownPulse;
 
   @override
   void initState() {
     super.initState();
 
-    _controller = AnimationController(
+    _entryCtrl = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1200),
+      duration: const Duration(milliseconds: 1500),
     );
-
-    _idleController = AnimationController(
+    _floatCtrl = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 4),
+      duration: const Duration(milliseconds: 3200),
+    )..repeat(reverse: true);
+    _pulseCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1000),
     )..repeat(reverse: true);
 
-    _cardScale = CurvedAnimation(
-      parent: _controller,
-      curve: const Interval(0.0, 0.7, curve: Curves.easeOutBack),
+    _veraEntry = CurvedAnimation(
+      parent: _entryCtrl,
+      curve: const Interval(0.0, 0.55, curve: Curves.elasticOut),
+    );
+    _towerEntry = CurvedAnimation(
+      parent: _entryCtrl,
+      curve: const Interval(0.20, 0.75, curve: Curves.easeOutBack),
+    );
+    _pillEntry = CurvedAnimation(
+      parent: _entryCtrl,
+      curve: const Interval(0.60, 1.0, curve: Curves.easeOutBack),
     );
 
-    _badgeScale = CurvedAnimation(
-      parent: _controller,
-      curve: const Interval(0.4, 0.9, curve: Curves.easeOutBack),
+    _veraFloat = Tween<double>(begin: -5, end: 5).animate(
+      CurvedAnimation(parent: _floatCtrl, curve: Curves.easeInOut),
+    );
+    _pillFloat = Tween<double>(begin: 3, end: -4).animate(
+      CurvedAnimation(parent: _floatCtrl,
+          curve: const Interval(0.15, 1.0, curve: Curves.easeInOut)),
+    );
+    _crownPulse = Tween<double>(begin: 1.0, end: 1.20).animate(
+      CurvedAnimation(parent: _pulseCtrl, curve: Curves.easeInOut),
     );
 
-    _blobAnim = CurvedAnimation(
-      parent: _idleController,
-      curve: Curves.easeInOut,
-    );
-
-    _cardIdleY = Tween<double>(begin: -4, end: 4).animate(
-      CurvedAnimation(
-        parent: _idleController,
-        curve: const Interval(0.0, 1.0, curve: Curves.easeInOut),
-      ),
-    );
-
-    _badgeIdleY = Tween<double>(begin: 2, end: -4).animate(
-      CurvedAnimation(
-        parent: _idleController,
-        curve: const Interval(0.15, 1.0, curve: Curves.easeInOut),
-      ),
-    );
-
-    _controller.forward();
+    _entryCtrl.forward();
   }
 
   @override
   void dispose() {
-    _controller.dispose();
-    _idleController.dispose();
+    _entryCtrl.dispose();
+    _floatCtrl.dispose();
+    _pulseCtrl.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: 290,
-      height: 270,
+      width: 300,
+      height: 300,
       child: Stack(
         clipBehavior: Clip.none,
         alignment: Alignment.center,
         children: [
-          // ── Ambient background blur blobs (Left Sage, Right Lavender) ────
-          AnimatedBuilder(
-            animation: _blobAnim,
-            builder: (context, child) {
-              final scale1 = 1.0 + (0.15 * _blobAnim.value);
-              final scale2 = 1.2 - (0.15 * _blobAnim.value);
-              final opacity1 = 0.4 + (0.2 * _blobAnim.value);
-              final opacity2 = 0.6 - (0.2 * _blobAnim.value);
-
-              return Stack(
-                children: [
-                  // Sage Blob (Left)
-                  Positioned(
-                    left: 20,
-                    top: 40,
-                    child: Transform.scale(
-                      scale: scale1,
-                      child: Opacity(
-                        opacity: opacity1,
-                        child: Container(
-                          width: 90,
-                          height: 90,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            boxShadow: [
-                              BoxShadow(
-                                color: AppTheme.primarySage.withValues(alpha: 0.25),
-                                blurRadius: 40,
-                                spreadRadius: 20,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                  // Lavender Blob (Right)
-                  Positioned(
-                    right: 20,
-                    bottom: 40,
-                    child: Transform.scale(
-                      scale: scale2,
-                      child: Opacity(
-                        opacity: opacity2,
-                        child: Container(
-                          width: 100,
-                          height: 100,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            boxShadow: [
-                              BoxShadow(
-                                color: AppTheme.accentLavender.withValues(alpha: 0.25),
-                                blurRadius: 45,
-                                spreadRadius: 25,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
+          // ── Ambient glow ────────────────────────────────────────────────
+          Positioned(
+            left: 20,
+            top: 50,
+            child: Container(
+              width: 110,
+              height: 110,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: AppTheme.secondaryCoral.withValues(alpha: 0.18),
+                    blurRadius: 70,
+                    spreadRadius: 25,
                   ),
                 ],
-              );
-            },
+              ),
+            ),
+          ),
+          Positioned(
+            right: 10,
+            bottom: 40,
+            child: Container(
+              width: 100,
+              height: 100,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: AppTheme.primarySage.withValues(alpha: 0.18),
+                    blurRadius: 70,
+                    spreadRadius: 25,
+                  ),
+                ],
+              ),
+            ),
           ),
 
-          // ── Central Card ────────────────────────────────────────────────
-          ScaleTransition(
-            scale: _cardScale,
-            child: AnimatedBuilder(
-              animation: _cardIdleY,
-              builder: (context, child) => Transform.translate(
-                offset: Offset(0, _cardIdleY.value),
-                child: child,
-              ),
-              child: Container(
-                width: 160,
-                height: 160,
-                decoration: BoxDecoration(
-                  color: AppTheme.cardCream,
-                  borderRadius: BorderRadius.circular(40),
-                  border: Border.all(
-                    color: AppTheme.borderCream.withValues(alpha: 0.8),
-                    width: 1.5,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.08),
-                      blurRadius: 24,
-                      offset: const Offset(0, 8),
-                    ),
-                  ],
+          // ── Streak Tower (right side) ────────────────────────────────────
+          Positioned(
+            right: 28,
+            bottom: 40,
+            child: ScaleTransition(
+              scale: _towerEntry,
+              alignment: Alignment.bottomCenter,
+              child: _StreakTower(crownPulse: _crownPulse),
+            ),
+          ),
+
+          // ── Vera (left / centre) ─────────────────────────────────────────
+          Positioned(
+            left: 28,
+            bottom: 36,
+            child: ScaleTransition(
+              scale: _veraEntry,
+              child: AnimatedBuilder(
+                animation: _veraFloat,
+                builder: (context, child) => Transform.translate(
+                  offset: Offset(0, _veraFloat.value),
+                  child: child,
                 ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    // Avatar circle (purple)
-                    Container(
-                      width: 80,
-                      height: 80,
-                      decoration: const BoxDecoration(
-                        color: AppTheme.accentLavender,
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.sentiment_satisfied_alt_rounded,
-                        color: Colors.white,
-                        size: 44,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    // Three green dots (...)
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: List.generate(3, (index) {
-                        return Container(
-                          margin: const EdgeInsets.symmetric(horizontal: 2.5),
-                          width: 6,
-                          height: 6,
-                          decoration: const BoxDecoration(
-                            color: AppTheme.primarySage,
-                            shape: BoxShape.circle,
-                          ),
-                        );
-                      }),
-                    ),
-                  ],
+                child: const VeraCharacter(
+                  size: 128,
+                  pose: VeraPose.celebrate,
+                  enableIdleBob: false, // float handled externally
                 ),
               ),
             ),
           ),
 
-          // ── Floating XP / Rewards Badge ───────────────────────────────
+          // ── XP tease pill ────────────────────────────────────────────────
           Positioned(
-            top: 25,
-            right: 40,
+            top: 16,
             child: ScaleTransition(
-              scale: _badgeScale,
+              scale: _pillEntry,
               child: AnimatedBuilder(
-                animation: _badgeIdleY,
+                animation: _pillFloat,
                 builder: (context, child) => Transform.translate(
-                  offset: Offset(0, _badgeIdleY.value),
+                  offset: Offset(0, _pillFloat.value),
                   child: child,
                 ),
-                child: Transform.rotate(
-                  angle: 12 * math.pi / 180, // 12 degrees
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: AppTheme.secondaryCoral,
-                      borderRadius: BorderRadius.circular(20),
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppTheme.secondaryCoral.withValues(alpha: 0.3),
-                          blurRadius: 8,
-                          offset: const Offset(0, 3),
-                        ),
-                      ],
-                    ),
-                    child: const Text(
-                      '+50 XP',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 0.5,
-                      ),
-                    ),
-                  ),
-                ),
+                child: _SagePill(label: '🔥 7-Day Streak = Bonus XP'),
               ),
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Stacked day-block tower with a glowing crown on top.
+class _StreakTower extends StatelessWidget {
+  final Animation<double> crownPulse;
+  const _StreakTower({required this.crownPulse});
+
+  @override
+  Widget build(BuildContext context) {
+    const litColor = AppTheme.secondaryCoral;
+    const unlitColor = AppTheme.borderCream;
+    final days = [
+      (lit: true, label: 'M'),
+      (lit: true, label: 'T'),
+      (lit: true, label: 'W'),
+      (lit: true, label: 'T'),
+      (lit: false, label: 'F'),
+      (lit: false, label: 'S'),
+      (lit: false, label: 'S'),
+    ];
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // Crown
+        AnimatedBuilder(
+          animation: crownPulse,
+          builder: (context, child) => Transform.scale(
+            scale: crownPulse.value,
+            child: const Text('🏆', style: TextStyle(fontSize: 22)),
+          ),
+        ),
+        const SizedBox(height: 6),
+        // Blocks — stacked bottom-to-top in reverse
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            for (int i = 0; i < days.length; i++)
+              _DayBlock(
+                lit: days[i].lit,
+                label: days[i].label,
+                height: 22.0 + i * 10.0,
+                litColor: litColor,
+                unlitColor: unlitColor,
+              ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _DayBlock extends StatelessWidget {
+  final bool lit;
+  final String label;
+  final double height;
+  final Color litColor;
+  final Color unlitColor;
+
+  const _DayBlock({
+    required this.lit,
+    required this.label,
+    required this.height,
+    required this.litColor,
+    required this.unlitColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final color = lit ? litColor : unlitColor;
+    return Container(
+      width: 20,
+      height: height,
+      margin: const EdgeInsets.symmetric(horizontal: 2),
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(6)),
+        boxShadow: lit
+            ? [
+                BoxShadow(
+                  color: litColor.withValues(alpha: 0.35),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ]
+            : null,
+      ),
+      alignment: Alignment.topCenter,
+      padding: const EdgeInsets.only(top: 3),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 8,
+          fontWeight: FontWeight.bold,
+          color: lit ? Colors.white : AppTheme.mutedForeground,
+        ),
+      ),
+    );
+  }
+}
+
+class _SagePill extends StatelessWidget {
+  final String label;
+  const _SagePill({required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
+      decoration: BoxDecoration(
+        color: AppTheme.primarySage,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: AppTheme.primarySage.withValues(alpha: 0.38),
+            blurRadius: 14,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Text(
+        label,
+        style: const TextStyle(
+          color: Colors.white,
+          fontWeight: FontWeight.bold,
+          fontSize: 13,
+          letterSpacing: 0.2,
+        ),
       ),
     );
   }

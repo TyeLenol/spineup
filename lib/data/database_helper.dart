@@ -1,6 +1,7 @@
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 import '../models/event.dart';
+import '../models/appointment.dart';
 
 class DatabaseHelper {
   static const String tableName = 'events';
@@ -29,8 +30,9 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 1,
+      version: 3,
       onCreate: _onCreate,
+      onUpgrade: _onUpgrade,
     );
   }
 
@@ -51,6 +53,55 @@ class DatabaseHelper {
     await db.execute(
       'CREATE INDEX idx_events_user_timestamp ON $tableName(user_id, timestamp)',
     );
+    await db.execute('''
+      CREATE TABLE user_profiles (
+        user_id TEXT PRIMARY KEY,
+        preset_id TEXT NOT NULL,
+        custom_photo_path TEXT
+      )
+    ''');
+    await db.execute('''
+      CREATE TABLE appointments (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL,
+        title TEXT NOT NULL,
+        scheduled_datetime TEXT NOT NULL,
+        notes TEXT,
+        status TEXT NOT NULL,
+        completed_event_id TEXT
+      )
+    ''');
+    await db.execute(
+      'CREATE INDEX idx_appointments_user_status ON appointments(user_id, status)',
+    );
+  }
+
+  Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 2) {
+      await db.execute('''
+        CREATE TABLE user_profiles (
+          user_id TEXT PRIMARY KEY,
+          preset_id TEXT NOT NULL,
+          custom_photo_path TEXT
+        )
+      ''');
+    }
+    if (oldVersion < 3) {
+      await db.execute('''
+        CREATE TABLE appointments (
+          id TEXT PRIMARY KEY,
+          user_id TEXT NOT NULL,
+          title TEXT NOT NULL,
+          scheduled_datetime TEXT NOT NULL,
+          notes TEXT,
+          status TEXT NOT NULL,
+          completed_event_id TEXT
+        )
+      ''');
+      await db.execute(
+        'CREATE INDEX idx_appointments_user_status ON appointments(user_id, status)',
+      );
+    }
   }
 
   /// Insert a new event into the database.
@@ -112,5 +163,90 @@ class DatabaseHelper {
       await _db!.close();
       _db = null;
     }
+  }
+
+  // ── User Profile ────────────────────────────────────────────────────────────
+
+  Future<Map<String, dynamic>?> getUserProfile(String userId) async {
+    final db = await database;
+    final maps = await db.query(
+      'user_profiles',
+      where: 'user_id = ?',
+      whereArgs: [userId],
+    );
+    if (maps.isNotEmpty) {
+      return maps.first;
+    }
+    return null;
+  }
+
+  Future<void> updateUserProfile(
+    String userId,
+    String presetId,
+    String? customPhotoPath,
+  ) async {
+    final db = await database;
+    await db.insert(
+      'user_profiles',
+      {
+        'user_id': userId,
+        'preset_id': presetId,
+        'custom_photo_path': customPhotoPath,
+      },
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  // ── Appointments ────────────────────────────────────────────────────────────
+
+  Future<int> insertAppointment(Appointment appointment) async {
+    final db = await database;
+    return await db.insert(
+      'appointments',
+      appointment.toDbMap(),
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  Future<int> updateAppointment(Appointment appointment) async {
+    final db = await database;
+    return await db.update(
+      'appointments',
+      appointment.toDbMap(),
+      where: 'id = ?',
+      whereArgs: [appointment.id],
+    );
+  }
+
+  Future<int> deleteAppointment(String appointmentId) async {
+    final db = await database;
+    return await db.delete(
+      'appointments',
+      where: 'id = ?',
+      whereArgs: [appointmentId],
+    );
+  }
+
+  Future<List<Appointment>> getAppointmentsByUser(String userId) async {
+    final db = await database;
+    final maps = await db.query(
+      'appointments',
+      where: 'user_id = ?',
+      whereArgs: [userId],
+    );
+    return maps.map((m) => Appointment.fromDbMap(m)).toList();
+  }
+
+  Future<Appointment?> getAppointmentById(String id) async {
+    final db = await database;
+    final maps = await db.query(
+      'appointments',
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+    if (maps.isNotEmpty) {
+      return Appointment.fromDbMap(maps.first);
+    }
+    return null;
   }
 }

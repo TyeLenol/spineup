@@ -15,7 +15,10 @@ void main() {
 }
 
 class SpineUpApp extends StatelessWidget {
-  const SpineUpApp({super.key});
+  /// Override the splash screen duration — useful in tests to set [Duration.zero].
+  final Duration? splashDuration;
+
+  const SpineUpApp({super.key, this.splashDuration});
 
   @override
   Widget build(BuildContext context) {
@@ -31,7 +34,9 @@ class SpineUpApp extends StatelessWidget {
         color: AppTheme.backgroundCream,
         child: child,
       ),
-      home: const SplashScreen(),
+      home: SplashScreen(
+        duration: splashDuration ?? const Duration(milliseconds: 4500),
+      ),
     );
   }
 }
@@ -46,12 +51,13 @@ Route<void> onboardingRoute(int step) {
       if (step == 3) {
         return OnboardingScreen(
           step: 3,
-          titlePlain: 'Connect with\npeople who\n',
-          titleAccent: 'actually get it.',
-          accentColor: AppTheme.secondaryCoral,
+          titlePlain: 'Other people get it\n',
+          titleAccent: 'in here.',
+          accentColor: AppTheme.accentLavender,
           description:
-              'Share wins, ask questions, and swap tips with others managing '
-              'scoliosis — in a space built just for that.',
+              'Scoliosis is a weird thing to explain to people who don\'t '
+              'have it. In here, you don\'t have to. Share your streak, '
+              'your wins, or just lurk and nod along.',
           illustration: const Ob3Illustration(),
           isLast: true,
           onNext: () => Navigator.of(context).push(authRoute(AuthMode.signup)),
@@ -63,12 +69,13 @@ Route<void> onboardingRoute(int step) {
       if (step == 2) {
         return OnboardingScreen(
           step: 2,
-          titlePlain: 'Build a habit\nthat actually ',
-          titleAccent: 'sticks.',
+          titlePlain: 'Show up. ',
+          titleAccent: 'Vera keeps count.',
           accentColor: AppTheme.primarySage,
           description:
-              'Log your symptom journal, hit your streak, and unlock new '
-              'styles for your avatar.',
+              'Every stretch, log, and pain check adds to your streak. '
+              'Miss a day — no drama, just start again. '
+              'But keep going and watch what happens.',
           illustration: const Ob2Illustration(),
           onNext: () => Navigator.of(context).push(onboardingRoute(3)),
           onBack: () => Navigator.of(context).pop(),
@@ -79,11 +86,13 @@ Route<void> onboardingRoute(int step) {
       // Default: Step 1
       return OnboardingScreen(
         step: 1,
-        titlePlain: 'Track your curve,\n',
-        titleAccent: 'earn your rewards.',
+        titlePlain: 'Physio is boring.\n',
+        titleAccent: 'Let\'s fix that.',
+        accentColor: AppTheme.secondaryCoral,
         description:
-            'A daily habit tracker designed for your scoliosis journey. '
-            'Turn your exercises into progress.',
+            'Doing 45-minute stretches every single day is hard to care about '
+            'when nothing changes overnight. SpineUp gives you XP, level ups, '
+            'and actual milestones every time you log a stretch or wear your brace.',
         illustration: const Ob1Illustration(),
         onNext: () => Navigator.of(context).push(onboardingRoute(2)),
         onSkip: () => Navigator.of(context).push(authRoute(AuthMode.signup)),

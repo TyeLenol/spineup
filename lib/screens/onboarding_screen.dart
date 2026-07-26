@@ -1,8 +1,11 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../theme/app_theme.dart';
 import '../theme/edge_to_edge_helper.dart';
+import '../widgets/chunky_3d_button.dart';
+import '../widgets/interactive_gradient_canvas.dart';
+import '../widgets/m3_squiggly_line.dart';
 
 class OnboardingScreen extends StatefulWidget {
   final int step;
@@ -14,7 +17,6 @@ class OnboardingScreen extends StatefulWidget {
   final VoidCallback? onBack;
   final VoidCallback onSkip;
   final bool isLast;
-
   final Color? accentColor;
 
   const OnboardingScreen({
@@ -35,322 +37,309 @@ class OnboardingScreen extends StatefulWidget {
   State<OnboardingScreen> createState() => _OnboardingScreenState();
 }
 
-/// Screen-level entrance (x:50→0, opacity:0→1) is driven by [onboardingRoute]
-/// in main.dart. Internal elements use staggered rise animations matching
-/// reference_ui App.tsx lines 406–422.
 class _OnboardingScreenState extends State<OnboardingScreen>
     with TickerProviderStateMixin {
-  // Illustration: delay 300ms, 700ms duration — scale+fade in
-  late AnimationController _illustrationCtrl;
-  late Animation<double> _illustrationOpacity;
-  late Animation<double> _illustrationY;
-
-  // Skip button: delay 200ms, 600ms duration — right to left
-  late AnimationController _skipCtrl;
-  late Animation<double> _skipOpacity;
-  late Animation<double> _skipX;
-
-  // Text block: delay 500ms, 600ms duration
-  late AnimationController _textCtrl;
-  late Animation<double> _textOpacity;
-  late Animation<double> _textY;
-
-  // Bottom row: delay 700ms, 600ms duration
-  late AnimationController _bottomCtrl;
-  late Animation<double> _bottomOpacity;
-  late Animation<double> _bottomY;
+  late AnimationController _cardCtrl;
+  late Animation<double> _cardY;
+  late Animation<double> _cardOpacity;
 
   @override
   void initState() {
     super.initState();
 
-    _illustrationCtrl = AnimationController(
+    _cardCtrl = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 700),
+      duration: const Duration(milliseconds: 650),
     );
-    final illCurve =
-        CurvedAnimation(parent: _illustrationCtrl, curve: Curves.easeOut);
-    _illustrationOpacity =
-        Tween<double>(begin: 0.0, end: 1.0).animate(illCurve);
-    _illustrationY =
-        Tween<double>(begin: 30.0, end: 0.0).animate(illCurve);
-
-    _skipCtrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 600),
+    final cardCurve = CurvedAnimation(
+      parent: _cardCtrl,
+      curve: Curves.easeOutCubic,
     );
-    final skipCurve = CurvedAnimation(parent: _skipCtrl, curve: Curves.easeOut);
-    _skipOpacity = Tween<double>(begin: 0.0, end: 1.0).animate(skipCurve);
-    _skipX = Tween<double>(begin: 20.0, end: 0.0).animate(skipCurve);
+    _cardY = Tween<double>(begin: 65, end: 0).animate(cardCurve);
+    _cardOpacity = Tween<double>(begin: 0, end: 1).animate(cardCurve);
 
-    _textCtrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 600),
-    );
-    final textCurve = CurvedAnimation(parent: _textCtrl, curve: Curves.easeOut);
-    _textOpacity = Tween<double>(begin: 0.0, end: 1.0).animate(textCurve);
-    _textY = Tween<double>(begin: 20.0, end: 0.0).animate(textCurve);
-
-    _bottomCtrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 600),
-    );
-    final bottomCurve =
-        CurvedAnimation(parent: _bottomCtrl, curve: Curves.easeOut);
-    _bottomOpacity = Tween<double>(begin: 0.0, end: 1.0).animate(bottomCurve);
-    _bottomY = Tween<double>(begin: 20.0, end: 0.0).animate(bottomCurve);
-
-    Future.delayed(const Duration(milliseconds: 200), () {
-      if (mounted) _skipCtrl.forward();
-    });
     Future.delayed(const Duration(milliseconds: 300), () {
-      if (mounted) _illustrationCtrl.forward();
-    });
-    Future.delayed(const Duration(milliseconds: 500), () {
-      if (mounted) _textCtrl.forward();
-    });
-    Future.delayed(const Duration(milliseconds: 700), () {
-      if (mounted) _bottomCtrl.forward();
+      if (mounted) _cardCtrl.forward();
     });
   }
 
   @override
   void dispose() {
-    _skipCtrl.dispose();
-    _illustrationCtrl.dispose();
-    _textCtrl.dispose();
-    _bottomCtrl.dispose();
+    _cardCtrl.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     EdgeToEdgeHelper.configureSystemUi(context);
+    final screenHeight = MediaQuery.of(context).size.height;
+    final accent = widget.accentColor ?? AppTheme.secondaryCoral;
 
     return Scaffold(
-      backgroundColor: AppTheme.backgroundCream,
-      body: SafeArea(
-        child: Column(
-          children: [
-            // ── Header: Back & Skip ─────────────────────────────────────────
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  if (widget.onBack != null)
-                    InkWell(
-                      onTap: widget.onBack,
-                      borderRadius: BorderRadius.circular(24),
-                      child: const SizedBox(
-                        width: 48,
-                        height: 48,
-                        child: Icon(
-                          Icons.chevron_left_rounded,
-                          color: AppTheme.mutedForeground,
-                          size: 28,
-                        ),
-                      ),
-                    )
-                  else
-                    const SizedBox(width: 48, height: 48),
-                  AnimatedBuilder(
-                    animation: _skipCtrl,
-                    builder: (context, child) => Opacity(
-                      opacity: _skipOpacity.value,
-                      child: Transform.translate(
-                        offset: Offset(_skipX.value, 0),
-                        child: child,
-                      ),
-                    ),
-                    child: InkWell(
-                      onTap: widget.onSkip,
-                      borderRadius: BorderRadius.circular(24),
-                      child: ConstrainedBox(
-                        constraints: const BoxConstraints(
-                          minWidth: 48,
-                          minHeight: 48,
-                        ),
-                        child: const Center(
-                          child: Padding(
-                            padding: EdgeInsets.symmetric(horizontal: 12),
-                            child: Text(
-                              'Skip',
-                              style: TextStyle(
-                                fontSize: 15,
-                                fontWeight: FontWeight.w500,
-                                color: AppTheme.mutedForeground,
-                              ),
-                            ),
+      backgroundColor: Colors.transparent,
+      body: InteractiveGradientCanvas(
+        child: SafeArea(
+          bottom: false,
+          child: Stack(
+            children: [
+              // ── 1. Top Header Bar (56px) ──────────────────────────────────
+              Positioned(
+                top: 4,
+                left: 8,
+                right: 8,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    // Back Chevron (Steps 2 and 3)
+                    if (widget.onBack != null)
+                      InkWell(
+                        onTap: widget.onBack,
+                        borderRadius: BorderRadius.circular(24),
+                        child: Container(
+                          width: 44,
+                          height: 44,
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.40),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.chevron_left_rounded,
+                            color: AppTheme.foregroundDark,
+                            size: 26,
                           ),
                         ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
+                      )
+                    else
+                      const SizedBox(width: 44, height: 44),
 
-            // ── Illustration ────────────────────────────────────────────────
-            Expanded(
-              child: Center(
-                child: AnimatedBuilder(
-                  animation: _illustrationCtrl,
-                  builder: (context, child) => Opacity(
-                    opacity: _illustrationOpacity.value,
-                    child: Transform.translate(
-                      offset: Offset(0, _illustrationY.value),
-                      child: child,
-                    ),
-                  ),
+                    // Skip Chip
+                    _SkipChip(onTap: widget.onSkip),
+                  ],
+                ),
+              ),
+
+              // ── 2. Interactive Game Stage (Upper 58% Height) ──────────────
+              Positioned(
+                top: 45,
+                left: 0,
+                right: 0,
+                height: screenHeight * 0.50,
+                child: Center(
                   child: RepaintBoundary(
                     child: widget.illustration,
                   ),
                 ),
               ),
-            ),
 
-            // ── Text & Bottom Actions ───────────────────────────────────────
-            Padding(
-              padding: const EdgeInsets.only(left: 28, right: 28, bottom: 32),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Headline + Description: rise from y=20 after 200ms delay
-                  // Ref: initial={{ y: 20, opacity: 0 }}, delay: 0.2, duration: 0.6
-                  AnimatedBuilder(
-                    animation: _textCtrl,
-                    builder: (context, child) => Opacity(
-                      opacity: _textOpacity.value,
-                      child: Transform.translate(
-                        offset: Offset(0, _textY.value),
-                        child: child,
-                      ),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        RichText(
-                          text: TextSpan(
-                            children: [
-                               TextSpan(
-                                 text: widget.titlePlain,
-                                 style: GoogleFonts.fraunces(
-                                   fontSize: 34,
-                                   height: 1.15,
-                                   fontWeight: FontWeight.w600,
-                                   color: AppTheme.foregroundDark,
-                                   letterSpacing: -0.5,
-                                 ),
-                                ),
-                                TextSpan(
-                                  text: widget.titleAccent,
-                                  style: GoogleFonts.fraunces(
-                                    fontSize: 34,
-                                    height: 1.15,
-                                    fontWeight: FontWeight.w600,
-                                    fontStyle: FontStyle.italic,
-                                    color: widget.accentColor ?? AppTheme.secondaryCoral,
-                                    letterSpacing: -0.5,
-                                  ),
-                                ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          widget.description,
-                          style: GoogleFonts.outfit(
-                            fontSize: 16,
-                            height: 1.45,
-                            color: AppTheme.mutedForeground,
-                          ),
-                        ),
-                      ],
+              // ── 3. Frosted Control Dock (Bottom 42% Height) ──────────────
+              Positioned(
+                bottom: 0,
+                left: 0,
+                right: 0,
+                child: AnimatedBuilder(
+                  animation: _cardCtrl,
+                  builder: (context, child) => Opacity(
+                    opacity: _cardOpacity.value,
+                    child: Transform.translate(
+                      offset: Offset(0, _cardY.value),
+                      child: child,
                     ),
                   ),
-                  const SizedBox(height: 36),
-
-                  // Bottom row: rise from y=20 after 400ms delay
-                  // Ref: initial={{ y: 20, opacity: 0 }}, delay: 0.4, duration: 0.6
-                  AnimatedBuilder(
-                    animation: _bottomCtrl,
-                    builder: (context, child) => Opacity(
-                      opacity: _bottomOpacity.value,
-                      child: Transform.translate(
-                        offset: Offset(0, _bottomY.value),
-                        child: child,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Organic M3 Squiggly Stage Contour
+                      const M3SquigglyDivider(
+                        color: Color(0xBDF5EDD8),
+                        height: 16,
                       ),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        // Page indicator dots
-                        Row(
-                          children: List.generate(3, (index) {
-                            final isActive = index == (widget.step - 1);
-                            return AnimatedContainer(
-                              duration: const Duration(milliseconds: 300),
-                              curve: Curves.easeOut,
-                              margin: const EdgeInsets.only(right: 6),
-                              width: isActive ? 32 : 8,
-                              height: 8,
-                              decoration: BoxDecoration(
-                                color: isActive
-                                    ? AppTheme.foregroundDark
-                                    : AppTheme.borderCream,
-                                borderRadius: BorderRadius.circular(4),
-                              ),
-                            );
-                          }),
-                        ),
 
-                        // Next / Get Started button
-                        Material(
-                          color: Colors.transparent,
-                          child: InkWell(
-                            onTap: widget.onNext,
-                            borderRadius: BorderRadius.circular(28),
-                            child: Container(
-                              height: 56,
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 28),
-                              decoration: BoxDecoration(
-                                color: AppTheme.primarySage,
-                                borderRadius: BorderRadius.circular(28),
+                      // Control Dock Content
+                      ClipRRect(
+                        child: BackdropFilter(
+                          filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.74),
+                              border: Border(
+                                top: BorderSide(
+                                  color: Colors.white.withValues(alpha: 0.60),
+                                  width: 1.2,
+                                ),
                               ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Text(
-                                    widget.isLast ? 'Get Started' : 'Next',
-                                    style: GoogleFonts.outfit(
-                                      fontSize: 17,
-                                      fontWeight: FontWeight.bold,
-                                      color: AppTheme.onPrimaryDark,
+                            ),
+                            padding: EdgeInsets.only(
+                              left: 26,
+                              right: 26,
+                              top: 20,
+                              bottom:
+                                  MediaQuery.of(context).padding.bottom + 24,
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                // Headline Plain Text
+                                Text(
+                                  widget.titlePlain.trimRight(),
+                                  style: GoogleFonts.fraunces(
+                                    fontSize: 30,
+                                    height: 1.15,
+                                    fontWeight: FontWeight.w700,
+                                    color: AppTheme.foregroundDark,
+                                    letterSpacing: -0.4,
+                                  ),
+                                ),
+
+                                const SizedBox(height: 2),
+
+                                // Headline Accent Text + M3 Squiggly Underline
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(
+                                      widget.titleAccent,
+                                      style: GoogleFonts.fraunces(
+                                        fontSize: 30,
+                                        height: 1.15,
+                                        fontWeight: FontWeight.w700,
+                                        fontStyle: FontStyle.italic,
+                                        color: accent,
+                                        letterSpacing: -0.4,
+                                      ),
                                     ),
+                                    const SizedBox(height: 3),
+                                    // Animated M3 Squiggly Underline
+                                    M3SquigglyUnderline(
+                                      width: 175,
+                                      color: accent,
+                                      strokeWidth: 3.5,
+                                      amplitude: 3.0,
+                                    ),
+                                  ],
+                                ),
+
+                                const SizedBox(height: 14),
+
+                                // Raw, Authentic Non-AI Body Copy
+                                Text(
+                                  widget.description,
+                                  style: GoogleFonts.outfit(
+                                    fontSize: 14.5,
+                                    height: 1.48,
+                                    color: AppTheme.mutedForeground,
                                   ),
-                                  const SizedBox(width: 8),
-                                  const FaIcon(
-                                    FontAwesomeIcons.arrowRight,
-                                    color: AppTheme.onPrimaryDark,
-                                    size: 16,
-                                  ),
-                                ],
-                              ),
+                                ),
+
+                                const SizedBox(height: 24),
+
+                                // Action Row: Orb Dots + 3D Push Button
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  children: [
+                                    // Progress Orbs
+                                    _OrbDots(step: widget.step),
+
+                                    // 3D Tactile Push Button
+                                    Chunky3DButton(
+                                      label: widget.isLast
+                                          ? 'Join the App →'
+                                          : widget.step == 1
+                                              ? 'Tap Vera for +30 XP →'
+                                              : 'Try the Streak Stack →',
+                                      color: accent,
+                                      depthColor: accent == AppTheme.primarySage
+                                          ? const Color(0xFF3B8E72)
+                                          : const Color(0xFFB33D18),
+                                      onTap: widget.onNext,
+                                    ),
+                                  ],
+                                ),
+                              ],
                             ),
                           ),
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
-                ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
+    );
+  }
+}
+
+class _SkipChip extends StatelessWidget {
+  final VoidCallback onTap;
+  const _SkipChip({required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.40),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.55),
+                width: 1,
+              ),
+            ),
+            child: const Text(
+              'Skip',
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+                color: AppTheme.mutedForeground,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _OrbDots extends StatelessWidget {
+  final int step;
+  const _OrbDots({required this.step});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: List.generate(3, (index) {
+        final isActive = index == (step - 1);
+        return Container(
+          margin: const EdgeInsets.only(right: 8),
+          width: isActive ? 12 : 8,
+          height: isActive ? 12 : 8,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: isActive ? AppTheme.secondaryCoral : AppTheme.borderCream,
+            boxShadow: isActive
+                ? [
+                    BoxShadow(
+                      color: AppTheme.secondaryCoral.withValues(alpha: 0.5),
+                      blurRadius: 8,
+                      spreadRadius: 1.5,
+                    ),
+                  ]
+                : null,
+          ),
+        );
+      }),
     );
   }
 }

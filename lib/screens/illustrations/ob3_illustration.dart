@@ -1,5 +1,7 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import '../../theme/app_theme.dart';
+import '../../widgets/vera_character.dart';
 
 class Ob3Illustration extends StatefulWidget {
   const Ob3Illustration({super.key});
@@ -10,67 +12,77 @@ class Ob3Illustration extends StatefulWidget {
 
 class _Ob3IllustrationState extends State<Ob3Illustration>
     with TickerProviderStateMixin {
-  late AnimationController _card1Ctrl;
-  late AnimationController _card2Ctrl;
-  late AnimationController _badgeCtrl;
+  late AnimationController _entryCtrl;
+  late AnimationController _floatCtrl;
 
-  late Animation<double> _card1X;
-  late Animation<double> _card1Opacity;
-  late Animation<double> _card2X;
-  late Animation<double> _card2Opacity;
-  late Animation<double> _badgeY;
-  late Animation<double> _badgeOpacity;
+  late Animation<double> _veraEntry;
+  late Animation<double> _card1Entry;
+  late Animation<double> _card2Entry;
+  late Animation<double> _card3Entry;
+  late Animation<double> _pillEntry;
 
-  late AnimationController _idleCtrl;
-  late Animation<double> _card1IdleY;
-  late Animation<double> _card2IdleY;
-  late Animation<double> _badgeIdleY;
-  late Animation<double> _blobAnim;
+  late Animation<double> _card1Float;
+  late Animation<double> _card2Float;
+  late Animation<double> _card3Float;
+  late Animation<double> _pillFloat;
 
   @override
   void initState() {
     super.initState();
 
-    _card1Ctrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 800));
-    final card1Curve = CurvedAnimation(parent: _card1Ctrl, curve: Curves.easeOutBack);
-    _card1X = Tween<double>(begin: -40.0, end: 0.0).animate(card1Curve);
-    _card1Opacity = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _card1Ctrl, curve: Curves.easeOut));
+    _entryCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1600),
+    );
+    _floatCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 3600),
+    )..repeat(reverse: true);
 
-    _card2Ctrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 800));
-    final card2Curve = CurvedAnimation(parent: _card2Ctrl, curve: Curves.easeOutBack);
-    _card2X = Tween<double>(begin: 40.0, end: 0.0).animate(card2Curve);
-    _card2Opacity = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _card2Ctrl, curve: Curves.easeOut));
+    _veraEntry = CurvedAnimation(
+      parent: _entryCtrl,
+      curve: const Interval(0.0, 0.50, curve: Curves.elasticOut),
+    );
+    _card1Entry = CurvedAnimation(
+      parent: _entryCtrl,
+      curve: const Interval(0.20, 0.60, curve: Curves.easeOutBack),
+    );
+    _card2Entry = CurvedAnimation(
+      parent: _entryCtrl,
+      curve: const Interval(0.32, 0.72, curve: Curves.easeOutBack),
+    );
+    _card3Entry = CurvedAnimation(
+      parent: _entryCtrl,
+      curve: const Interval(0.44, 0.84, curve: Curves.easeOutBack),
+    );
+    _pillEntry = CurvedAnimation(
+      parent: _entryCtrl,
+      curve: const Interval(0.65, 1.0, curve: Curves.easeOutBack),
+    );
 
-    _badgeCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 700));
-    final badgeCurve = CurvedAnimation(parent: _badgeCtrl, curve: Curves.easeOutBack);
-    _badgeY = Tween<double>(begin: 30.0, end: 0.0).animate(badgeCurve);
-    _badgeOpacity = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _badgeCtrl, curve: Curves.easeOut));
+    _card1Float = Tween<double>(begin: -5, end: 5).animate(
+      CurvedAnimation(parent: _floatCtrl, curve: Curves.easeInOut),
+    );
+    _card2Float = Tween<double>(begin: 4, end: -5).animate(
+      CurvedAnimation(parent: _floatCtrl,
+          curve: const Interval(0.1, 1.0, curve: Curves.easeInOut)),
+    );
+    _card3Float = Tween<double>(begin: -3, end: 6).animate(
+      CurvedAnimation(parent: _floatCtrl,
+          curve: const Interval(0.25, 1.0, curve: Curves.easeInOut)),
+    );
+    _pillFloat = Tween<double>(begin: 3, end: -4).animate(
+      CurvedAnimation(parent: _floatCtrl,
+          curve: const Interval(0.15, 0.9, curve: Curves.easeInOut)),
+    );
 
-    _idleCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 4000))
-      ..repeat(reverse: true);
-
-    _card1IdleY = Tween<double>(begin: -5.0, end: 5.0).animate(
-      CurvedAnimation(parent: _idleCtrl, curve: const Interval(0.0, 1.0, curve: Curves.easeInOut)));
-    _card2IdleY = Tween<double>(begin: 4.0, end: -5.0).animate(
-      CurvedAnimation(parent: _idleCtrl, curve: const Interval(0.2, 1.0, curve: Curves.easeInOut)));
-    _badgeIdleY = Tween<double>(begin: -3.0, end: 4.0).animate(
-      CurvedAnimation(parent: _idleCtrl, curve: const Interval(0.1, 1.0, curve: Curves.easeInOut)));
-    _blobAnim = CurvedAnimation(parent: _idleCtrl, curve: Curves.easeInOut);
-
-    Future.delayed(const Duration(milliseconds: 300), () { if (mounted) _card1Ctrl.forward(); });
-    Future.delayed(const Duration(milliseconds: 500), () { if (mounted) _card2Ctrl.forward(); });
-    Future.delayed(const Duration(milliseconds: 700), () { if (mounted) _badgeCtrl.forward(); });
+    _entryCtrl.forward();
   }
 
   @override
   void dispose() {
-    _card1Ctrl.dispose();
-    _card2Ctrl.dispose();
-    _badgeCtrl.dispose();
-    _idleCtrl.dispose();
+    _entryCtrl.dispose();
+    _floatCtrl.dispose();
     super.dispose();
   }
 
@@ -78,189 +90,290 @@ class _Ob3IllustrationState extends State<Ob3Illustration>
   Widget build(BuildContext context) {
     return SizedBox(
       width: 300,
-      height: 280,
+      height: 310,
       child: Stack(
         clipBehavior: Clip.none,
+        alignment: Alignment.center,
         children: [
-          // Ambient blobs
-          RepaintBoundary(
-            child: AnimatedBuilder(
-              animation: _blobAnim,
-              builder: (context, _) {
-                final scale1 = 1.0 + (0.15 * _blobAnim.value);
-                final scale2 = 1.2 - (0.12 * _blobAnim.value);
-                final opacity1 = 0.35 + (0.2 * _blobAnim.value);
-                final opacity2 = 0.55 - (0.15 * _blobAnim.value);
-                return Stack(
-                  children: [
-                    Positioned(
-                      top: 10, right: 10,
-                      child: Transform.scale(scale: scale1,
-                        child: Opacity(opacity: opacity1,
-                          child: Container(width: 90, height: 90,
-                            decoration: BoxDecoration(shape: BoxShape.circle,
-                              boxShadow: [BoxShadow(color: AppTheme.primarySage.withValues(alpha: 0.28),
-                                blurRadius: 48, spreadRadius: 24)])))),
-                    ),
-                    Positioned(
-                      bottom: 20, left: 15,
-                      child: Transform.scale(scale: scale2,
-                        child: Opacity(opacity: opacity2,
-                          child: Container(width: 80, height: 80,
-                            decoration: BoxDecoration(shape: BoxShape.circle,
-                              boxShadow: [BoxShadow(color: AppTheme.secondaryCoral.withValues(alpha: 0.22),
-                                blurRadius: 42, spreadRadius: 20)])))),
-                    ),
-                  ],
-                );
-              },
+          // ── Ambient glow ────────────────────────────────────────────────
+          Positioned(
+            right: 10,
+            top: 30,
+            child: Container(
+              width: 120,
+              height: 120,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: AppTheme.accentLavender.withValues(alpha: 0.18),
+                    blurRadius: 70,
+                    spreadRadius: 28,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          Positioned(
+            left: 15,
+            bottom: 30,
+            child: Container(
+              width: 100,
+              height: 100,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: AppTheme.primarySage.withValues(alpha: 0.18),
+                    blurRadius: 70,
+                    spreadRadius: 25,
+                  ),
+                ],
+              ),
             ),
           ),
 
-          // Card 1: top-left, -2 deg tilt, slides from left
+          // ── Community cards fanned behind Vera ───────────────────────────
+
+          // Card 3 — Cobb chart (back, leftmost)
           Positioned(
-            top: 16, left: 12,
-            child: AnimatedBuilder(
-              animation: Listenable.merge([_card1Ctrl, _idleCtrl]),
-              builder: (context, child) => Opacity(
-                opacity: _card1Opacity.value,
-                child: Transform.translate(
-                  offset: Offset(_card1X.value, _card1IdleY.value),
-                  child: Transform.rotate(angle: -0.035, child: child))),
-              child: RepaintBoundary(child: _buildCard1()),
+            left: 10,
+            top: 50,
+            child: ScaleTransition(
+              scale: _card3Entry,
+              child: AnimatedBuilder(
+                animation: _card3Float,
+                builder: (context, child) => Transform.translate(
+                  offset: Offset(0, _card3Float.value),
+                  child: child,
+                ),
+                child: Transform.rotate(
+                  angle: -14 * math.pi / 180,
+                  child: _CommunityCard(
+                    content: '📉 Cobb angle: 28° → 26°',
+                    subtext: 'Logged 3 months ago',
+                    accent: AppTheme.primarySage,
+                  ),
+                ),
+              ),
             ),
           ),
 
-          // Card 2: bottom-right, +4 deg tilt, slides from right
+          // Card 1 — milestone post (front-left)
           Positioned(
-            bottom: 52, right: 8,
-            child: AnimatedBuilder(
-              animation: Listenable.merge([_card2Ctrl, _idleCtrl]),
-              builder: (context, child) => Opacity(
-                opacity: _card2Opacity.value,
-                child: Transform.translate(
-                  offset: Offset(_card2X.value, _card2IdleY.value),
-                  child: Transform.rotate(angle: 0.07, child: child))),
-              child: RepaintBoundary(child: _buildCard2()),
+            left: 35,
+            top: 30,
+            child: ScaleTransition(
+              scale: _card1Entry,
+              child: AnimatedBuilder(
+                animation: _card1Float,
+                builder: (context, child) => Transform.translate(
+                  offset: Offset(0, _card1Float.value),
+                  child: child,
+                ),
+                child: Transform.rotate(
+                  angle: -5 * math.pi / 180,
+                  child: _CommunityCard(
+                    content: 'Just hit 30 days! 🏆',
+                    subtext: 'Mia · Spine Warriors',
+                    accent: AppTheme.secondaryCoral,
+                  ),
+                ),
+              ),
             ),
           ),
 
-          // "You and 12 others" badge
+          // Card 2 — reply (front-right)
           Positioned(
-            bottom: 12, left: 40,
-            child: AnimatedBuilder(
-              animation: Listenable.merge([_badgeCtrl, _idleCtrl]),
-              builder: (context, child) => Opacity(
-                opacity: _badgeOpacity.value,
-                child: Transform.translate(
-                  offset: Offset(0, _badgeY.value + _badgeIdleY.value),
-                  child: child)),
-              child: _buildBadge(),
+            right: 15,
+            top: 55,
+            child: ScaleTransition(
+              scale: _card2Entry,
+              child: AnimatedBuilder(
+                animation: _card2Float,
+                builder: (context, child) => Transform.translate(
+                  offset: Offset(0, _card2Float.value),
+                  child: child,
+                ),
+                child: Transform.rotate(
+                  angle: 9 * math.pi / 180,
+                  child: _ReplyCard(text: 'you\'ve got this 💪'),
+                ),
+              ),
+            ),
+          ),
+
+          // ── Vera — bottom centre, leaning slightly ───────────────────────
+          Positioned(
+            bottom: 22,
+            child: ScaleTransition(
+              scale: _veraEntry,
+              child: const VeraCharacter(
+                size: 120,
+                pose: VeraPose.wave,
+                enableIdleBob: true,
+              ),
+            ),
+          ),
+
+          // ── XP tease pill ────────────────────────────────────────────────
+          Positioned(
+            bottom: 10,
+            right: 10,
+            child: ScaleTransition(
+              scale: _pillEntry,
+              child: AnimatedBuilder(
+                animation: _pillFloat,
+                builder: (context, child) => Transform.translate(
+                  offset: Offset(0, _pillFloat.value),
+                  child: child,
+                ),
+                child: _CoralPill(label: 'Share milestone → +50 XP 👥'),
+              ),
             ),
           ),
         ],
       ),
     );
   }
+}
 
-  Widget _buildCard1() {
+class _CommunityCard extends StatelessWidget {
+  final String content;
+  final String subtext;
+  final Color accent;
+
+  const _CommunityCard({
+    required this.content,
+    required this.subtext,
+    required this.accent,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
-      width: 188,
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      width: 148,
+      padding: const EdgeInsets.all(11),
       decoration: BoxDecoration(
-        color: AppTheme.cardCream,
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: AppTheme.borderCream.withValues(alpha: 0.7), width: 1.5),
-        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.07), blurRadius: 18, offset: const Offset(0, 6))],
+        color: Colors.white.withValues(alpha: 0.93),
+        borderRadius: BorderRadius.circular(14),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.10),
+            blurRadius: 14,
+            offset: const Offset(0, 4),
+          ),
+        ],
+        border: Border.all(
+          color: AppTheme.borderCream.withValues(alpha: 0.7),
+          width: 1,
+        ),
       ),
-      child: Row(
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
+          // Accent bar
           Container(
-            width: 38, height: 38,
-            decoration: BoxDecoration(color: AppTheme.accentLavender.withValues(alpha: 0.2), shape: BoxShape.circle),
-            child: const Icon(Icons.sentiment_satisfied_alt_rounded, color: AppTheme.accentLavender, size: 22),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: 2),
-                _skeletonLine(width: 60, opacity: 0.40),
-                const SizedBox(height: 6),
-                _skeletonLine(width: double.infinity, opacity: 0.18),
-                const SizedBox(height: 4),
-                _skeletonLine(width: double.infinity, opacity: 0.18),
-                const SizedBox(height: 4),
-                _skeletonLine(width: 80, opacity: 0.13),
-              ],
+            width: 28,
+            height: 3,
+            decoration: BoxDecoration(
+              color: accent,
+              borderRadius: BorderRadius.circular(2),
             ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            content,
+            style: const TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              color: AppTheme.foregroundDark,
+              height: 1.3,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            subtext,
+            style: const TextStyle(
+              fontSize: 9,
+              color: AppTheme.mutedForeground,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Row(
+            children: [
+              Icon(Icons.favorite_rounded, color: accent, size: 11),
+              const SizedBox(width: 3),
+              Text('24', style: TextStyle(fontSize: 9, color: accent, fontWeight: FontWeight.bold)),
+            ],
           ),
         ],
       ),
     );
   }
+}
 
-  Widget _buildCard2() {
+class _ReplyCard extends StatelessWidget {
+  final String text;
+  const _ReplyCard({required this.text});
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
-      width: 196,
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
       decoration: BoxDecoration(
-        color: AppTheme.cardCream,
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: AppTheme.borderCream.withValues(alpha: 0.7), width: 1.5),
-        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.10), blurRadius: 24, offset: const Offset(0, 8))],
+        color: AppTheme.accentLavender.withValues(alpha: 0.15),
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(14),
+          topRight: Radius.circular(14),
+          bottomRight: Radius.circular(4),
+          bottomLeft: Radius.circular(14),
+        ),
+        border: Border.all(
+          color: AppTheme.accentLavender.withValues(alpha: 0.30),
+          width: 1,
+        ),
       ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 38, height: 38,
-            decoration: BoxDecoration(color: AppTheme.secondaryCoral.withValues(alpha: 0.18), shape: BoxShape.circle),
-            child: const Icon(Icons.group_rounded, color: AppTheme.secondaryCoral, size: 22),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: 2),
-                _skeletonLine(width: 80, opacity: 0.40),
-                const SizedBox(height: 6),
-                _skeletonLine(width: double.infinity, opacity: 0.18),
-                const SizedBox(height: 4),
-                _skeletonLine(width: 110, opacity: 0.13),
-              ],
-            ),
-          ),
-        ],
+      child: Text(
+        text,
+        style: const TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+          color: AppTheme.foregroundDark,
+        ),
       ),
     );
   }
+}
 
-  Widget _buildBadge() {
+class _CoralPill extends StatelessWidget {
+  final String label;
+  const _CoralPill({required this.label});
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
       decoration: BoxDecoration(
-        color: AppTheme.primarySage,
+        color: AppTheme.secondaryCoral,
         borderRadius: BorderRadius.circular(24),
-        boxShadow: [BoxShadow(color: AppTheme.primarySage.withValues(alpha: 0.35), blurRadius: 12, offset: const Offset(0, 4))],
+        boxShadow: [
+          BoxShadow(
+            color: AppTheme.secondaryCoral.withValues(alpha: 0.38),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
-      child: const Text(
-        'You and 12 others',
-        style: TextStyle(color: AppTheme.onPrimaryDark, fontSize: 13, fontWeight: FontWeight.w700, letterSpacing: 0.1),
-      ),
-    );
-  }
-
-  Widget _skeletonLine({required double width, required double opacity}) {
-    return Container(
-      width: width == double.infinity ? null : width,
-      height: 7,
-      decoration: BoxDecoration(
-        color: AppTheme.foregroundDark.withValues(alpha: opacity),
-        borderRadius: BorderRadius.circular(4),
+      child: Text(
+        label,
+        style: const TextStyle(
+          color: Colors.white,
+          fontWeight: FontWeight.bold,
+          fontSize: 11,
+          letterSpacing: 0.2,
+        ),
       ),
     );
   }
