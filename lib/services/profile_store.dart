@@ -13,6 +13,7 @@ class ProfileStore {
   static const String _legacyKey = 'spineup_profile_data';
   static const String _ownerKeyPrefix = 'spineup_profile_data_';
   static const String _subjectKeyPrefix = 'spineup_profile_data_subject_';
+  static const String _keySeparator = '_';
 
   static String _legacyOwnerKey(String ownerUserId) =>
       '$_ownerKeyPrefix$ownerUserId';
@@ -20,7 +21,7 @@ class ProfileStore {
   static String _keyFor({
     required String ownerUserId,
     required String careSubjectId,
-  }) => _subjectKeyPrefix + ownerUserId + '_' + careSubjectId;
+  }) => '$_subjectKeyPrefix$ownerUserId$_keySeparator$careSubjectId';
 
   /// Loads the saved profile for one care subject, or returns a default profile.
   ///
@@ -99,7 +100,7 @@ class ProfileStore {
   /// account-wide deletion and mirrors DatabaseHelper.clearUserData.
   static Future<void> clearProfilesForOwner({required String userId}) async {
     final prefs = await SharedPreferences.getInstance();
-    final subjectPrefix = _subjectKeyPrefix + userId + '_';
+    final subjectPrefix = '$_subjectKeyPrefix$userId$_keySeparator';
     final keys = prefs
         .getKeys()
         .where(
