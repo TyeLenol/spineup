@@ -98,7 +98,7 @@ const _spineUpProject = LearnSource(
   license: 'Project documentation; link to source',
 );
 
-const spineUpLearnTopics = <LearnTopic>[
+final spineUpLearnTopics = <LearnTopic>[
   LearnTopic(
     id: 'cobb-angle',
     title: 'Cobb angle',
@@ -115,7 +115,7 @@ const spineUpLearnTopics = <LearnTopic>[
         'Use the number and wording from your clinical report when possible. Ask your clinician if you are unsure what a measurement means.',
     reviewState: LearnReviewState.sourceLinked,
     lastVerified: DateTime(2026, 8, 12),
-    sources: const [_sosortGuidelines],
+    sources: [_sosortGuidelines],
     relatedTopicIds: ['measurement-log', 'brace-type'],
   ),
   LearnTopic(
@@ -134,7 +134,7 @@ const spineUpLearnTopics = <LearnTopic>[
         'For fit, wear schedule, skin concerns, pain, or changes in symptoms, contact the relevant healthcare professional or orthotist.',
     reviewState: LearnReviewState.sourceLinked,
     lastVerified: DateTime(2026, 8, 12),
-    sources: const [_srsBracingManual, _nhsYoungPeopleScoliosis],
+    sources: [_srsBracingManual, _nhsYoungPeopleScoliosis],
     relatedTopicIds: ['exercise-safety', 'measurement-log'],
   ),
   LearnTopic(
@@ -153,11 +153,7 @@ const spineUpLearnTopics = <LearnTopic>[
         'Before starting a new programme, check that it is suitable with a healthcare professional. Stop an activity that causes pain or concerning symptoms and seek appropriate help.',
     reviewState: LearnReviewState.sourceLinked,
     lastVerified: DateTime(2026, 8, 12),
-    sources: const [
-      _nhsAdultScoliosis,
-      _nhsYoungPeopleScoliosis,
-      _sosortGuidelines,
-    ],
+    sources: [_nhsAdultScoliosis, _nhsYoungPeopleScoliosis, _sosortGuidelines],
     relatedTopicIds: ['brace-type'],
   ),
   LearnTopic(
@@ -176,7 +172,7 @@ const spineUpLearnTopics = <LearnTopic>[
         'Bring questions about measurements or changes to a qualified healthcare professional.',
     reviewState: LearnReviewState.draft,
     lastVerified: DateTime(2026, 8, 12),
-    sources: const [_spineUpProject],
+    sources: [_spineUpProject],
     relatedTopicIds: ['cobb-angle', 'export-import'],
   ),
   LearnTopic(
@@ -195,7 +191,7 @@ const spineUpLearnTopics = <LearnTopic>[
         'Only enter information you are comfortable storing locally on the device.',
     reviewState: LearnReviewState.draft,
     lastVerified: DateTime(2026, 8, 12),
-    sources: const [_spineUpProject],
+    sources: [_spineUpProject],
     relatedTopicIds: ['export-import'],
   ),
   LearnTopic(
@@ -214,7 +210,7 @@ const spineUpLearnTopics = <LearnTopic>[
         'Do not share health records or passphrases through an unsafe channel. Confirm the destination before transferring any future archive.',
     reviewState: LearnReviewState.draft,
     lastVerified: DateTime(2026, 8, 12),
-    sources: const [_spineUpProject],
+    sources: [_spineUpProject],
     relatedTopicIds: ['measurement-log', 'sex-assigned-at-birth'],
   ),
 ];
