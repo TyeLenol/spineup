@@ -21,7 +21,9 @@ import 'steps/step_goals.dart';
 import 'steps/step_ownership.dart';
 
 class ProfileSetupScreen extends StatefulWidget {
-  const ProfileSetupScreen({super.key});
+  final bool createNewWard;
+
+  const ProfileSetupScreen({super.key, this.createNewWard = false});
 
   @override
   State<ProfileSetupScreen> createState() => _ProfileSetupScreenState();
@@ -40,10 +42,14 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
   }
 
   Future<void> _loadInitialData() async {
-    final data = await ProfileStore.loadProfile(
-      userId: SessionService.currentUserId,
-      careSubjectId: SessionService.currentCareSubjectId,
-    );
+    final data = widget.createNewWard
+        ? const ProfileData(
+            ownership: ProfileOwnership(subjectType: CareSubjectType.ward),
+          )
+        : await ProfileStore.loadProfile(
+            userId: SessionService.currentUserId,
+            careSubjectId: SessionService.currentCareSubjectId,
+          );
     if (mounted) {
       setState(() => _data = data);
     }
@@ -88,7 +94,9 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
 
     try {
       final ownerUserId = SessionService.currentUserId;
-      final existingSubject = SessionService.activeCareSubject;
+      final existingSubject = widget.createNewWard
+          ? null
+          : SessionService.activeCareSubject;
       final careSubjectId =
           existingSubject?.id ??
           (_data.ownership.isSelf ? ownerUserId : const Uuid().v4());
@@ -136,9 +144,13 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
       SessionService.setActiveCareSubject(careSubject);
 
       if (!mounted) return;
-      Navigator.of(
-        context,
-      ).pushAndRemoveUntil(mainAppRoute(), (route) => false);
+      if (widget.createNewWard) {
+        Navigator.of(context).pop(true);
+      } else {
+        Navigator.of(
+          context,
+        ).pushAndRemoveUntil(mainAppRoute(), (route) => false);
+      }
     } finally {
       if (mounted) setState(() => _finishing = false);
     }
@@ -157,11 +169,15 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
 
     switch (_step) {
       case 1:
-        title = 'Who is this profile for?';
-        explainer =
-            'Choose whose information you are setting up. Each person’s records stay in their own private workspace.';
+        title = widget.createNewWard
+            ? 'Add someone you care for.'
+            : 'Who is this profile for?';
+        explainer = widget.createNewWard
+            ? 'Create a separate private workspace for another person. Your own profile will not be changed.'
+            : 'Choose whose information you are setting up. Each person’s records stay in their own private workspace.';
         child = StepOwnership(
           initialData: _data,
+          allowSelf: !widget.createNewWard,
           onSave: _saveOwnership,
           onValidityChanged: (valid) {
             WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -264,10 +280,16 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
       secondaryLabel: secondaryLabel,
       onSecondaryTap: _finishing ? null : onSecondaryTap,
       onBack: _finishing ? null : _prevStep,
-      onClose: () => Navigator.of(
-        context,
-      ).pushAndRemoveUntil(authRoute(AuthMode.signup), (route) => false),
-      child: child,
+      onClose: () {
+        if (widget.createNewWard) {
+          Navigator.of(context).pop(false);
+        } else {
+          Navigator.of(
+            context,
+          ).pushAndRemoveUntil(authRoute(AuthMode.signup), (route) => false);
+        }
+      },
+      ld: child,
     );
   }
 }

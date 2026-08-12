@@ -5,12 +5,14 @@ import '../profile_fields.dart';
 
 class StepOwnership extends StatefulWidget {
   final ProfileData initialData;
+  final bool allowSelf;
   final ValueChanged<ProfileData> onSave;
   final ValueChanged<bool> onValidityChanged;
 
   const StepOwnership({
     super.key,
     required this.initialData,
+    this.allowSelf = true,
     required this.onSave,
     required this.onValidityChanged,
   });
@@ -26,7 +28,9 @@ class _StepOwnershipState extends State<StepOwnership> {
   @override
   void initState() {
     super.initState();
-    _subjectType = widget.initialData.ownership.subjectType;
+    _subjectType = widget.allowSelf
+        ? widget.initialData.ownership.subjectType
+        : CareSubjectType.ward;
     _relationshipController = TextEditingController(
       text: widget.initialData.ownership.relationship ?? '',
     );
@@ -67,13 +71,28 @@ class _StepOwnershipState extends State<StepOwnership> {
   @override
   Widget build(BuildContext context) {
     final isWard = _subjectType == CareSubjectType.ward;
+    final options = <ChipOption<CareSubjectType>>[
+      if (widget.allowSelf)
+        const ChipOption(
+          value: CareSubjectType.self,
+          label: 'Me',
+          hint: 'I am setting up my own profile.',
+        ),
+      const ChipOption(
+        value: CareSubjectType.ward,
+        label: 'Someone I care for',
+        hint: 'I am managing a separate profile for another person.',
+      ),
+    ];
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         ProfileField(
           label: 'Who is this profile for?',
-          hint:
-              'This keeps the person’s records separate. You can add another person you care for later.',
+          hint: widget.allowSelf
+              ? 'This keeps the person’s records separate. You can add another person you care for later.'
+              : 'This creates a new separate profile. Your own profile will not be changed.',
           child: ProfileChipGroup<CareSubjectType>(
             columns: 1,
             selectedValue: _subjectType,
@@ -82,18 +101,7 @@ class _StepOwnershipState extends State<StepOwnership> {
               _save();
               _validate();
             },
-            options: const [
-              ChipOption(
-                value: CareSubjectType.self,
-                label: 'Me',
-                hint: 'I am setting up my own profile.',
-              ),
-              ChipOption(
-                value: CareSubjectType.ward,
-                label: 'Someone I care for',
-                hint: 'I am managing a separate profile for another person.',
-              ),
-            ],
+            options: options,
           ),
         ),
         if (isWard) ...[

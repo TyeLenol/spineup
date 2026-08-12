@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:uuid/uuid.dart';
 
@@ -9,6 +10,7 @@ import 'package:spineup/models/event.dart';
 import 'package:spineup/models/profile_data.dart';
 import 'package:spineup/services/gamification_service.dart';
 import 'package:spineup/services/profile_mapper.dart';
+import 'package:spineup/services/session_service.dart';
 
 void main() {
   setUpAll(() {
@@ -324,6 +326,71 @@ void main() {
         hasLength(1),
       );
       expect(await dbHelper.getCareSubjects(userId), hasLength(1));
+    },
+  );
+
+  test('session tracks the active subject and rejects another owner', () {
+    SessionService.start(userId: userId);
+    final activeSubject = CareSubject(
+      id: 'subject-active',
+      ownerUserId: userId,
+      type: CareSubjectType.ward,
+      displayName: 'Ama',
+      relationship: 'Parent',
+      createdAt: DateTime(2026, 8, 12),
+      updatedAt: DateTime(2026, 8, 12),
+    );
+    final otherOwnerSubject = activeSubject.copyWith(
+      id: 'subject-foreign',
+      ownerUserId: otherUserId,
+    );
+
+    SessionService.setActiveCareSubject(activeSubject);
+    expect(SessionService.currentCareSubjectId, activeSubject.id);
+    expect(
+      () => SessionService.setActiveCareSubject(otherOwnerSubject),
+      throwsStateError,
+    );
+
+    SessionService.startMockSession();
+  });
+
+  test(
+    'session restores a persisted subject only from the current owner',
+    () async {
+      final self = CareSubject(
+        id: userId,
+        ownerUserId: userId,
+        type: CareSubjectType.self,
+        displayName: 'Me',
+        createdAt: DateTime(2026, 8, 12),
+        updatedAt: DateTime(2026, 8, 12),
+      );
+      final ward = CareSubject(
+        id: 'subject-ward',
+        ownerUserId: userId,
+        type: CareSubjectType.ward,
+        displayName: 'Kojo',
+        relationship: 'Parent',
+        createdAt: DateTime(2026, 8, 12),
+        updatedAt: DateTime(2026, 8, 12),
+      );
+
+      SharedPreferences.setMockInitialValues({
+        'spineup_active_care_subject_$userId': ward.id,
+      });
+      SessionService.start(userId: userId);
+      await SessionService.restoreActiveCareSubject(subjects: [self, ward]);
+      expect(SessionService.currentCareSubjectId, ward.id);
+
+      SharedPreferences.setMockInitialValues({
+        'spineup_active_care_subject_$userId': 'missing-or-foreign-subject',
+      });
+      SessionService.start(userId: userId);
+      await SessionService.restoreActiveCareSubject(subjects: [self, ward]);
+      expect(SessionService.currentCareSubjectId, self.id);
+
+      SessionService.startMockSession();
     },
   );
 

@@ -13,7 +13,9 @@ import '../theme/app_theme.dart';
 import '../widgets/avatar_display.dart';
 import '../widgets/badge_icon.dart';
 import 'auth_screen.dart';
+import 'care_subject_manager.dart';
 import 'profile_setup/profile_fields.dart';
+import 'profile_setup/profile_setup_screen.dart';
 
 class MeScreen extends StatefulWidget {
   const MeScreen({super.key});
@@ -51,6 +53,28 @@ class _MeScreenState extends State<MeScreen>
     }
   }
 
+  Future<void> _openAddWardSetup() async {
+    await Navigator.of(context).push<bool>(
+      MaterialPageRoute(
+        builder: (_) => const ProfileSetupScreen(createNewWard: true),
+      ),
+    );
+    await _loadAll();
+  }
+
+  Future<void> _openSubjectManager() async {
+    await showModalBottomSheet<CareSubjectManagerResult>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (_) => CareSubjectManager(
+        ownerUserId: SessionService.currentUserId,
+        onAddWard: _openAddWardSetup,
+      ),
+    );
+    await _loadAll();
+  }
+
   @override
   Widget build(BuildContext context) {
     super.build(context);
@@ -70,6 +94,8 @@ class _MeScreenState extends State<MeScreen>
                   const SizedBox(height: 24),
                   // Progression Title + Level
                   _IdentitySummary(snap: _snap),
+                  const SizedBox(height: 16),
+                  _ActiveProfileCard(onManageProfiles: _openSubjectManager),
                   const SizedBox(height: 28),
 
                   _SectionHeader(title: 'Profile Info'),
@@ -108,6 +134,50 @@ class _MeScreenState extends State<MeScreen>
                 ],
               ),
             ),
+    );
+  }
+}
+
+class _ActiveProfileCard extends StatelessWidget {
+  final VoidCallback onManageProfiles;
+
+  const _ActiveProfileCard({required this.onManageProfiles});
+
+  @override
+  Widget build(BuildContext context) {
+    final subject = SessionService.activeCareSubject;
+    final name = subject?.displayName ?? SessionService.displayName;
+    final description = subject?.isWard == true
+        ? 'Someone I care for'
+        : 'My private profile';
+
+    return Card(
+      elevation: 0,
+      color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(18),
+        side: BorderSide(
+          color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.25),
+        ),
+      ),
+      child: ListTile(
+        leading: CircleAvatar(
+          backgroundColor: Theme.of(context).colorScheme.primary,
+          foregroundColor: Theme.of(context).colorScheme.onPrimary,
+          child: Icon(
+            subject?.isWard == true
+                ? Icons.people_outline_rounded
+                : Icons.person_outline_rounded,
+          ),
+        ),
+        title: Text(
+          'Active profile: $name',
+          style: const TextStyle(fontWeight: FontWeight.w700),
+        ),
+        subtitle: Text(description),
+        trailing: const Icon(Icons.swap_horiz_rounded),
+        onTap: onManageProfiles,
+      ),
     );
   }
 }

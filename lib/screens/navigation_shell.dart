@@ -1,6 +1,7 @@
 import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
 
+import '../models/care_subject.dart';
 import '../services/session_service.dart';
 import '../theme/app_transitions.dart';
 import '../widgets/glass_nav_bar.dart';
@@ -53,7 +54,10 @@ class _NavigationShellState extends State<NavigationShell> {
               child: _screens[_selectedIndex],
             ),
           ),
-          const _ActiveCareSubjectIndicator(),
+          ValueListenableBuilder<CareSubject?>(
+            valueListenable: SessionService.activeCareSubjectNotifier,
+            builder: (_, __, ___) => const _ActiveCareSubjectIndicator(),
+          ),
           Positioned(
             left: 0,
             right: 0,

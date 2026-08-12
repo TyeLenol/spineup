@@ -1,3 +1,9 @@
+import 'dart:async';
+
+import 'package:flutter/foundation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+import '../data/database_helper.dart';
 import '../models/care_subject.dart';
 
 /// Defines the session-owner and active-care-subject boundaries used by the app
@@ -5,16 +11,23 @@ import '../models/care_subject.dart';
 ///
 /// Keeping both concepts behind one service prevents screens and repositories
 /// from inventing identities. The mock implementation still exposes one local
-/// owner, while health records are now addressed through [currentCareSubjectId].
+/// owner, while health records are addressed through [currentCareSubjectId].
 class SessionService {
   SessionService._();
 
   static const String _mockUserId = 'local_user_001';
   static const String _mockDisplayName = 'You';
+  static const String _activeSubjectKeyPrefix = 'spineup_active_care_subject_';
 
   static String? _currentUserId = _mockUserId;
   static String _displayName = _mockDisplayName;
   static CareSubject? _activeCareSubject;
+
+  /// Emits whenever the active subject changes so app-shell context and
+  /// subject-aware screens can refresh without inventing a second identity
+  /// state.
+  static final ValueNotifier<CareSubject?> activeCareSubjectNotifier =
+      ValueNotifier<CareSubject?>(null);
 
   /// The session owner ID. This identifies the person who can manage one or
   /// more care subjects; it is not automatically the health-record scope.
@@ -42,7 +55,7 @@ class SessionService {
       throw ArgumentError.value(userId, 'userId', 'cannot be empty');
     }
     _currentUserId = userId.trim();
-    _activeCareSubject = null;
+    _setActiveCareSubject(null);
     if (displayName != null && displayName.trim().isNotEmpty) {
       _displayName = displayName.trim();
     }
@@ -54,24 +67,77 @@ class SessionService {
     if (subject.ownerUserId != currentUserId) {
       throw StateError('Cannot activate a care subject owned by another user.');
     }
-    _activeCareSubject = subject;
+    _setActiveCareSubject(subject);
+    unawaited(_persistActiveSubject(subject));
+  }
+
+  /// Restores the last selected subject from the current owner’s local
+  /// subject index after login.
+  static Future<void> restorePersistedActiveCareSubject() async {
+    final subjects = await DatabaseHelper().getCareSubjects(currentUserId);
+    await restoreActiveCareSubject(subjects: subjects);
+  }
+
+  /// Restores the last selected subject only when it is present in the
+  /// owner-scoped subject list. If it is missing, prefer the self subject and
+  /// otherwise the first available subject.
+  static Future<void> restoreActiveCareSubject({
+    required List<CareSubject> subjects,
+  }) async {
+    final ownerUserId = currentUserId;
+    final prefs = await SharedPreferences.getInstance();
+    final persistedId = prefs.getString(_activeSubjectKey(ownerUserId));
+
+    CareSubject? selected;
+    if (persistedId != null) {
+      for (final subject in subjects) {
+        if (subject.id == persistedId && subject.ownerUserId == ownerUserId) {
+          selected = subject;
+          break;
+        }
+      }
+    }
+    if (selected == null && subjects.isNotEmpty) {
+      selected = subjects.firstWhere(
+        (subject) => subject.isSelf,
+        orElse: () => subjects.first,
+      );
+    }
+
+    _setActiveCareSubject(selected);
+    if (selected != null) {
+      await prefs.setString(_activeSubjectKey(ownerUserId), selected.id);
+    }
   }
 
   static void clearActiveCareSubject() {
-    _activeCareSubject = null;
+    _setActiveCareSubject(null);
   }
 
   /// Ends the current session without deleting persisted user data.
   static void signOut() {
     _currentUserId = null;
     _displayName = _mockDisplayName;
-    _activeCareSubject = null;
+    _setActiveCareSubject(null);
   }
 
   /// Restores the local development session for tests and the current mock auth.
   static void startMockSession() {
     _currentUserId = _mockUserId;
     _displayName = _mockDisplayName;
-    _activeCareSubject = null;
+    _setActiveCareSubject(null);
+  }
+
+  static void _setActiveCareSubject(CareSubject? subject) {
+    _activeCareSubject = subject;
+    activeCareSubjectNotifier.value = subject;
+  }
+
+  static String _activeSubjectKey(String ownerUserId) =>
+      '$_activeSubjectKeyPrefix$ownerUserId';
+
+  static Future<void> _persistActiveSubject(CareSubject subject) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_activeSubjectKey(subject.ownerUserId), subject.id);
   }
 }

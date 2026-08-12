@@ -21,6 +21,7 @@ class AuthService {
     await Future<void>.delayed(const Duration(milliseconds: 800));
     debugPrint('[MOCK AUTH] signInWithEmail: $email — success (mock)');
     SessionService.startMockSession();
+    await SessionService.restorePersistedActiveCareSubject();
     return null; // null = success
   }
 
@@ -30,6 +31,7 @@ class AuthService {
     await Future<void>.delayed(const Duration(milliseconds: 800));
     debugPrint('[MOCK AUTH] signUpWithEmail: $email — success (mock)');
     SessionService.startMockSession();
+    await SessionService.restorePersistedActiveCareSubject();
     return null;
   }
 
@@ -41,9 +43,12 @@ class AuthService {
   ///   // use account.email, account.displayName, etc.
   static Future<String?> signInWithGoogle() async {
     // MOCK FALLBACK — replace with real implementation once OAuth is configured
-    debugPrint('[MOCK AUTH] Google sign-in — mock success (no OAuth configured yet)');
+    debugPrint(
+      '[MOCK AUTH] Google sign-in — mock success (no OAuth configured yet)',
+    );
     await Future<void>.delayed(const Duration(milliseconds: 600));
     SessionService.startMockSession();
+    await SessionService.restorePersistedActiveCareSubject();
     return null;
   }
 
@@ -57,14 +62,18 @@ class AuthService {
       final credential = await SignInWithApple.getAppleIDCredential(
         scopes: [AppleIDAuthorizationScopes.email],
       );
-      debugPrint('[MOCK AUTH] Apple sign-in: ${credential.email} — success (mock session)');
+      debugPrint(
+        '[MOCK AUTH] Apple sign-in: ${credential.email} — success (mock session)',
+      );
       SessionService.startMockSession();
+      await SessionService.restorePersistedActiveCareSubject();
       return null;
     } catch (e) {
       // MOCK FALLBACK — remove once Apple credentials are configured
       debugPrint('[MOCK AUTH] Apple sign-in failed ($e), using mock success');
       await Future<void>.delayed(const Duration(milliseconds: 500));
       SessionService.startMockSession();
+      await SessionService.restorePersistedActiveCareSubject();
       return null;
     }
   }
