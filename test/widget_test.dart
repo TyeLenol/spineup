@@ -1,30 +1,31 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
 import 'package:spineup/main.dart';
+import 'package:spineup/screens/splash_screen.dart';
+import 'package:spineup/screens/onboarding_screen.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  testWidgets(
+      'SpineUpApp boots up with SplashScreen and transitions to NavigationShell',
+      (WidgetTester tester) async {
+    // Use Duration.zero so the splash navigates immediately in tests.
+    await tester.pumpWidget(
+      const SpineUpApp(splashDuration: Duration.zero),
+    );
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+    // Initial frame — SplashScreen should be visible.
+    expect(find.byType(SplashScreen), findsOneWidget);
+    expect(find.text('SpineUp'), findsOneWidget);
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
+    // Advance past the zero-duration splash timer + route transition.
+    // Use pump(Duration) — screens contain repeating animations that would
+    // cause pumpAndSettle to time out.
+    await tester.pump(const Duration(milliseconds: 100));
+    await tester.pump(const Duration(seconds: 2));
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    // The normal flow is: Splash → Onboarding (Step 1).
+    // NavigationShell is reached only after full auth; testing that full flow
+    // is out of scope for this unit test.
+    expect(find.byType(SplashScreen), findsNothing);
+    expect(find.byType(OnboardingScreen), findsOneWidget);
   });
 }

@@ -43,3 +43,7 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+.agents/skills/m3-motion/SKILL.md
+.agents/skills/m3-shape-theming/SKILL.md
+refactor_auth.py
+screen.png
