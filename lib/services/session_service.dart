@@ -68,7 +68,14 @@ class SessionService {
       throw StateError('Cannot activate a care subject owned by another user.');
     }
     _setActiveCareSubject(subject);
-    unawaited(_persistActiveSubject(subject));
+    unawaited(
+      _persistActiveSubject(subject).catchError((
+        Object error,
+        StackTrace stack,
+      ) {
+        debugPrint('Unable to persist the active care subject: $error\n$stack');
+      }),
+    );
   }
 
   /// Restores the last selected subject from the current owner’s local
