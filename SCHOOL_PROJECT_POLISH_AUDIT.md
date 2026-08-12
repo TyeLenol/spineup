@@ -28,3 +28,7 @@ The immediate goal is a polished, reliable Android/Web school-project demonstrat
 The navigation shell now keys Today, Journey, and Me by the active care-subject ID inside a `ValueListenableBuilder`. When `SessionService.setActiveCareSubject` changes the notifier, the subject-scoped screens are recreated and reload their records instead of retaining the previous subject’s kept-alive state. Learn remains shared because its content is not subject-scoped. A widget regression test verifies that Today receives a different key after switching to a ward profile.
 
 The change is intentionally narrow: it does not alter the care-subject data model, persistence, deletion rules, or portability behavior. It fixes the presentation/data freshness boundary where those completed features meet the four-tab navigation shell.
+
+## Validation checkpoint
+
+The first polish workflow found one test-only import omission, which was corrected by importing `profile_data.dart` where the canonical `CareSubjectType` enum is declared. The corrected branch head `0ef0d91` passed the complete pinned Flutter workflow in [run 31652179774](https://github.com/TyeLenol/spineup/actions/runs/31652179774): dependency resolution, changed-file formatting, Dart/Flutter analysis, and all tests succeeded.
