@@ -133,6 +133,7 @@ class _MeScreenState extends State<MeScreen>
                   _SettingsSection(
                     userId: SessionService.currentUserId,
                     gamificationService: _gs,
+                    onDataChanged: _loadAll,
                   ),
                   const SizedBox(height: 24),
                 ],
@@ -855,10 +856,12 @@ class _ProfileDetailRow extends StatelessWidget {
 class _SettingsSection extends StatefulWidget {
   final String userId;
   final GamificationService gamificationService;
+  final VoidCallback? onDataChanged;
 
   const _SettingsSection({
     required this.userId,
     required this.gamificationService,
+    this.onDataChanged,
   });
 
   @override
@@ -968,6 +971,7 @@ class _SettingsSectionState extends State<_SettingsSection> {
       }
       return;
     }
+    if (!mounted) return;
 
     final passphrase = await showArchivePassphraseDialog(
       context,
@@ -999,7 +1003,7 @@ class _SettingsSectionState extends State<_SettingsSection> {
             ? SessionService.currentCareSubjectId
             : null,
       );
-      await _loadAll();
+      widget.onDataChanged?.call();
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(

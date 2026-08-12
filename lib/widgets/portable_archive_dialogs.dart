@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../models/care_subject.dart';
+import '../models/profile_data.dart';
 import '../services/portable_archive_service.dart';
 
 Future<String?> showArchivePassphraseDialog(
