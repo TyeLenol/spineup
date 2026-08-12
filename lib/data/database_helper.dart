@@ -217,6 +217,28 @@ class DatabaseHelper {
     return CareSubject.fromDbMap(maps.first);
   }
 
+  /// Clears records for one care subject while retaining its subject row.
+  /// Replace-mode import uses this only after the user has explicitly selected
+  /// the target profile and confirmed the destructive replacement.
+  Future<void> clearCareSubjectRecords({
+    required String ownerUserId,
+    required String careSubjectId,
+  }) async {
+    final db = await database;
+    await db.transaction((txn) async {
+      final subjectRows = await txn.query(
+        'care_subjects',
+        where: 'id = ? AND owner_user_id = ?',
+        whereArgs: [careSubjectId, ownerUserId],
+        limit: 1,
+      );
+      if (subjectRows.isEmpty) {
+        throw StateError('Care subject does not belong to the active owner.');
+      }
+      await _deleteRecordsForSubject(txn, careSubjectId);
+    });
+  }
+
   /// Deletes health records for one care subject after confirming that it
   /// belongs to [ownerUserId]. Account-wide deletion remains separate.
   Future<void> clearCareSubjectData({

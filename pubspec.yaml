@@ -48,6 +48,8 @@ dependencies:
   fl_chart: ^1.2.0
   flutter_expandable_fab: ^2.5.2
   shared_preferences: ^2.5.5
+  cryptography_plus: ^3.0.0
+  file_picker: ^11.0.3
 dev_dependencies:
   flutter_test:
     sdk: flutter

@@ -1,4 +1,6 @@
 import 'dart:io';
+import 'package:file_picker/file_picker.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
@@ -7,11 +9,13 @@ import '../models/event.dart';
 import '../models/milestone.dart';
 import '../models/user_profile.dart';
 import '../services/gamification_service.dart';
+import '../services/portable_archive_service.dart';
 import '../services/profile_store.dart';
 import '../services/session_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/avatar_display.dart';
 import '../widgets/badge_icon.dart';
+import '../widgets/portable_archive_dialogs.dart';
 import 'auth_screen.dart';
 import 'care_subject_manager.dart';
 import 'profile_setup/profile_fields.dart';
@@ -863,6 +867,8 @@ class _SettingsSection extends StatefulWidget {
 
 class _SettingsSectionState extends State<_SettingsSection> {
   bool _notificationsEnabled = true;
+  bool _archiveBusy = false;
+  final _archiveService = PortableArchiveService();
 
   void _showAppearanceDialog() {
     showDialog(
@@ -902,6 +908,146 @@ class _SettingsSectionState extends State<_SettingsSection> {
     );
   }
 
+  Future<void> _exportArchive() async {
+    if (_archiveBusy) return;
+    final passphrase = await showArchivePassphraseDialog(
+      context,
+      confirm: true,
+    );
+    if (passphrase == null) return;
+
+    setState(() => _archiveBusy = true);
+    try {
+      final bytes = await _archiveService.exportOwner(
+        ownerUserId: SessionService.currentUserId,
+        passphrase: passphrase,
+      );
+      final stamp = DateTime.now().toIso8601String().split('T').first;
+      final savedPath = await FilePicker.saveFile(
+        dialogTitle: 'Save protected SpineUp export',
+        fileName: 'spineup-export-$stamp.spineup',
+        allowedExtensions: const ['spineup'],
+        bytes: bytes,
+      );
+      if (!mounted || (savedPath == null && !kIsWeb)) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Protected archive exported successfully.'),
+        ),
+      );
+    } on PortableArchiveException catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(error.message)));
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Export failed: $error')));
+    } finally {
+      if (mounted) setState(() => _archiveBusy = false);
+    }
+  }
+
+  Future<void> _importArchive() async {
+    if (_archiveBusy) return;
+    final picked = await FilePicker.pickFiles(
+      dialogTitle: 'Choose a SpineUp archive',
+      type: FileType.custom,
+      allowedExtensions: const ['spineup'],
+      withData: true,
+    );
+    if (picked == null || picked.files.isEmpty) return;
+    final bytes = picked.files.single.bytes;
+    if (bytes == null) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('SpineUp could not read that archive.')),
+        );
+      }
+      return;
+    }
+
+    final passphrase = await showArchivePassphraseDialog(
+      context,
+      confirm: false,
+    );
+    if (passphrase == null) return;
+
+    setState(() => _archiveBusy = true);
+    try {
+      final preview = await _archiveService.inspect(
+        archiveBytes: bytes,
+        passphrase: passphrase,
+      );
+      if (!mounted) return;
+      final mode = await showArchiveImportPreviewDialog(context, preview);
+      if (!mounted || mode == null) return;
+
+      if (mode == ArchiveImportMode.replaceSelectedSubject) {
+        final confirmed = await _confirmReplaceImport();
+        if (!mounted || !confirmed) return;
+      }
+
+      final result = await _archiveService.importArchive(
+        ownerUserId: SessionService.currentUserId,
+        archiveBytes: bytes,
+        passphrase: passphrase,
+        mode: mode,
+        replaceSubjectId: mode == ArchiveImportMode.replaceSelectedSubject
+            ? SessionService.currentCareSubjectId
+            : null,
+      );
+      await _loadAll();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Imported ${result.importedSubjectIds.length} profile(s), ${result.importedEventCount} events, and ${result.importedAppointmentCount} appointments.',
+          ),
+        ),
+      );
+    } on PortableArchiveException catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(error.message)));
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Import failed: $error')));
+    } finally {
+      if (mounted) setState(() => _archiveBusy = false);
+    }
+  }
+
+  Future<bool> _confirmReplaceImport() async {
+    final target = SessionService.displayName;
+    return await showDialog<bool>(
+          context: context,
+          builder: (dialogContext) => AlertDialog(
+            title: const Text('Replace this profile?'),
+            content: Text(
+              'This will delete the current records for "$target" and replace them with the one archived profile shown in the preview. This cannot be undone unless you have another export.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(dialogContext).pop(false),
+                child: const Text('Cancel'),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.of(dialogContext).pop(true),
+                style: FilledButton.styleFrom(backgroundColor: Colors.red),
+                child: const Text('Replace profile'),
+              ),
+            ],
+          ),
+        ) ??
+        false;
+  }
+
   void _showPrivacyDialog() {
     showDialog(
       context: context,
@@ -910,7 +1056,7 @@ class _SettingsSectionState extends State<_SettingsSection> {
           title: const Text('Privacy & Data'),
           content: const Text(
             'SpineUp keeps health data local to this device by default. '
-            'This prototype does not send analytics or enable cloud backup. Database encryption and protected export/import are planned safeguards, not features available here yet.',
+            'This prototype does not send analytics or enable cloud backup. Protected export/import is available from Me and requires a passphrase; database encryption and cloud backup are not claimed features.',
           ),
           actions: [
             TextButton(
@@ -990,6 +1136,22 @@ class _SettingsSectionState extends State<_SettingsSection> {
             subtitle: const Text('Daily stretch & logging reminders'),
             value: _notificationsEnabled,
             onChanged: (val) => setState(() => _notificationsEnabled = val),
+          ),
+          const Divider(height: 1),
+          ListTile(
+            leading: const Icon(Icons.file_upload_outlined),
+            title: const Text('Export protected archive'),
+            subtitle: const Text('Move your local profiles to another device'),
+            trailing: const Icon(Icons.chevron_right_rounded),
+            onTap: _archiveBusy ? null : _exportArchive,
+          ),
+          const Divider(height: 1),
+          ListTile(
+            leading: const Icon(Icons.file_download_outlined),
+            title: const Text('Import protected archive'),
+            subtitle: const Text('Review before adding or replacing profiles'),
+            trailing: const Icon(Icons.chevron_right_rounded),
+            onTap: _archiveBusy ? null : _importArchive,
           ),
           const Divider(height: 1),
           ListTile(
