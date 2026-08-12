@@ -5,12 +5,11 @@ import '../models/community_post.dart';
 import '../models/milestone.dart';
 import '../theme/app_theme.dart';
 import '../services/gamification_service.dart';
+import '../services/session_service.dart';
 import '../models/user_profile.dart';
 import '../widgets/avatar_display.dart';
 import '../widgets/badge_icon.dart';
 
-const String _kUserId = 'local_user_001';
-const String _kUserName = 'You';
 
 class CommunityScreen extends StatefulWidget {
   const CommunityScreen({super.key});
@@ -41,7 +40,7 @@ class _CommunityScreenState extends State<CommunityScreen>
   Future<void> _loadAll() async {
     // Simulate network delay for fetching community posts
     await Future.delayed(const Duration(milliseconds: 600));
-    final snap = await _gs.getSnapshot('local_user_001'); // Using mock auth ID
+    final snap = await _gs.getSnapshot(SessionService.currentUserId);
     
     if (mounted) {
       setState(() {
@@ -89,7 +88,7 @@ class _CommunityScreenState extends State<CommunityScreen>
 
     final report = ModerationReport(
       postId: postId,
-      reportedByUserId: _kUserId,
+      reportedByUserId: SessionService.currentUserId,
       timestamp: DateTime.now(),
     );
     _moderationQueue.add(report);
@@ -115,7 +114,7 @@ class _CommunityScreenState extends State<CommunityScreen>
     if (body.trim().isEmpty) return;
     final reply = CommunityReply(
       id: const Uuid().v4(),
-      authorName: _kUserName,
+      authorName: SessionService.displayName,
       body: body.trim(),
       timestamp: DateTime.now(),
     );
@@ -185,7 +184,7 @@ class _CommunityScreenState extends State<CommunityScreen>
     if (result != null && result.trim().isNotEmpty) {
       final newPost = CommunityPost(
         id: const Uuid().v4(),
-        authorName: _kUserName,
+        authorName: SessionService.displayName,
         body: result.trim(),
         timestamp: DateTime.now(),
         upvotes: 0,
@@ -310,7 +309,7 @@ class _PostCard extends StatelessWidget {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
 
-    final isMe = post.authorName == _kUserName;
+    final isMe = post.authorName == SessionService.displayName;
     final displayProfile = isMe
         ? localSnap.userProfile
         : UserProfile(

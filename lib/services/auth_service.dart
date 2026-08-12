@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
+import 'session_service.dart';
 
 /// MOCK AUTH SERVICE
 /// -----------------
@@ -19,6 +20,7 @@ class AuthService {
     // MOCK: simulate network delay, then succeed
     await Future<void>.delayed(const Duration(milliseconds: 800));
     debugPrint('[MOCK AUTH] signInWithEmail: $email — success (mock)');
+    SessionService.startMockSession();
     return null; // null = success
   }
 
@@ -27,6 +29,7 @@ class AuthService {
     // MOCK: simulate network delay, then succeed
     await Future<void>.delayed(const Duration(milliseconds: 800));
     debugPrint('[MOCK AUTH] signUpWithEmail: $email — success (mock)');
+    SessionService.startMockSession();
     return null;
   }
 
@@ -40,6 +43,7 @@ class AuthService {
     // MOCK FALLBACK — replace with real implementation once OAuth is configured
     debugPrint('[MOCK AUTH] Google sign-in — mock success (no OAuth configured yet)');
     await Future<void>.delayed(const Duration(milliseconds: 600));
+    SessionService.startMockSession();
     return null;
   }
 
@@ -54,11 +58,13 @@ class AuthService {
         scopes: [AppleIDAuthorizationScopes.email],
       );
       debugPrint('[MOCK AUTH] Apple sign-in: ${credential.email} — success (mock session)');
+      SessionService.startMockSession();
       return null;
     } catch (e) {
       // MOCK FALLBACK — remove once Apple credentials are configured
       debugPrint('[MOCK AUTH] Apple sign-in failed ($e), using mock success');
       await Future<void>.delayed(const Duration(milliseconds: 500));
+      SessionService.startMockSession();
       return null;
     }
   }

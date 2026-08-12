@@ -5,11 +5,11 @@ import 'package:intl/intl.dart';
 import 'package:flutter_expandable_fab/flutter_expandable_fab.dart';
 import '../models/event.dart';
 import '../services/gamification_service.dart';
+import '../services/session_service.dart';
 import '../theme/app_theme.dart';
 import 'cobb_angle_logger_modal.dart';
 import 'appointment_logger_modal.dart';
 
-const String _kUserId = 'local_user_001';
 
 class MyJourneyScreen extends StatefulWidget {
   final EventType? initialEventFilter;
@@ -43,8 +43,8 @@ class _MyJourneyScreenState extends State<MyJourneyScreen>
 
   Future<void> _loadAll() async {
     setState(() => _loading = true);
-    final cobbs = await _gs.getCobbAngleHistory(_kUserId);
-    final events = await _gs.getAllEvents(_kUserId);
+    final cobbs = await _gs.getCobbAngleHistory(SessionService.currentUserId);
+    final events = await _gs.getAllEvents(SessionService.currentUserId);
     if (mounted) {
       setState(() {
         _cobbHistory = cobbs;
@@ -264,7 +264,7 @@ class _MyJourneyScreenState extends State<MyJourneyScreen>
               heroTag: 'fab_cobb',
               onPressed: () => showCobbAngleLogger(
                 context: context,
-                userId: _kUserId,
+                userId: SessionService.currentUserId,
                 gamificationService: _gs,
                 onLogged: _handleLogged,
               ),
@@ -277,7 +277,7 @@ class _MyJourneyScreenState extends State<MyJourneyScreen>
               heroTag: 'fab_appointment',
               onPressed: () => showAppointmentLogger(
                 context: context,
-                userId: _kUserId,
+                userId: SessionService.currentUserId,
                 gamificationService: _gs,
                 onLogged: _handleLogged,
               ),

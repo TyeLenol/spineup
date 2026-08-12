@@ -1,13 +1,19 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
-import '../../models/profile_data.dart';
-import '../../services/profile_store.dart';
+
 import '../../main.dart';
-import 'profile_shell.dart';
-import 'steps/step_consent.dart';
+import '../../models/profile_data.dart';
+import '../../services/gamification_service.dart';
+import '../../services/profile_mapper.dart';
+import '../../services/profile_store.dart';
+import '../../services/session_service.dart';
 import '../auth_screen.dart';
+import 'profile_shell.dart';
 import 'steps/step_basics.dart';
-import 'steps/step_curve.dart';
 import 'steps/step_care.dart';
+import 'steps/step_consent.dart';
+import 'steps/step_curve.dart';
 import 'steps/step_goals.dart';
 
 class ProfileSetupScreen extends StatefulWidget {
@@ -21,6 +27,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
   int _step = 1;
   ProfileData _data = const ProfileData();
   bool _stepValid = true;
+  bool _finishing = false;
 
   @override
   void initState() {
@@ -29,7 +36,9 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
   }
 
   Future<void> _loadInitialData() async {
-    final data = await ProfileStore.loadProfile();
+    final data = await ProfileStore.loadProfile(
+      userId: SessionService.currentUserId,
+    );
     if (mounted) {
       setState(() {
         _data = data;
@@ -38,31 +47,56 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
   }
 
   void _nextStep() {
+    if (_finishing) return;
     if (_step < 5) {
       setState(() {
         _step++;
-        _stepValid = false; // Reset for next step, let the child component set it
+        _stepValid = false;
       });
     } else {
-      _finish();
+      unawaited(_finish());
     }
   }
 
   void _prevStep() {
-    if (_step > 1) {
+    if (_step > 1 && !_finishing) {
       setState(() {
         _step--;
-        _stepValid = true; // Going back usually means previous step is already valid
+        _stepValid = true;
       });
     }
   }
 
-  void _finish() {
-    ProfileStore.saveProfile(_data);
-    Navigator.of(context).pushAndRemoveUntil(
-      mainAppRoute(),
-      (route) => false,
-    );
+  Future<void> _finish() async {
+    if (_finishing) return;
+    setState(() => _finishing = true);
+
+    try {
+      final userId = SessionService.currentUserId;
+      final runtimeProfile = ProfileMapper.toRuntimeProfile(_data);
+
+      await ProfileStore.saveProfile(
+        userId: userId,
+        data: _data,
+      );
+      await GamificationService().updateProfile(
+        userId: userId,
+        presetId: runtimeProfile.presetId,
+        customPhotoPath: runtimeProfile.customPhotoPath,
+        name: runtimeProfile.name,
+        diagnosis: runtimeProfile.diagnosis,
+        braceStatus: runtimeProfile.braceStatus,
+        ageRange: runtimeProfile.ageRange,
+      );
+
+      if (!mounted) return;
+      Navigator.of(context).pushAndRemoveUntil(
+        mainAppRoute(),
+        (route) => false,
+      );
+    } finally {
+      if (mounted) setState(() => _finishing = false);
+    }
   }
 
   @override
@@ -71,7 +105,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
     String title = '';
     String explainer = '';
     String primaryLabel = 'Continue';
-    VoidCallback? onPrimaryTap = _nextStep;
+    VoidCallback onPrimaryTap = _nextStep;
     String? secondaryLabel;
     VoidCallback? onSecondaryTap;
 
@@ -84,7 +118,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
           onSave: (d) => _data = d,
           onNext: _nextStep,
         );
-        _stepValid = true; // Consent is just a toggle, always valid
+        _stepValid = true;
         break;
       case 2:
         title = 'Nice to meet you.';
@@ -110,7 +144,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
           initialData: _data,
           onSave: (d) => _data = d,
         );
-        _stepValid = true; // Everything is optional
+        _stepValid = true;
         break;
       case 4:
         title = 'Your care routine.';
@@ -132,7 +166,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
       case 5:
         title = 'Pick your quests.';
         explainer = 'What matters to you right now? Pick at least one — this shapes your daily quests, XP goals, and home screen.';
-        primaryLabel = 'Complete profile · +250 XP';
+        primaryLabel = _finishing ? 'Saving profile…' : 'Complete profile · +250 XP';
         child = StepGoals(
           initialData: _data,
           onSave: (d) => _data = d,
@@ -155,12 +189,15 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
       title: title,
       explainer: explainer,
       primaryLabel: primaryLabel,
-      primaryDisabled: !_stepValid,
+      primaryDisabled: !_stepValid || _finishing,
       onPrimaryTap: onPrimaryTap,
       secondaryLabel: secondaryLabel,
-      onSecondaryTap: onSecondaryTap,
-      onBack: _prevStep,
-      onClose: () => Navigator.of(context).pushAndRemoveUntil(authRoute(AuthMode.signup), (route) => false),
+      onSecondaryTap: _finishing ? null : onSecondaryTap,
+      onBack: _finishing ? null : _prevStep,
+      onClose: () => Navigator.of(context).pushAndRemoveUntil(
+        authRoute(AuthMode.signup),
+        (route) => false,
+      ),
       child: child,
     );
   }

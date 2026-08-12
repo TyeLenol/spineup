@@ -7,13 +7,14 @@ import '../models/event.dart';
 import '../models/milestone.dart';
 import '../models/user_profile.dart';
 import '../services/gamification_service.dart';
+import '../services/profile_store.dart';
+import '../services/session_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/avatar_display.dart';
 import '../widgets/badge_icon.dart';
 import 'auth_screen.dart';
 import 'profile_setup/profile_fields.dart';
 
-const String _kUserId = 'local_user_001';
 
 class MeScreen extends StatefulWidget {
   const MeScreen({super.key});
@@ -40,8 +41,8 @@ class _MeScreenState extends State<MeScreen>
 
   Future<void> _loadAll() async {
     setState(() => _loading = true);
-    final snap = await _gs.getSnapshot(_kUserId);
-    final events = await _gs.getAllEvents(_kUserId);
+    final snap = await _gs.getSnapshot(SessionService.currentUserId);
+    final events = await _gs.getAllEvents(SessionService.currentUserId);
     if (mounted) {
       setState(() {
         _snap = snap;
@@ -75,7 +76,7 @@ class _MeScreenState extends State<MeScreen>
                   _SectionHeader(title: 'Profile Info'),
                   const SizedBox(height: 12),
                   _ProfileInfoSection(
-                    userId: _kUserId,
+                    userId: SessionService.currentUserId,
                     snap: _snap,
                     gamificationService: _gs,
                     onProfileUpdated: _loadAll,
@@ -85,7 +86,7 @@ class _MeScreenState extends State<MeScreen>
                   _SectionHeader(title: 'Avatar & Identity'),
                   const SizedBox(height: 12),
                   _AvatarSettings(
-                    userId: _kUserId,
+                    userId: SessionService.currentUserId,
                     snap: _snap,
                     gamificationService: _gs,
                     onProfileUpdated: _loadAll,
@@ -101,7 +102,7 @@ class _MeScreenState extends State<MeScreen>
                   _SectionHeader(title: 'Settings'),
                   const SizedBox(height: 12),
                   _SettingsSection(
-                    userId: _kUserId,
+                    userId: SessionService.currentUserId,
                     gamificationService: _gs,
                   ),
                   const SizedBox(height: 24),
@@ -809,7 +810,10 @@ class _SettingsSectionState extends State<_SettingsSection> {
             TextButton(
               onPressed: () async {
                 Navigator.pop(ctx);
-                await widget.gamificationService.clearAllUserData();
+                final userId = SessionService.currentUserId;
+                await widget.gamificationService.clearUserData(userId: userId);
+                await ProfileStore.clearProfile(userId: userId);
+                SessionService.signOut();
                 if (!mounted) return;
                 Navigator.of(context).pushAndRemoveUntil(
                   authRoute(AuthMode.login),

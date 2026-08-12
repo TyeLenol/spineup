@@ -114,12 +114,18 @@ class DatabaseHelper {
     }
   }
 
-  /// Wipes all user data completely across all tables.
-  Future<void> clearAllUserData() async {
+  /// Wipes all persisted data belonging to [userId] across all tables.
+  ///
+  /// The transaction keeps account deletion consistent if the database write
+  /// fails partway through. No operation in the app should delete rows for
+  /// users other than the active session.
+  Future<void> clearUserData(String userId) async {
     final db = await database;
-    await db.delete(tableName);
-    await db.delete('user_profiles');
-    await db.delete('appointments');
+    await db.transaction((txn) async {
+      await txn.delete(tableName, where: 'user_id = ?', whereArgs: [userId]);
+      await txn.delete('user_profiles', where: 'user_id = ?', whereArgs: [userId]);
+      await txn.delete('appointments', where: 'user_id = ?', whereArgs: [userId]);
+    });
   }
 
   /// Insert a new event into the database.
@@ -129,6 +135,30 @@ class DatabaseHelper {
       tableName,
       event.toDbMap(),
       conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  /// Fetch one event by ID while enforcing ownership by [userId].
+  Future<Event?> getEventById(String eventId, String userId) async {
+    final db = await database;
+    final maps = await db.query(
+      tableName,
+      where: 'id = ? AND user_id = ?',
+      whereArgs: [eventId, userId],
+      limit: 1,
+    );
+    if (maps.isEmpty) return null;
+    return Event.fromDbMap(maps.first);
+  }
+
+  /// Updates an event owned by its [Event.userId].
+  Future<int> updateEvent(Event event) async {
+    final db = await database;
+    return db.update(
+      tableName,
+      event.toDbMap(),
+      where: 'id = ? AND user_id = ?',
+      whereArgs: [event.id, event.userId],
     );
   }
 

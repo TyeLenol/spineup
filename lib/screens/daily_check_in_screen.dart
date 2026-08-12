@@ -3,18 +3,19 @@ import 'package:uuid/uuid.dart';
 import '../models/event.dart';
 import '../models/user_profile.dart';
 import '../services/gamification_service.dart';
+import '../services/session_service.dart';
 import '../theme/app_theme.dart';
 import 'my_journey_screen.dart';
 
 class DailyCheckInScreen extends StatefulWidget {
   final UserProfile userProfile;
-  final String userId;
+  final String? userId;
   final Event? existingLogToday;
 
   const DailyCheckInScreen({
     super.key,
     required this.userProfile,
-    this.userId = 'local_user_001',
+    this.userId,
     this.existingLogToday,
   });
 
@@ -24,6 +25,8 @@ class DailyCheckInScreen extends StatefulWidget {
 
 class _DailyCheckInScreenState extends State<DailyCheckInScreen> {
   final _gs = GamificationService();
+
+  String get _effectiveUserId => widget.userId ?? SessionService.currentUserId;
   final _notesController = TextEditingController();
 
   double _painLevel = 2;
@@ -80,20 +83,33 @@ class _DailyCheckInScreenState extends State<DailyCheckInScreen> {
 
   Future<void> _submit() async {
     setState(() => _saving = true);
+    final payload = {
+      'pain_level': _painLevel.round(),
+      'brace_hours': _braceHours.round(),
+      'mood': _mood,
+      'locations': _selectedLocations.toList(),
+      'tightness': _tightness,
+      'fatigue': _fatigue,
+      'notes': _notesController.text.trim(),
+      'logged_at': DateTime.now().toIso8601String(),
+    };
+
+    if (widget.existingLogToday != null) {
+      await _gs.updateJournalEntry(
+        eventId: widget.existingLogToday!.id,
+        userId: _effectiveUserId,
+        payload: payload,
+      );
+      if (!mounted) return;
+      Navigator.pop(context);
+      return;
+    }
+
     final result = await _gs.logEvent(
       eventId: const Uuid().v4(),
-      userId: widget.userId,
+      userId: _effectiveUserId,
       type: EventType.journalEntry,
-      payload: {
-        'pain_level': _painLevel.round(),
-        'brace_hours': _braceHours.round(),
-        'mood': _mood,
-        'locations': _selectedLocations.toList(),
-        'tightness': _tightness,
-        'fatigue': _fatigue,
-        'notes': _notesController.text.trim(),
-        'logged_at': DateTime.now().toIso8601String(),
-      },
+      payload: payload,
     );
     if (!mounted) return;
     Navigator.pop(context, result);

@@ -136,6 +136,11 @@ class GamificationService {
   }) async {
     int base = baseXpFor(type);
 
+    final eventsBefore = await _db.getEventsByUser(userId);
+    final previousTotalXp = eventsBefore.fold<int>(
+      0,
+      (sum, event) => sum + event.xpValue,
+    );
     final firstToday = await isFirstEventToday(userId);
 
     if (type == EventType.angleLogged) {
@@ -160,12 +165,13 @@ class GamificationService {
     await _db.insertEvent(event);
 
     final snapshot = await getSnapshot(userId);
-    final previousEvents = await _db.getEventsByUser(userId);
-    
+    final eventsAfter = await _db.getEventsByUser(userId);
+
     final newMilestones = _detectNewMilestones(
       type: type,
       snapshot: snapshot,
-      allEvents: previousEvents,
+      allEvents: eventsAfter,
+      previousTotalXp: previousTotalXp,
     );
 
     return LogEventResult(
@@ -173,6 +179,23 @@ class GamificationService {
       dailyBonusAwarded: firstToday,
       newMilestones: newMilestones,
     );
+  }
+
+  /// Updates an existing journal entry owned by [userId] without awarding XP again.
+  Future<void> updateJournalEntry({
+    required String eventId,
+    required String userId,
+    required Map<String, dynamic> payload,
+  }) async {
+    final existing = await _db.getEventById(eventId, userId);
+    if (existing == null) {
+      throw StateError('Journal entry not found for the active user: $eventId');
+    }
+    if (existing.type != EventType.journalEntry) {
+      throw ArgumentError.value(eventId, 'eventId', 'Event is not a journal entry.');
+    }
+
+    await _db.updateEvent(existing.copyWith(payload: payload));
   }
 
   Future<void> reportPost(String postId, String userId) async {
@@ -209,9 +232,9 @@ class GamificationService {
     );
   }
 
-  /// Completely wipes all data for account deletion.
-  Future<void> clearAllUserData() async {
-    await _db.clearAllUserData();
+  /// Deletes all local data belonging to [userId] for account deletion.
+  Future<void> clearUserData({required String userId}) async {
+    await _db.clearUserData(userId);
     _userProfile = UserProfile.defaultProfile();
   }
 
@@ -221,14 +244,13 @@ class GamificationService {
     required EventType type,
     required GamificationSnapshot snapshot,
     required List<Event> allEvents,
+    required int previousTotalXp,
   }) {
     final result = <Milestone>[];
     for (final m in allMilestones) {
       if (m.requiredXp != null) {
-        // XP-gated: newly unlocked if totalXp now crosses the threshold and
-        // the pre-event xp was below it.
-        final xpBeforeThis = snapshot.totalXp - kXpStretch; // pessimistic guess
-        if (snapshot.totalXp >= m.requiredXp! && xpBeforeThis < m.requiredXp!) {
+        // XP-gated: newly unlocked only when this event crosses the threshold.
+        if (snapshot.totalXp >= m.requiredXp! && previousTotalXp < m.requiredXp!) {
           result.add(m);
         }
       } else if (m.requiredEventType != null && m.requiredEventCount != null) {

@@ -6,12 +6,11 @@ import 'package:uuid/uuid.dart';
 import '../models/event.dart';
 import '../models/appointment.dart';
 import '../services/gamification_service.dart';
+import '../services/session_service.dart';
 import '../theme/app_theme.dart';
 import 'appointment_logger_modal.dart';
 import 'daily_check_in_screen.dart';
 
-// ─── Hardcoded user ID (mock auth) ───────────────────────────────────────────
-const String _kUserId = 'local_user_001';
 
 // ─── Exercise catalogue ───────────────────────────────────────────────────────
 
@@ -286,9 +285,9 @@ class _TodayScreenState extends State<TodayScreen>
   }
 
   Future<void> _loadSnapshot() async {
-    final snap = await _gs.getSnapshot(_kUserId);
-    final todayEvents = await _gs.getTodayEvents(_kUserId);
-    final appointments = await _gs.getAppointments(_kUserId);
+    final snap = await _gs.getSnapshot(SessionService.currentUserId);
+    final todayEvents = await _gs.getTodayEvents(SessionService.currentUserId);
+    final appointments = await _gs.getAppointments(SessionService.currentUserId);
 
     final completedIds = todayEvents
         .where((e) => e.type == EventType.stretchCompleted)
@@ -329,7 +328,7 @@ class _TodayScreenState extends State<TodayScreen>
     setState(() => _completedToday.add(ex.id));
     final result = await _gs.logEvent(
       eventId: const Uuid().v4(),
-      userId: _kUserId,
+      userId: SessionService.currentUserId,
       type: EventType.stretchCompleted,
       payload: {
         'exercise_id': ex.id,
@@ -456,7 +455,7 @@ class _TodayScreenState extends State<TodayScreen>
                       nextAppointment: _nextAppointment,
                       onTap: () => showAppointmentLogger(
                         context: context,
-                        userId: _kUserId,
+                        userId: SessionService.currentUserId,
                         gamificationService: _gs,
                         onLogged: (result) async {
                           await _loadSnapshot();

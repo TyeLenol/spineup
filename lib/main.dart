@@ -65,7 +65,10 @@ Route<void> authRoute(AuthMode mode, {bool isCrossFade = false}) {
       onSwitchMode: (newMode) {
         Navigator.of(context).pushReplacement(authRoute(newMode, isCrossFade: true));
       },
-      onSuccess: () => Navigator.of(context).pushAndRemoveUntil(profileSetupRoute(), (route) => false),
+      onSuccess: () => Navigator.of(context).pushAndRemoveUntil(
+        mode == AuthMode.signup ? profileSetupRoute() : mainAppRoute(),
+        (route) => false,
+      ),
     );
   }
 
