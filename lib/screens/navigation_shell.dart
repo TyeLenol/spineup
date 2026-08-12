@@ -56,7 +56,7 @@ class _NavigationShellState extends State<NavigationShell> {
           ),
           ValueListenableBuilder<CareSubject?>(
             valueListenable: SessionService.activeCareSubjectNotifier,
-            builder: (_, __, ___) => const _ActiveCareSubjectIndicator(),
+            builder: (_, _, _) => const _ActiveCareSubjectIndicator(),
           ),
           Positioned(
             left: 0,

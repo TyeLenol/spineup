@@ -20,7 +20,7 @@ class ProfileStore {
   static String _keyFor({
     required String ownerUserId,
     required String careSubjectId,
-  }) => '${_subjectKeyPrefix}${ownerUserId}_${careSubjectId}';
+  }) => _subjectKeyPrefix + ownerUserId + '_' + careSubjectId;
 
   /// Loads the saved profile for one care subject, or returns a default profile.
   ///
@@ -99,7 +99,7 @@ class ProfileStore {
   /// account-wide deletion and mirrors DatabaseHelper.clearUserData.
   static Future<void> clearProfilesForOwner({required String userId}) async {
     final prefs = await SharedPreferences.getInstance();
-    final subjectPrefix = '${_subjectKeyPrefix}${userId}_';
+    final subjectPrefix = _subjectKeyPrefix + userId + '_';
     final keys = prefs
         .getKeys()
         .where(

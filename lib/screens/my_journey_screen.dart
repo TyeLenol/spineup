@@ -231,8 +231,9 @@ class _MyJourneyScreenState extends State<MyJourneyScreen>
                                   ),
                                 ],
                                 onChanged: (v) {
-                                  if (v != null)
+                                  if (v != null) {
                                     setState(() => _overlayOption = v);
+                                  }
                                 },
                               ),
                             ],
