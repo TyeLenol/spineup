@@ -91,8 +91,7 @@ class GamificationService {
   final DatabaseHelper _db;
   UserProfile _userProfile = UserProfile.defaultProfile();
 
-  GamificationService({DatabaseHelper? db})
-      : _db = db ?? DatabaseHelper();
+  GamificationService({DatabaseHelper? db}) : _db = db ?? DatabaseHelper();
 
   // ── Base XP helper ─────────────────────────────────────────────────────────
 
@@ -196,7 +195,11 @@ class GamificationService {
       throw StateError('Journal entry not found for the active user: $eventId');
     }
     if (existing.type != EventType.journalEntry) {
-      throw ArgumentError.value(eventId, 'eventId', 'Event is not a journal entry.');
+      throw ArgumentError.value(
+        eventId,
+        'eventId',
+        'Event is not a journal entry.',
+      );
     }
 
     await _db.updateEvent(existing.copyWith(payload: payload));
@@ -254,7 +257,8 @@ class GamificationService {
     for (final m in allMilestones) {
       if (m.requiredXp != null) {
         // XP-gated: newly unlocked only when this event crosses the threshold.
-        if (snapshot.totalXp >= m.requiredXp! && previousTotalXp < m.requiredXp!) {
+        if (snapshot.totalXp >= m.requiredXp! &&
+            previousTotalXp < m.requiredXp!) {
           result.add(m);
         }
       } else if (m.requiredEventType != null && m.requiredEventCount != null) {
@@ -292,7 +296,7 @@ class GamificationService {
     }
 
     final totalXp = events.fold(0, (sum, e) => sum + e.xpValue);
-    
+
     int level = 1;
     int remainingXp = totalXp;
     while (true) {
@@ -304,7 +308,7 @@ class GamificationService {
         break;
       }
     }
-    
+
     final xpInLevel = remainingXp;
     final progress = xpInLevel / (100 + (level - 1) * 25);
 
@@ -336,11 +340,18 @@ class GamificationService {
     if (events.isEmpty) return 0;
 
     // Collect unique calendar dates (UTC-normalised for consistency).
-    final dates = events
-        .map((e) => DateTime(e.timestamp.year, e.timestamp.month, e.timestamp.day))
-        .toSet()
-        .toList()
-      ..sort((a, b) => b.compareTo(a)); // descending
+    final dates =
+        events
+            .map(
+              (e) => DateTime(
+                e.timestamp.year,
+                e.timestamp.month,
+                e.timestamp.day,
+              ),
+            )
+            .toSet()
+            .toList()
+          ..sort((a, b) => b.compareTo(a)); // descending
 
     final today = DateTime(
       DateTime.now().year,
@@ -384,7 +395,8 @@ class GamificationService {
         if (count >= m.requiredEventCount!) {
           result.add(m);
         }
-      } else if (m.requiredStreakDays != null && streakDays >= m.requiredStreakDays!) {
+      } else if (m.requiredStreakDays != null &&
+          streakDays >= m.requiredStreakDays!) {
         result.add(m);
       }
     }
@@ -397,15 +409,15 @@ class GamificationService {
   Future<List<({DateTime date, double degrees})>> getCobbAngleHistory(
     String userId,
   ) async {
-    final events = await _db.getEventsByUserAndType(userId, EventType.angleLogged);
+    final events = await _db.getEventsByUserAndType(
+      userId,
+      EventType.angleLogged,
+    );
     final result = <({DateTime date, double degrees})>[];
     for (final e in events) {
       final deg = e.payload['degrees'];
       if (deg != null) {
-        result.add((
-          date: e.timestamp,
-          degrees: (deg as num).toDouble(),
-        ));
+        result.add((date: e.timestamp, degrees: (deg as num).toDouble()));
       }
     }
     // Return in ascending order for the chart.
@@ -482,7 +494,9 @@ class GamificationService {
       throw StateError('Cannot complete a cancelled appointment.');
     }
     if (appointment.scheduledDateTime.isAfter(DateTime.now())) {
-      throw StateError('Cannot complete future appointment before scheduled date/time.');
+      throw StateError(
+        'Cannot complete future appointment before scheduled date/time.',
+      );
     }
 
     final eventId = const Uuid().v4();

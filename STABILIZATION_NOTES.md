@@ -31,3 +31,5 @@ The third CI run’s analyzer-stage failure was traced through the signed GitHub
 Run 4 (`https://github.com/TyeLenol/spineup/actions/runs/31629826768`) confirmed checkout cleanup is fixed. Analyzer then failed on one lint: `test/architecture_data_boundary_test.dart:2:8` imported `package:sqflite/sqflite.dart` unnecessarily because `sqflite_common_ffi` already exports the used database symbols. The redundant import has been removed locally.
 
 Run 5 (`https://github.com/TyeLenol/spineup/actions/runs/31630160861`) reached the full test suite: 48 tests passed and one failed. The failing regression test correctly showed profile completion awarded 250 XP but `LogEventResult.dailyBonusAwarded` incorrectly reported `true` even when `includeDailyBonus: false`. The result metadata now uses the same gated condition as the XP calculation.
+
+Run 6 (`https://github.com/TyeLenol/spineup/actions/runs/31630462853`) passed dependency resolution, but the changed-file formatting gate reported that `lib/services/gamification_service.dart` needed formatting. The matching Dart 3.12.2 formatter was run locally and its output is committed in the next fix.
