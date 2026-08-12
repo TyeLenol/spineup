@@ -261,6 +261,11 @@ class LearnTopicDetailPage extends StatelessWidget {
           ),
           const SizedBox(height: 18),
           Text(
+            topic.shortExplanation,
+            style: theme.textTheme.titleMedium?.copyWith(height: 1.4),
+          ),
+          const SizedBox(height: 10),
+          Text(
             topic.body,
             style: theme.textTheme.bodyLarge?.copyWith(height: 1.55),
           ),
