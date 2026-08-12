@@ -4,6 +4,7 @@ import 'package:sqflite/sqflite.dart';
 import '../models/appointment.dart';
 import '../models/care_subject.dart';
 import '../models/event.dart';
+import '../models/profile_data.dart';
 
 class DatabaseHelper {
   static const String tableName = 'events';
