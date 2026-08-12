@@ -13,6 +13,8 @@ import 'package:spineup/services/profile_mapper.dart';
 import 'package:spineup/services/session_service.dart';
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
   setUpAll(() {
     sqfliteFfiInit();
     databaseFactory = databaseFactoryFfi;
