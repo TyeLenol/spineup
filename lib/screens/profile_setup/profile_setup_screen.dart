@@ -289,7 +289,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
           ).pushAndRemoveUntil(authRoute(AuthMode.signup), (route) => false);
         }
       },
-      ld: child,
+      child: child,
     );
   }
 }
