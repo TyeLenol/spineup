@@ -1,345 +1,350 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import '../theme/app_theme.dart';
-import '../theme/edge_to_edge_helper.dart';
-import '../widgets/chunky_3d_button.dart';
-import '../widgets/interactive_gradient_canvas.dart';
-import '../widgets/m3_squiggly_line.dart';
+import 'package:flutter/services.dart';
+import '../main.dart';
+import '../widgets/onboarding/breathing_widget.dart';
+import '../widgets/onboarding/count_up_widget.dart';
+import '../widgets/onboarding/keycap_cta.dart';
+import '../widgets/onboarding/morph_shape.dart';
+import '../widgets/onboarding/onboarding_chrome.dart';
+import 'auth_screen.dart';
+
+class OnboardingScreenData {
+  final Color bg;
+  final Color edge;
+  final Color shape;
+  final Color accent;
+  final Color tint;
+  final Color tintSoft;
+  final Color deep;
+  final List<String> headline;
+  final String subtext;
+  final String cta;
+  final bool overshoot;
+
+  const OnboardingScreenData({
+    required this.bg,
+    required this.edge,
+    required this.shape,
+    required this.accent,
+    required this.tint,
+    required this.tintSoft,
+    required this.deep,
+    required this.headline,
+    required this.subtext,
+    required this.cta,
+    required this.overshoot,
+  });
+}
+
+const List<OnboardingScreenData> kOnboardingScreens = [
+  // Screen 1: Sage
+  OnboardingScreenData(
+    bg: Color(0xFF0F6E56),
+    edge: Color(0xFF04342C),
+    shape: Color(0xFF2F8F74),
+    accent: Color(0xFF7FD3B6),
+    tint: Color(0xFFE8F7F1),
+    tintSoft: Color(0xFFC6EAD9),
+    deep: Color(0xFF04342C),
+    headline: ['Your spine has a story.', "Let's track it."],
+    subtext: 'Log brace time and exercises daily, and watch the picture of your curve come together.',
+    cta: 'Next',
+    overshoot: false,
+  ),
+
+  // Screen 2: Lavender
+  OnboardingScreenData(
+    bg: Color(0xFF3C3489),
+    edge: Color(0xFF26215C),
+    shape: Color(0xFF5A51B0),
+    accent: Color(0xFFA79FF0),
+    tint: Color(0xFFEEECFB),
+    tintSoft: Color(0xFFC5BFF2),
+    deep: Color(0xFF221D55),
+    headline: ['Every stretch counts', 'toward something.'],
+    subtext: 'Brace hours and stretches feed one daily ring — fill it and your streak keeps going.',
+    cta: 'Next',
+    overshoot: true,
+  ),
+
+  // Screen 3: Coral
+  OnboardingScreenData(
+    bg: Color(0xFF993C1D),
+    edge: Color(0xFF712B13),
+    shape: Color(0xFFBF5730),
+    accent: Color(0xFFF0A181),
+    tint: Color(0xFFFDEEE7),
+    tintSoft: Color(0xFFF5C6AE),
+    deep: Color(0xFF5C2210),
+    headline: ['Show up,', 'level up.'],
+    subtext: 'Real actions earn real XP, so every session pushes your level and streak forward.',
+    cta: 'Next',
+    overshoot: true,
+  ),
+
+  // Screen 4: Azure
+  OnboardingScreenData(
+    bg: Color(0xFF10556C),
+    edge: Color(0xFF082F3E),
+    shape: Color(0xFF1C7592),
+    accent: Color(0xFF7FCBE4),
+    tint: Color(0xFFE6F5FA),
+    tintSoft: Color(0xFFB9E2F0),
+    deep: Color(0xFF052430),
+    headline: ["You're not doing", 'this alone.'],
+    subtext: "Follow others managing scoliosis, swap what actually helps, and cheer each other's streaks on.",
+    cta: 'Next',
+    overshoot: true,
+  ),
+
+  // Screen 5: Lavender Privacy
+  OnboardingScreenData(
+    bg: Color(0xFF3C3489),
+    edge: Color(0xFF26215C),
+    shape: Color(0xFF5A51B0),
+    accent: Color(0xFFA79FF0),
+    tint: Color(0xFFEEECFB),
+    tintSoft: Color(0xFFC5BFF2),
+    deep: Color(0xFF221D55),
+    headline: ['Your data', 'stays yours.'],
+    subtext: 'Stored on this device, never sold or shared, and deletable anytime in Settings.',
+    cta: 'Get started',
+    overshoot: false,
+  ),
+];
 
 class OnboardingScreen extends StatefulWidget {
-  final int step;
-  final String titlePlain;
-  final String titleAccent;
-  final String description;
-  final Widget illustration;
-  final VoidCallback onNext;
-  final VoidCallback? onBack;
-  final VoidCallback onSkip;
-  final bool isLast;
-  final Color? accentColor;
-
-  const OnboardingScreen({
-    super.key,
-    required this.step,
-    required this.titlePlain,
-    required this.titleAccent,
-    required this.description,
-    required this.illustration,
-    required this.onNext,
-    this.onBack,
-    required this.onSkip,
-    this.isLast = false,
-    this.accentColor,
-  });
+  const OnboardingScreen({super.key});
 
   @override
   State<OnboardingScreen> createState() => _OnboardingScreenState();
 }
 
-class _OnboardingScreenState extends State<OnboardingScreen>
-    with TickerProviderStateMixin {
-  late AnimationController _cardCtrl;
-  late Animation<double> _cardY;
-  late Animation<double> _cardOpacity;
-
-  @override
-  void initState() {
-    super.initState();
-
-    _cardCtrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 650),
-    );
-    final cardCurve = CurvedAnimation(
-      parent: _cardCtrl,
-      curve: Curves.easeOutCubic,
-    );
-    _cardY = Tween<double>(begin: 65, end: 0).animate(cardCurve);
-    _cardOpacity = Tween<double>(begin: 0, end: 1).animate(cardCurve);
-
-    Future.delayed(const Duration(milliseconds: 300), () {
-      if (mounted) _cardCtrl.forward();
-    });
-  }
+class _OnboardingScreenState extends State<OnboardingScreen> {
+  int _currentStep = 1; // 1-indexed: 1..5
+  final FocusNode _focusNode = FocusNode();
 
   @override
   void dispose() {
-    _cardCtrl.dispose();
+    _focusNode.dispose();
     super.dispose();
+  }
+
+  void _goToStep(int step) {
+    if (step >= 1 && step <= kOnboardingScreens.length) {
+      setState(() {
+        _currentStep = step;
+      });
+    }
+  }
+
+  void _next() {
+    if (_currentStep < kOnboardingScreens.length) {
+      _goToStep(_currentStep + 1);
+    } else {
+      _complete();
+    }
+  }
+
+  void _complete() {
+    Navigator.of(context).push(authRoute(AuthMode.signup));
+  }
+
+  void _handleKeyEvent(KeyEvent event) {
+    if (event is KeyDownEvent) {
+      if (event.logicalKey == LogicalKeyboardKey.arrowRight && _currentStep < kOnboardingScreens.length) {
+        _next();
+      } else if (event.logicalKey == LogicalKeyboardKey.arrowLeft && _currentStep > 1) {
+        _goToStep(_currentStep - 1);
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    EdgeToEdgeHelper.configureSystemUi(context);
-    final screenHeight = MediaQuery.of(context).size.height;
-    final accent = widget.accentColor ?? AppTheme.secondaryCoral;
+    final s = kOnboardingScreens[_currentStep - 1];
+    final total = kOnboardingScreens.length;
+    final topPadding = MediaQuery.of(context).padding.top;
+    final bottomPadding = MediaQuery.of(context).padding.bottom;
+    final disableAnimations = MediaQuery.of(context).disableAnimations;
 
-    return Scaffold(
-      backgroundColor: Colors.transparent,
-      body: InteractiveGradientCanvas(
-        child: SafeArea(
-          bottom: false,
-          child: Stack(
-            children: [
-              // ── 1. Top Header Bar (56px) ──────────────────────────────────
-              Positioned(
-                top: 4,
-                left: 8,
-                right: 8,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    // Back Chevron (Steps 2 and 3)
-                    if (widget.onBack != null)
-                      InkWell(
-                        onTap: widget.onBack,
-                        borderRadius: BorderRadius.circular(24),
-                        child: Container(
-                          width: 44,
-                          height: 44,
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.40),
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(
-                            Icons.chevron_left_rounded,
-                            color: AppTheme.foregroundDark,
-                            size: 26,
-                          ),
-                        ),
-                      )
-                    else
-                      const SizedBox(width: 44, height: 44),
-
-                    // Skip Chip
-                    _SkipChip(onTap: widget.onSkip),
-                  ],
+    return KeyboardListener(
+      focusNode: _focusNode,
+      autofocus: true,
+      onKeyEvent: _handleKeyEvent,
+      child: Scaffold(
+        body: AnimatedContainer(
+          duration: Duration(milliseconds: disableAnimations ? 0 : 400),
+          curve: Curves.easeOut,
+          decoration: BoxDecoration(
+            gradient: RadialGradient(
+              center: const Alignment(0.0, -0.3),
+              radius: 1.2,
+              colors: [s.bg, s.bg, s.edge],
+              stops: const [0.0, 0.45, 1.0],
+            ),
+          ),
+          child: SafeArea(
+            child: Column(
+              children: [
+                StepAnnouncer(
+                  message: 'Step $_currentStep of $total. ${s.headline[0]} ${s.headline[1]}. ${s.subtext}',
                 ),
-              ),
 
-              // ── 2. Interactive Game Stage (Upper 58% Height) ──────────────
-              Positioned(
-                top: 45,
-                left: 0,
-                right: 0,
-                height: screenHeight * 0.50,
-                child: Center(
-                  child: RepaintBoundary(
-                    child: widget.illustration,
+                // ── Header Chrome ───────────────────────────────────────────────
+                Padding(
+                  padding: EdgeInsets.only(
+                    left: 20.0,
+                    right: 20.0,
+                    top: topPadding > 0 ? 8.0 : 16.0,
                   ),
-                ),
-              ),
-
-              // ── 3. Frosted Control Dock (Bottom 42% Height) ──────────────
-              Positioned(
-                bottom: 0,
-                left: 0,
-                right: 0,
-                child: AnimatedBuilder(
-                  animation: _cardCtrl,
-                  builder: (context, child) => Opacity(
-                    opacity: _cardOpacity.value,
-                    child: Transform.translate(
-                      offset: Offset(0, _cardY.value),
-                      child: child,
-                    ),
-                  ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      // Organic M3 Squiggly Stage Contour
-                      const M3SquigglyDivider(
-                        color: Color(0xBDF5EDD8),
-                        height: 16,
+                      // Back button (hidden on screen 1)
+                      SizedBox(
+                        width: 48.0,
+                        height: 48.0,
+                        child: _currentStep > 1
+                            ? OnboardingIconButton(
+                                icon: Icons.arrow_back_rounded,
+                                label: 'Go back',
+                                onClick: () => _goToStep(_currentStep - 1),
+                                tint: s.tint,
+                              )
+                            : const SizedBox.shrink(),
                       ),
 
-                      // Control Dock Content
-                      ClipRRect(
-                        child: BackdropFilter(
-                          filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.74),
-                              border: Border(
-                                top: BorderSide(
-                                  color: Colors.white.withValues(alpha: 0.60),
-                                  width: 1.2,
-                                ),
-                              ),
-                            ),
-                            padding: EdgeInsets.only(
-                              left: 26,
-                              right: 26,
-                              top: 20,
-                              bottom:
-                                  MediaQuery.of(context).padding.bottom + 24,
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                // Headline Plain Text
-                                Text(
-                                  widget.titlePlain.trimRight(),
-                                  style: GoogleFonts.fraunces(
-                                    fontSize: 30,
-                                    height: 1.15,
-                                    fontWeight: FontWeight.w700,
-                                    color: AppTheme.foregroundDark,
-                                    letterSpacing: -0.4,
-                                  ),
-                                ),
+                      // Progress dots (1..5)
+                      ProgressDots(
+                        step: _currentStep,
+                        total: total,
+                        tint: s.tint,
+                      ),
 
-                                const SizedBox(height: 2),
-
-                                // Headline Accent Text + M3 Squiggly Underline
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Text(
-                                      widget.titleAccent,
-                                      style: GoogleFonts.fraunces(
-                                        fontSize: 30,
-                                        height: 1.15,
-                                        fontWeight: FontWeight.w700,
-                                        fontStyle: FontStyle.italic,
-                                        color: accent,
-                                        letterSpacing: -0.4,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 3),
-                                    // Animated M3 Squiggly Underline
-                                    M3SquigglyUnderline(
-                                      width: 175,
-                                      color: accent,
-                                      strokeWidth: 3.5,
-                                      amplitude: 3.0,
-                                    ),
-                                  ],
-                                ),
-
-                                const SizedBox(height: 14),
-
-                                // Raw, Authentic Non-AI Body Copy
-                                Text(
-                                  widget.description,
-                                  style: GoogleFonts.outfit(
-                                    fontSize: 14.5,
-                                    height: 1.48,
-                                    color: AppTheme.mutedForeground,
-                                  ),
-                                ),
-
-                                const SizedBox(height: 24),
-
-                                // Action Row: Orb Dots + 3D Push Button
-                                Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  crossAxisAlignment: CrossAxisAlignment.center,
-                                  children: [
-                                    // Progress Orbs
-                                    _OrbDots(step: widget.step),
-
-                                    // 3D Tactile Push Button
-                                    Chunky3DButton(
-                                      label: widget.isLast
-                                          ? 'Join the App →'
-                                          : widget.step == 1
-                                              ? 'Tap Vera for +30 XP →'
-                                              : 'Try the Streak Stack →',
-                                      color: accent,
-                                      depthColor: accent == AppTheme.primarySage
-                                          ? const Color(0xFF3B8E72)
-                                          : const Color(0xFFB33D18),
-                                      onTap: widget.onNext,
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
+                      // Skip link (hidden on screen 1)
+                      SizedBox(
+                        height: 48.0,
+                        child: _currentStep > 1
+                            ? OnboardingSmallLink(
+                                text: 'Skip',
+                                ariaLabel: 'Skip onboarding',
+                                onClick: _complete,
+                                tint: s.tint,
+                              )
+                            : const SizedBox.shrink(),
                       ),
                     ],
                   ),
                 ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
 
-class _SkipChip extends StatelessWidget {
-  final VoidCallback onTap;
-  const _SkipChip({required this.onTap});
+                // ── Central Graphic Area ─────────────────────────────────────────
+                Expanded(
+                  child: Center(
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        if (_currentStep == 1)
+                          BreathingWidget(
+                            child: MorphShape(
+                              index: 0.0,
+                              fill: s.shape,
+                              accent: s.accent,
+                              overshoot: false,
+                              size: 300.0,
+                            ),
+                          )
+                        else
+                          MorphShape(
+                            index: (_currentStep - 1).toDouble(),
+                            fill: s.shape,
+                            accent: s.accent,
+                            overshoot: s.overshoot,
+                            ringProgress: _currentStep == 2 ? 0.70 : null,
+                            nodes: _currentStep == 4,
+                            layered: _currentStep == 5,
+                            size: _currentStep == 5 ? 232.0 : 300.0,
+                          ),
 
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(20),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.40),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: Colors.white.withValues(alpha: 0.55),
-                width: 1,
-              ),
-            ),
-            child: const Text(
-              'Skip',
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w500,
-                color: AppTheme.mutedForeground,
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _OrbDots extends StatelessWidget {
-  final int step;
-  const _OrbDots({required this.step});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: List.generate(3, (index) {
-        final isActive = index == (step - 1);
-        return Container(
-          margin: const EdgeInsets.only(right: 8),
-          width: isActive ? 12 : 8,
-          height: isActive ? 12 : 8,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: isActive ? AppTheme.secondaryCoral : AppTheme.borderCream,
-            boxShadow: isActive
-                ? [
-                    BoxShadow(
-                      color: AppTheme.secondaryCoral.withValues(alpha: 0.5),
-                      blurRadius: 8,
-                      spreadRadius: 1.5,
+                        if (_currentStep == 3)
+                          CountUpWidget(
+                            to: 120,
+                            color: s.tint,
+                          ),
+                      ],
                     ),
-                  ]
-                : null,
+                  ),
+                ),
+
+                // ── Content & Bottom CTA ────────────────────────────────────────
+                Padding(
+                  padding: EdgeInsets.only(
+                    left: 24.0,
+                    right: 24.0,
+                    bottom: bottomPadding > 0 ? bottomPadding + 12.0 : 24.0,
+                  ),
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 380.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // Headline
+                        Text(
+                          s.headline[0],
+                          style: TextStyle(
+                            color: s.tint,
+                            fontSize: 38.0,
+                            fontWeight: FontWeight.w900,
+                            height: 1.02,
+                            letterSpacing: -0.5,
+                            fontFamily: 'serif',
+                          ),
+                        ),
+                        const SizedBox(height: 4.0),
+                        Text(
+                          s.headline[1],
+                          style: TextStyle(
+                            color: s.tintSoft,
+                            fontSize: 30.0,
+                            fontWeight: FontWeight.bold,
+                            fontStyle: FontStyle.italic,
+                            height: 1.1,
+                            fontFamily: 'serif',
+                          ),
+                        ),
+                        const SizedBox(height: 16.0),
+
+                        // Subtext
+                        Text(
+                          s.subtext,
+                          style: TextStyle(
+                            color: s.tintSoft,
+                            fontSize: 14.0,
+                            height: 1.5,
+                          ),
+                        ),
+
+                        const SizedBox(height: 32.0),
+
+                        // Keycap CTA button
+                        KeycapCta(
+                          label: s.cta,
+                          onClick: _next,
+                          fill: s.tint,
+                          ink: s.deep,
+                          text: s.edge,
+                        ),
+                        const SizedBox(height: 8.0),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
-        );
-      }),
+        ),
+      ),
     );
   }
 }

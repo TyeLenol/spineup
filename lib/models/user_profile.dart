@@ -41,14 +41,46 @@ const List<AvatarPreset> presetAvatars = [
 class UserProfile {
   final String presetId;
   final String? customPhotoPath;
+  final String name;
+  final String diagnosis;
+  final String braceStatus;
+  final String ageRange;
 
   const UserProfile({
     required this.presetId,
     this.customPhotoPath,
+    this.name = 'Alex',
+    this.diagnosis = 'Thoracic Curve',
+    this.braceStatus = 'Yes',
+    this.ageRange = '13-17',
   });
 
   factory UserProfile.defaultProfile() {
-    return const UserProfile(presetId: 'preset_sun');
+    return const UserProfile(
+      presetId: 'preset_sun',
+      name: 'Alex',
+      diagnosis: 'Thoracic Curve',
+      braceStatus: 'Yes',
+      ageRange: '13-17',
+    );
+  }
+
+  UserProfile copyWith({
+    String? presetId,
+    String? customPhotoPath,
+    String? name,
+    String? diagnosis,
+    String? braceStatus,
+    String? ageRange,
+  }) {
+    return UserProfile(
+      presetId: presetId ?? this.presetId,
+      customPhotoPath: customPhotoPath ?? this.customPhotoPath,
+      name: name ?? this.name,
+      diagnosis: diagnosis ?? this.diagnosis,
+      braceStatus: braceStatus ?? this.braceStatus,
+      ageRange: ageRange ?? this.ageRange,
+    );
   }
 
   AvatarPreset get preset {

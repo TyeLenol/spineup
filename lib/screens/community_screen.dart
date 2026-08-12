@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:uuid/uuid.dart';
 import '../models/community_post.dart';
+import '../models/milestone.dart';
 import '../theme/app_theme.dart';
 import '../services/gamification_service.dart';
 import '../models/user_profile.dart';
 import '../widgets/avatar_display.dart';
+import '../widgets/badge_icon.dart';
 
 const String _kUserId = 'local_user_001';
 const String _kUserName = 'You';
@@ -24,6 +27,7 @@ class _CommunityScreenState extends State<CommunityScreen>
   final _gs = GamificationService();
   GamificationSnapshot _snap = GamificationSnapshot.empty;
   List<CommunityPost> _posts = [];
+  String _feedFilter = 'All'; // 'All' or 'Saved'
 
   // Moderation queue — stored in memory (would be persisted to SQLite in production).
   final List<ModerationReport> _moderationQueue = [];
@@ -58,6 +62,25 @@ class _CommunityScreenState extends State<CommunityScreen>
         );
       }).toList();
     });
+  }
+
+  void _toggleSave(String postId) {
+    bool nowSaved = false;
+    setState(() {
+      _posts = _posts.map((p) {
+        if (p.id != postId) return p;
+        nowSaved = !p.isSaved;
+        return p.copyWith(isSaved: nowSaved);
+      }).toList();
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(nowSaved ? 'Post saved to bookmarks.' : 'Post removed from saved.'),
+        duration: const Duration(seconds: 2),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+    );
   }
 
   void _reportPost(String postId) {
@@ -175,50 +198,89 @@ class _CommunityScreenState extends State<CommunityScreen>
   Widget build(BuildContext context) {
     super.build(context);
     final tt = Theme.of(context).textTheme;
-    final cs = Theme.of(context).colorScheme;
+    final displayedPosts = _posts.where((p) => _feedFilter == 'All' || p.isSaved).toList();
 
     return Scaffold(
-      backgroundColor: cs.surface,
+      backgroundColor: Colors.transparent,
       body: CustomScrollView(
         slivers: [
           SliverAppBar(
             floating: true,
-            snap: true,
-            backgroundColor: cs.surface,
+            pinned: true,
+            backgroundColor: Colors.transparent,
             surfaceTintColor: Colors.transparent,
             title: Text('Community', style: tt.titleLarge),
-            actions: [
-              IconButton(
-                tooltip: 'New post',
-                icon: const Icon(Icons.add_rounded),
-                onPressed: _createPost,
-              ),
-            ],
           ),
-          SliverPadding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 100),
-            sliver: SliverList(
-              delegate: SliverChildBuilderDelegate(
-                (_, i) {
-                  final post = _posts[i];
-                  return _PostCard(
-                    post: post,
-                    localSnap: _snap,
-                    onUpvote: () => _toggleUpvote(post.id),
-                    onReport: () => _reportPost(post.id),
-                    onOpenReplies: () => _openReplySheet(post),
-                  );
-                },
-                childCount: _posts.length,
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+              child: SegmentedButton<String>(
+                segments: const [
+                  ButtonSegment(
+                    value: 'All',
+                    label: Text('All Posts'),
+                    icon: Icon(Icons.forum_outlined, size: 16),
+                  ),
+                  ButtonSegment(
+                    value: 'Saved',
+                    label: Text('Saved'),
+                    icon: Icon(Icons.bookmark_border_rounded, size: 16),
+                  ),
+                ],
+                selected: {_feedFilter},
+                onSelectionChanged: (set) => setState(() => _feedFilter = set.first),
+                style: const ButtonStyle(
+                  visualDensity: VisualDensity.compact,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
               ),
             ),
           ),
+          if (displayedPosts.isEmpty)
+            SliverFillRemaining(
+              hasScrollBody: false,
+              child: Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(32),
+                  child: Text(
+                    _feedFilter == 'Saved'
+                        ? 'No saved posts yet.\nTap the bookmark icon on any post to save it for later!'
+                        : 'No community posts yet.',
+                    textAlign: TextAlign.center,
+                    style: tt.bodyMedium?.copyWith(color: AppTheme.mutedForeground),
+                  ),
+                ),
+              ),
+            )
+          else
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 120),
+              sliver: SliverList(
+                delegate: SliverChildBuilderDelegate(
+                  (_, i) {
+                    final post = displayedPosts[i];
+                    return _PostCard(
+                      post: post,
+                      localSnap: _snap,
+                      onUpvote: () => _toggleUpvote(post.id),
+                      onSave: () => _toggleSave(post.id),
+                      onReport: () => _reportPost(post.id),
+                      onOpenReplies: () => _openReplySheet(post),
+                    );
+                  },
+                  childCount: displayedPosts.length,
+                ),
+              ),
+            ),
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _createPost,
-        icon: const Icon(Icons.edit_rounded),
-        label: const Text('New Post'),
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.only(bottom: 96),
+        child: FloatingActionButton.extended(
+          onPressed: _createPost,
+          icon: const Icon(Icons.edit_rounded),
+          label: const Text('New Post'),
+        ),
       ),
     );
   }
@@ -230,6 +292,7 @@ class _PostCard extends StatelessWidget {
   final CommunityPost post;
   final GamificationSnapshot localSnap;
   final VoidCallback onUpvote;
+  final VoidCallback onSave;
   final VoidCallback onReport;
   final VoidCallback onOpenReplies;
 
@@ -237,6 +300,7 @@ class _PostCard extends StatelessWidget {
     required this.post,
     required this.localSnap,
     required this.onUpvote,
+    required this.onSave,
     required this.onReport,
     required this.onOpenReplies,
   });
@@ -291,6 +355,8 @@ class _PostCard extends StatelessWidget {
                   tooltip: 'Report post',
                   icon: const Icon(Icons.flag_outlined, size: 18),
                   color: AppTheme.mutedForeground,
+                  constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+                  padding: EdgeInsets.zero,
                   onPressed: onReport,
                 ),
             ],
@@ -299,19 +365,39 @@ class _PostCard extends StatelessWidget {
           // Milestone badge
           if (post.milestoneBadge != null) ...[
             const SizedBox(height: 8),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-              decoration: BoxDecoration(
-                color: AppTheme.primarySage.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Text(
-                post.milestoneBadge!,
-                style: tt.labelSmall?.copyWith(
-                  color: AppTheme.primarySage,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
+            Builder(
+              builder: (_) {
+                final milestone = allMilestones.firstWhere(
+                  (m) => m.id == post.milestoneBadge,
+                  orElse: () => Milestone(
+                    id: 'custom',
+                    label: post.milestoneBadge!,
+                    iconFamily: 'milestone',
+                    tier: 1,
+                  ),
+                );
+                return Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: AppTheme.primarySage.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      BadgeIcon(milestone: milestone, size: 16),
+                      const SizedBox(width: 6),
+                      Text(
+                        milestone.label,
+                        style: tt.labelSmall?.copyWith(
+                          color: AppTheme.primarySage,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
             ),
           ],
 
@@ -334,6 +420,19 @@ class _PostCard extends StatelessWidget {
                     ? AppTheme.secondaryCoral
                     : AppTheme.mutedForeground,
                 onTap: onUpvote,
+              ),
+              const SizedBox(width: 10),
+
+              // Bookmark / Save
+              _ActionChip(
+                icon: post.isSaved
+                    ? Icons.bookmark_rounded
+                    : Icons.bookmark_border_rounded,
+                label: post.isSaved ? 'Saved' : 'Save',
+                color: post.isSaved
+                    ? AppTheme.primarySage
+                    : AppTheme.mutedForeground,
+                onTap: onSave,
               ),
               const SizedBox(width: 10),
 
@@ -365,7 +464,8 @@ class _PostCard extends StatelessWidget {
     if (diff.inMinutes < 1) return 'just now';
     if (diff.inHours < 1) return '${diff.inMinutes}m';
     if (diff.inDays < 1) return '${diff.inHours}h';
-    return '${diff.inDays}d';
+    if (diff.inDays < 7) return '${diff.inDays}d';
+    return DateFormat.MMMd().format(dt);
   }
 }
 
@@ -567,6 +667,7 @@ class _ReplySheetState extends State<_ReplySheet> {
     if (diff.inMinutes < 1) return 'just now';
     if (diff.inHours < 1) return '${diff.inMinutes}m';
     if (diff.inDays < 1) return '${diff.inHours}h';
-    return '${diff.inDays}d';
+    if (diff.inDays < 7) return '${diff.inDays}d';
+    return DateFormat.MMMd().format(dt);
   }
 }

@@ -1,21 +1,19 @@
-import 'dart:io';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:flutter_svg/flutter_svg.dart';
+import 'package:fl_chart/fl_chart.dart';
+import 'package:intl/intl.dart';
+import 'package:flutter_expandable_fab/flutter_expandable_fab.dart';
 import '../models/event.dart';
-import '../models/milestone.dart';
-import '../models/user_profile.dart';
 import '../services/gamification_service.dart';
 import '../theme/app_theme.dart';
-import '../widgets/avatar_display.dart';
 import 'cobb_angle_logger_modal.dart';
 import 'appointment_logger_modal.dart';
 
 const String _kUserId = 'local_user_001';
 
 class MyJourneyScreen extends StatefulWidget {
-  const MyJourneyScreen({super.key});
+  final EventType? initialEventFilter;
+  const MyJourneyScreen({super.key, this.initialEventFilter});
 
   @override
   State<MyJourneyScreen> createState() => _MyJourneyScreenState();
@@ -27,29 +25,28 @@ class _MyJourneyScreenState extends State<MyJourneyScreen>
   bool get wantKeepAlive => true;
 
   final _gs = GamificationService();
-  GamificationSnapshot _snap = GamificationSnapshot.empty;
   List<({DateTime date, double degrees})> _cobbHistory = [];
   List<Event> _allEvents = [];
   bool _loading = true;
 
   // Chart Filters
-  String _chartTimeRange = '30d'; // '7d', '30d', '90d', 'All'
+  String _chartTimeRange = 'Month'; // 'Week', 'Month', 'Year', 'All'
   String _overlayOption = 'None'; // 'None', 'Pain Level', 'Stretches'
+  EventType? _timelineFilter;
 
   @override
   void initState() {
     super.initState();
+    _timelineFilter = widget.initialEventFilter;
     _loadAll();
   }
 
   Future<void> _loadAll() async {
     setState(() => _loading = true);
-    final snap = await _gs.getSnapshot(_kUserId);
     final cobbs = await _gs.getCobbAngleHistory(_kUserId);
     final events = await _gs.getAllEvents(_kUserId);
     if (mounted) {
       setState(() {
-        _snap = snap;
         _cobbHistory = cobbs;
         _allEvents = events;
         _loading = false;
@@ -74,9 +71,9 @@ class _MyJourneyScreenState extends State<MyJourneyScreen>
   List<({DateTime date, double degrees})> get _filteredCobbHistory {
     if (_chartTimeRange == 'All') return _cobbHistory;
     final days = switch (_chartTimeRange) {
-      '7d' => 7,
-      '30d' => 30,
-      '90d' => 90,
+      'Week' || '7d' => 7,
+      'Month' || '30d' => 30,
+      'Year' || '90d' => 365,
       _ => 30,
     };
     final cutoff = DateTime.now().subtract(Duration(days: days));
@@ -86,9 +83,9 @@ class _MyJourneyScreenState extends State<MyJourneyScreen>
   List<({DateTime date, double value})> get _overlayData {
     if (_overlayOption == 'None') return [];
     final days = switch (_chartTimeRange) {
-      '7d' => 7,
-      '30d' => 30,
-      '90d' => 90,
+      'Week' || '7d' => 7,
+      'Month' || '30d' => 30,
+      'Year' || '90d' => 365,
       _ => 365,
     };
     final cutoff = DateTime.now().subtract(Duration(days: days));
@@ -128,7 +125,7 @@ class _MyJourneyScreenState extends State<MyJourneyScreen>
     final cs = Theme.of(context).colorScheme;
 
     return Scaffold(
-      backgroundColor: cs.surface,
+      backgroundColor: Colors.transparent,
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : RefreshIndicator(
@@ -137,13 +134,13 @@ class _MyJourneyScreenState extends State<MyJourneyScreen>
                 slivers: [
                   SliverAppBar(
                     floating: true,
-                    snap: true,
-                    backgroundColor: cs.surface,
+                    pinned: true,
+                    backgroundColor: Colors.transparent,
                     surfaceTintColor: Colors.transparent,
                     title: Text('My Journey', style: tt.titleLarge),
                   ),
                   SliverPadding(
-                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 100),
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 120),
                     sliver: SliverList(
                       delegate: SliverChildListDelegate([
                         // ── Privacy notice ─────────────────────────────────
@@ -154,42 +151,45 @@ class _MyJourneyScreenState extends State<MyJourneyScreen>
                         _SectionHeader(title: 'Cobb Angle Progression'),
                         const SizedBox(height: 12),
 
-                        // Time Range & Overlay Filter Bar
-                        Row(
-                          children: [
-                            SegmentedButton<String>(
-                              segments: const [
-                                ButtonSegment(value: '7d', label: Text('7d', style: TextStyle(fontSize: 11))),
-                                ButtonSegment(value: '30d', label: Text('30d', style: TextStyle(fontSize: 11))),
-                                ButtonSegment(value: '90d', label: Text('90d', style: TextStyle(fontSize: 11))),
-                                ButtonSegment(value: 'All', label: Text('All', style: TextStyle(fontSize: 11))),
-                              ],
-                              selected: {_chartTimeRange},
-                              onSelectionChanged: (set) {
-                                setState(() => _chartTimeRange = set.first);
-                              },
-                              style: const ButtonStyle(
-                                visualDensity: VisualDensity.compact,
-                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        // Time Range & Overlay Filter Bar (Scrollable to prevent edge clipping)
+                        SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: Row(
+                            children: [
+                              SegmentedButton<String>(
+                                segments: const [
+                                  ButtonSegment(value: 'Week', label: Text('Week', style: TextStyle(fontSize: 11))),
+                                  ButtonSegment(value: 'Month', label: Text('Month', style: TextStyle(fontSize: 11))),
+                                  ButtonSegment(value: 'Year', label: Text('Year', style: TextStyle(fontSize: 11))),
+                                  ButtonSegment(value: 'All', label: Text('All', style: TextStyle(fontSize: 11))),
+                                ],
+                                selected: {_chartTimeRange},
+                                onSelectionChanged: (set) {
+                                  setState(() => _chartTimeRange = set.first);
+                                },
+                                style: const ButtonStyle(
+                                  visualDensity: VisualDensity.compact,
+                                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                ),
                               ),
-                            ),
-                            const Spacer(),
-                            DropdownButton<String>(
-                              value: _overlayOption,
-                              isDense: true,
-                              underline: const SizedBox.shrink(),
-                              icon: const Icon(Icons.layers_outlined, size: 18, color: AppTheme.primarySage),
-                              style: tt.labelSmall?.copyWith(color: AppTheme.primarySage, fontWeight: FontWeight.bold),
-                              items: const [
-                                DropdownMenuItem(value: 'None', child: Text('No Overlay')),
-                                DropdownMenuItem(value: 'Pain Level', child: Text('+ Pain Level')),
-                                DropdownMenuItem(value: 'Stretches', child: Text('+ Stretches')),
-                              ],
-                              onChanged: (v) {
-                                if (v != null) setState(() => _overlayOption = v);
-                              },
-                            ),
-                          ],
+                              const SizedBox(width: 16),
+                              DropdownButton<String>(
+                                value: _overlayOption,
+                                isDense: true,
+                                underline: const SizedBox.shrink(),
+                                icon: const Icon(Icons.layers_outlined, size: 18, color: AppTheme.primarySage),
+                                style: tt.labelSmall?.copyWith(color: AppTheme.primarySage, fontWeight: FontWeight.bold),
+                                items: const [
+                                  DropdownMenuItem(value: 'None', child: Text('No Overlay')),
+                                  DropdownMenuItem(value: 'Pain Level', child: Text('+ Pain Level')),
+                                  DropdownMenuItem(value: 'Stretches', child: Text('+ Stretches')),
+                                ],
+                                onChanged: (v) {
+                                  if (v != null) setState(() => _overlayOption = v);
+                                },
+                              ),
+                            ],
+                          ),
                         ),
                         const SizedBox(height: 12),
 
@@ -197,63 +197,34 @@ class _MyJourneyScreenState extends State<MyJourneyScreen>
                           history: _filteredCobbHistory,
                           overlayData: _overlayData,
                           overlayOption: _overlayOption,
+                          timeRange: _chartTimeRange,
                         ),
-                        const SizedBox(height: 12),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: FilledButton.icon(
-                                onPressed: () => showCobbAngleLogger(
-                                  context: context,
-                                  userId: _kUserId,
-                                  gamificationService: _gs,
-                                  onLogged: _handleLogged,
-                                ),
-                                icon: const Icon(Icons.add_rounded),
-                                label: const Text('Log Cobb Angle'),
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            OutlinedButton.icon(
-                              onPressed: () => showAppointmentLogger(
-                                context: context,
-                                userId: _kUserId,
-                                gamificationService: _gs,
-                                onLogged: _handleLogged,
-                              ),
-                              icon: const Icon(Icons.medical_services_outlined),
-                              label: const Text('Appointments'),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 28),
-
-                        // ── Badges & Achievements Split ────────────────────
-                        _BadgesSection(snap: _snap),
                         const SizedBox(height: 24),
-                        _AchievementsSection(snap: _snap, allEvents: _allEvents),
-                        const SizedBox(height: 28),
-
-                        // ── Avatar & Profile Settings ─────────────────────
-                        _SectionHeader(title: 'Avatar & Profile'),
-                        const SizedBox(height: 12),
-                        _AvatarSettings(
-                          userId: _kUserId,
-                          snap: _snap,
-                          gamificationService: _gs,
-                          onProfileUpdated: _loadAll,
-                        ),
-                        const SizedBox(height: 28),
 
                         // ── Activity timeline ──────────────────────────────
-                        _SectionHeader(title: 'Activity Log'),
+                        Row(
+                          children: [
+                            _SectionHeader(title: 'Activity Log'),
+                            const Spacer(),
+                            if (_timelineFilter != null)
+                              FilterChip(
+                                label: const Text('Filtered: Journal Entries', style: TextStyle(fontSize: 11)),
+                                selected: true,
+                                onSelected: (_) => setState(() => _timelineFilter = null),
+                                deleteIcon: const Icon(Icons.close, size: 14),
+                                onDeleted: () => setState(() => _timelineFilter = null),
+                              ),
+                          ],
+                        ),
                         const SizedBox(height: 12),
-                        if (_allEvents.isEmpty)
+                        if (_allEvents.where((e) => _timelineFilter == null || e.type == _timelineFilter).isEmpty)
                           Center(
                             child: Padding(
                               padding: const EdgeInsets.all(32),
                               child: Text(
-                                'No activity yet.\nStart logging to see your history!',
+                                _timelineFilter == null
+                                    ? 'No activity yet.\nStart logging to see your history!'
+                                    : 'No journal entries logged yet.',
                                 textAlign: TextAlign.center,
                                 style: tt.bodyMedium?.copyWith(
                                   color: AppTheme.mutedForeground,
@@ -263,6 +234,7 @@ class _MyJourneyScreenState extends State<MyJourneyScreen>
                           )
                         else
                           ..._allEvents
+                              .where((e) => _timelineFilter == null || e.type == _timelineFilter)
                               .take(30)
                               .map((e) => _EventTile(event: e)),
                       ]),
@@ -271,6 +243,52 @@ class _MyJourneyScreenState extends State<MyJourneyScreen>
                 ],
               ),
             ),
+      floatingActionButtonLocation: ExpandableFab.location,
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.only(bottom: 96),
+        child: ExpandableFab(
+          type: ExpandableFabType.up,
+          distance: 70,
+          openButtonBuilder: RotateFloatingActionButtonBuilder(
+            child: const Icon(Icons.add_rounded, color: Colors.white, size: 28),
+            fabSize: ExpandableFabSize.regular,
+            shape: const CircleBorder(),
+          ),
+          closeButtonBuilder: DefaultFloatingActionButtonBuilder(
+            child: const Icon(Icons.close_rounded, color: Colors.white, size: 24),
+            fabSize: ExpandableFabSize.regular,
+            shape: const CircleBorder(),
+          ),
+          children: [
+            FloatingActionButton.extended(
+              heroTag: 'fab_cobb',
+              onPressed: () => showCobbAngleLogger(
+                context: context,
+                userId: _kUserId,
+                gamificationService: _gs,
+                onLogged: _handleLogged,
+              ),
+              icon: const Icon(Icons.architecture_rounded),
+              label: const Text('Log Cobb Angle'),
+              backgroundColor: cs.surfaceContainerHigh,
+              foregroundColor: cs.onSurface,
+            ),
+            FloatingActionButton.extended(
+              heroTag: 'fab_appointment',
+              onPressed: () => showAppointmentLogger(
+                context: context,
+                userId: _kUserId,
+                gamificationService: _gs,
+                onLogged: _handleLogged,
+              ),
+              icon: const Icon(Icons.medical_services_outlined),
+              label: const Text('Schedule Visit'),
+              backgroundColor: cs.surfaceContainerHigh,
+              foregroundColor: cs.onSurface,
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -324,11 +342,13 @@ class _CobbChart extends StatelessWidget {
   final List<({DateTime date, double degrees})> history;
   final List<({DateTime date, double value})> overlayData;
   final String overlayOption;
+  final String timeRange;
 
   const _CobbChart({
     required this.history,
     this.overlayData = const [],
     this.overlayOption = 'None',
+    required this.timeRange,
   });
 
   @override
@@ -336,537 +356,228 @@ class _CobbChart extends StatelessWidget {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
 
-    final hasData = history.isNotEmpty;
+    if (history.isEmpty) {
+      return Container(
+        height: 200,
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: cs.surfaceContainer,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppTheme.borderCream),
+        ),
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.show_chart_rounded, size: 36, color: AppTheme.accentLavender),
+              const SizedBox(height: 10),
+              Text(
+                'No data yet — log your first angle to see your trend',
+                textAlign: TextAlign.center,
+                style: tt.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Log your first Cobb angle reading using the + button to track curve progression over time.',
+                textAlign: TextAlign.center,
+                style: tt.bodySmall?.copyWith(color: AppTheme.mutedForeground),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
 
-    // Seed data for empty state display
-    final displayData = hasData
-        ? history
-        : [
-            (
-              date: DateTime.now().subtract(const Duration(days: 90)),
-              degrees: 32.0,
-            ),
-            (
-              date: DateTime.now().subtract(const Duration(days: 60)),
-              degrees: 30.5,
-            ),
-            (
-              date: DateTime.now().subtract(const Duration(days: 30)),
-              degrees: 29.0,
-            ),
-            (date: DateTime.now(), degrees: 28.0),
-          ];
+    final minDeg = math.max(0.0, history.map((e) => e.degrees).reduce(math.min) - 5);
+    final maxDeg = history.map((e) => e.degrees).reduce(math.max) + 5;
+
+    final now = DateTime.now();
+    double minX;
+    double maxX = now.millisecondsSinceEpoch.toDouble();
+    double xInterval;
+    String Function(DateTime) formatX;
+
+    switch (timeRange) {
+      case 'Week':
+      case '7d':
+        minX = now.subtract(const Duration(days: 7)).millisecondsSinceEpoch.toDouble();
+        xInterval = const Duration(days: 1).inMilliseconds.toDouble();
+        formatX = (dt) => DateFormat.E().format(dt);
+        break;
+      case 'Month':
+      case '30d':
+        minX = now.subtract(const Duration(days: 30)).millisecondsSinceEpoch.toDouble();
+        xInterval = const Duration(days: 7).inMilliseconds.toDouble();
+        formatX = (dt) => DateFormat.Md().format(dt);
+        break;
+      case 'Year':
+      case '90d':
+        minX = now.subtract(const Duration(days: 365)).millisecondsSinceEpoch.toDouble();
+        xInterval = const Duration(days: 60).inMilliseconds.toDouble();
+        formatX = (dt) => DateFormat.MMM().format(dt);
+        break;
+      default: // 'All'
+        final firstDate = history.first.date;
+        minX = firstDate.millisecondsSinceEpoch.toDouble();
+        final daysDiff = now.difference(firstDate).inDays;
+        if (daysDiff > 365) {
+          xInterval = const Duration(days: 180).inMilliseconds.toDouble();
+          formatX = (dt) => DateFormat.yMMM().format(dt);
+        } else {
+          xInterval = const Duration(days: 30).inMilliseconds.toDouble();
+          formatX = (dt) => DateFormat.MMM().format(dt);
+        }
+    }
+
+    final cobbSpots = history.map((e) {
+      return FlSpot(e.date.millisecondsSinceEpoch.toDouble(), e.degrees);
+    }).toList();
+
+    List<FlSpot> overlaySpots = [];
+    if (overlayData.isNotEmpty) {
+      overlaySpots = overlayData.map((e) {
+        return FlSpot(e.date.millisecondsSinceEpoch.toDouble(), e.value);
+      }).toList();
+    }
+
+    final overlayColor = overlayOption == 'Pain Level' ? AppTheme.secondaryCoral : AppTheme.primarySage;
 
     return Container(
-      height: 180,
+      height: 220,
+      padding: const EdgeInsets.fromLTRB(12, 16, 16, 12),
       decoration: BoxDecoration(
         color: cs.surfaceContainer,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: AppTheme.borderCream),
       ),
-      child: Stack(
+      child: Column(
         children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(16),
-            child: CustomPaint(
-              size: Size.infinite,
-              painter: _CobbChartPainter(
-                data: displayData,
-                overlayData: overlayData,
-                overlayOption: overlayOption,
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Latest: ${history.last.degrees.toStringAsFixed(1)}° Cobb',
+                style: tt.labelSmall?.copyWith(
+                  color: AppTheme.accentLavender,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              if (overlayData.isNotEmpty)
+                Text(
+                  '${overlayOption == 'Pain Level' ? 'Pain' : 'Stretches'}: ${overlayData.last.value.toStringAsFixed(0)}',
+                  style: tt.labelSmall?.copyWith(
+                    color: overlayColor,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Expanded(
+            child: LineChart(
+              LineChartData(
+                minX: minX,
+                maxX: maxX,
+                minY: minDeg.clamp(0, 180),
+                maxY: maxDeg.clamp(0, 180),
+                gridData: FlGridData(
+                  show: true,
+                  drawVerticalLine: false,
+                  horizontalInterval: 10,
+                  getDrawingHorizontalLine: (value) => FlLine(
+                    color: AppTheme.borderCream.withValues(alpha: 0.6),
+                    strokeWidth: 1,
+                  ),
+                ),
+                titlesData: FlTitlesData(
+                  topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  leftTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      reservedSize: 34,
+                      interval: 10,
+                      getTitlesWidget: (value, meta) {
+                        return SideTitleWidget(
+                          meta: meta,
+                          child: Text(
+                            '${value.toInt()}°',
+                            style: const TextStyle(fontSize: 10, color: AppTheme.mutedForeground),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                  bottomTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      reservedSize: 28,
+                      interval: xInterval,
+                      getTitlesWidget: (value, meta) {
+                        final dt = DateTime.fromMillisecondsSinceEpoch(value.toInt());
+                        return SideTitleWidget(
+                          meta: meta,
+                          child: Text(
+                            formatX(dt),
+                            style: const TextStyle(fontSize: 10, color: AppTheme.mutedForeground),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ),
+                borderData: FlBorderData(show: false),
+                lineBarsData: [
+                  LineChartBarData(
+                    spots: cobbSpots,
+                    isCurved: true,
+                    color: AppTheme.accentLavender,
+                    barWidth: 3,
+                    isStrokeCapRound: true,
+                    dotData: const FlDotData(show: true),
+                    belowBarData: BarAreaData(
+                      show: true,
+                      color: AppTheme.accentLavender.withValues(alpha: 0.15),
+                    ),
+                  ),
+                  if (overlaySpots.isNotEmpty)
+                    LineChartBarData(
+                      spots: overlaySpots,
+                      isCurved: true,
+                      color: overlayColor,
+                      barWidth: 2,
+                      isStrokeCapRound: true,
+                      dotData: const FlDotData(show: true),
+                    ),
+                ],
+                lineTouchData: LineTouchData(
+                  enabled: true,
+                  touchTooltipData: LineTouchTooltipData(
+                    getTooltipItems: (touchedSpots) {
+                      return touchedSpots.map((spot) {
+                        final isCobb = spot.barIndex == 0;
+                        final dt = DateTime.fromMillisecondsSinceEpoch(spot.x.toInt());
+                        final dateStr = DateFormat.MMMd().format(dt);
+                        final label = isCobb
+                            ? '$dateStr: ${spot.y.toStringAsFixed(1)}°'
+                            : '$overlayOption: ${spot.y.toInt()}';
+                        return LineTooltipItem(
+                          label,
+                          TextStyle(
+                            color: isCobb ? AppTheme.accentLavender : overlayColor,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                          ),
+                        );
+                      }).toList();
+                    },
+                  ),
+                ),
               ),
             ),
           ),
-          if (!hasData)
-            Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text('📐', style: const TextStyle(fontSize: 28)),
-                  const SizedBox(height: 6),
-                  Text(
-                    'No angle logs yet — example data shown',
-                    style: tt.bodySmall?.copyWith(
-                      color: AppTheme.mutedForeground,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          if (hasData)
-            Positioned(
-              right: 12,
-              top: 12,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    '${displayData.last.degrees.toStringAsFixed(1)}° Cobb',
-                    style: tt.labelSmall?.copyWith(
-                      color: AppTheme.accentLavender,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  if (overlayData.isNotEmpty)
-                    Text(
-                      '${overlayOption == 'Pain Level' ? 'Pain' : 'Stretches'}: ${overlayData.last.value.toStringAsFixed(0)}',
-                      style: tt.labelSmall?.copyWith(
-                        color: overlayOption == 'Pain Level' ? AppTheme.secondaryCoral : AppTheme.primarySage,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 10,
-                      ),
-                    ),
-                ],
-              ),
-            ),
         ],
       ),
-    );
-  }
-}
-
-class _CobbChartPainter extends CustomPainter {
-  final List<({DateTime date, double degrees})> data;
-  final List<({DateTime date, double value})> overlayData;
-  final String overlayOption;
-
-  const _CobbChartPainter({
-    required this.data,
-    this.overlayData = const [],
-    this.overlayOption = 'None',
-  });
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    if (data.length < 2) return;
-
-    final minDeg = data.map((e) => e.degrees).reduce(math.min) - 5;
-    final maxDeg = data.map((e) => e.degrees).reduce(math.max) + 5;
-    final range = maxDeg - minDeg;
-
-    final padL = 16.0, padR = 16.0, padT = 24.0, padB = 24.0;
-    final w = size.width - padL - padR;
-    final h = size.height - padT - padB;
-
-    Offset toPoint(int i) {
-      final x = padL + (i / (data.length - 1)) * w;
-      final y = padT + (1 - (data[i].degrees - minDeg) / range) * h;
-      return Offset(x, y);
-    }
-
-    // Fill under curve
-    final fillPath = Path()..moveTo(padL, padT + h);
-    for (int i = 0; i < data.length; i++) {
-      fillPath.lineTo(toPoint(i).dx, toPoint(i).dy);
-    }
-    fillPath.lineTo(padL + w, padT + h);
-    fillPath.close();
-
-    canvas.drawPath(
-      fillPath,
-      Paint()
-        ..shader = LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            AppTheme.accentLavender.withValues(alpha: 0.3),
-            AppTheme.accentLavender.withValues(alpha: 0.0),
-          ],
-        ).createShader(Rect.fromLTWH(0, padT, size.width, h)),
-    );
-
-    // Primary Cobb Line
-    final linePaint = Paint()
-      ..color = AppTheme.accentLavender
-      ..strokeWidth = 2.5
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round
-      ..strokeJoin = StrokeJoin.round;
-
-    final path = Path()..moveTo(toPoint(0).dx, toPoint(0).dy);
-    for (int i = 1; i < data.length; i++) {
-      path.lineTo(toPoint(i).dx, toPoint(i).dy);
-    }
-    canvas.drawPath(path, linePaint);
-
-    // Primary Dots
-    for (int i = 0; i < data.length; i++) {
-      canvas.drawCircle(
-        toPoint(i),
-        4,
-        Paint()..color = AppTheme.accentLavender,
-      );
-      canvas.drawCircle(toPoint(i), 2, Paint()..color = Colors.white);
-    }
-
-    // Secondary Overlay Line
-    if (overlayData.length >= 2) {
-      final overlayColor = overlayOption == 'Pain Level' ? AppTheme.secondaryCoral : AppTheme.primarySage;
-      final maxVal = overlayData.map((e) => e.value).reduce(math.max);
-      final valRange = maxVal > 0 ? maxVal : 10.0;
-
-      Offset toOverlayPoint(int i) {
-        final x = padL + (i / (overlayData.length - 1)) * w;
-        final y = padT + (1 - (overlayData[i].value / valRange)) * h;
-        return Offset(x, y);
-      }
-
-      final overlayPaint = Paint()
-        ..color = overlayColor
-        ..strokeWidth = 2.0
-        ..style = PaintingStyle.stroke
-        ..strokeCap = StrokeCap.round;
-
-      final overlayPath = Path()..moveTo(toOverlayPoint(0).dx, toOverlayPoint(0).dy);
-      for (int i = 1; i < overlayData.length; i++) {
-        overlayPath.lineTo(toOverlayPoint(i).dx, toOverlayPoint(i).dy);
-      }
-      canvas.drawPath(overlayPath, overlayPaint);
-
-      for (int i = 0; i < overlayData.length; i++) {
-        canvas.drawCircle(toOverlayPoint(i), 3, Paint()..color = overlayColor);
-      }
-    }
-  }
-
-  @override
-  bool shouldRepaint(_CobbChartPainter old) =>
-      old.data != data || old.overlayData != overlayData || old.overlayOption != overlayOption;
-}
-
-// ─── Badges Section (Undated Collectibles) ────────────────────────────────────
-
-class _BadgesSection extends StatelessWidget {
-  final GamificationSnapshot snap;
-  const _BadgesSection({required this.snap});
-
-  @override
-  Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-    final cs = Theme.of(context).colorScheme;
-
-    final unlockedIds = snap.unlockedMilestones.map((m) => m.id).toSet();
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _SectionHeader(title: 'Badges'),
-        Text(
-          'Collectible milestone badges',
-          style: tt.bodySmall?.copyWith(color: AppTheme.mutedForeground),
-        ),
-        const SizedBox(height: 12),
-        SizedBox(
-          height: 80,
-          child: ListView(
-            scrollDirection: Axis.horizontal,
-            children: allMilestones.map((m) {
-              final isUnlocked = unlockedIds.contains(m.id);
-              return Container(
-                width: 90,
-                margin: const EdgeInsets.only(right: 12),
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: isUnlocked
-                      ? AppTheme.primarySage.withValues(alpha: 0.15)
-                      : cs.surfaceContainer.withValues(alpha: 0.5),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: isUnlocked ? AppTheme.primarySage : AppTheme.borderCream,
-                    width: isUnlocked ? 1.5 : 1.0,
-                  ),
-                ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      m.emoji,
-                      style: TextStyle(
-                        fontSize: 24,
-                        color: isUnlocked ? null : Colors.grey,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      m.label,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      textAlign: TextAlign.center,
-                      style: tt.labelSmall?.copyWith(
-                        fontSize: 10,
-                        fontWeight: isUnlocked ? FontWeight.bold : FontWeight.normal,
-                        color: isUnlocked ? AppTheme.primarySage : AppTheme.mutedForeground,
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            }).toList(),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-// ─── Achievements Section (Chronological Dated History) ────────────────────────
-
-class _AchievementsSection extends StatelessWidget {
-  final GamificationSnapshot snap;
-  final List<Event> allEvents;
-
-  const _AchievementsSection({
-    required this.snap,
-    required this.allEvents,
-  });
-
-  DateTime? _findEarnedDate(Milestone m) {
-    if (m.requiredEventType != null) {
-      final matching = allEvents.where((e) => e.type == m.requiredEventType).toList();
-      if (matching.isNotEmpty) {
-        matching.sort((a, b) => a.timestamp.compareTo(b.timestamp));
-        final reqCount = m.requiredEventCount ?? 1;
-        if (matching.length >= reqCount) {
-          return matching[reqCount - 1].timestamp;
-        }
-      }
-    } else if (m.requiredXp != null) {
-      int cumulative = 0;
-      final sorted = List<Event>.from(allEvents)..sort((a, b) => a.timestamp.compareTo(b.timestamp));
-      for (final e in sorted) {
-        cumulative += e.xpValue;
-        if (cumulative >= m.requiredXp!) {
-          return e.timestamp;
-        }
-      }
-    }
-    return null;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-    final cs = Theme.of(context).colorScheme;
-
-    final unlocked = snap.unlockedMilestones;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _SectionHeader(title: 'Achievements'),
-        Text(
-          'Chronological milestone history',
-          style: tt.bodySmall?.copyWith(color: AppTheme.mutedForeground),
-        ),
-        const SizedBox(height: 12),
-        if (unlocked.isEmpty)
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: cs.surfaceContainer,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: AppTheme.borderCream),
-            ),
-            child: Text(
-              'No achievements unlocked yet. Keep logging to earn milestones!',
-              style: tt.bodySmall?.copyWith(color: AppTheme.mutedForeground),
-              textAlign: TextAlign.center,
-            ),
-          )
-        else
-          ...unlocked.map((m) {
-            final earnedDate = _findEarnedDate(m);
-            final dateStr = earnedDate != null
-                ? 'Earned ${earnedDate.year}-${earnedDate.month.toString().padLeft(2, '0')}-${earnedDate.day.toString().padLeft(2, '0')}'
-                : 'Unlocked';
-
-            return Container(
-              margin: const EdgeInsets.only(bottom: 10),
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                color: cs.surfaceContainer,
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: AppTheme.borderCream),
-              ),
-              child: Row(
-                children: [
-                  Text(m.emoji, style: const TextStyle(fontSize: 26)),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(m.label, style: tt.titleSmall?.copyWith(fontWeight: FontWeight.bold)),
-                        Text(
-                          dateStr,
-                          style: tt.bodySmall?.copyWith(color: AppTheme.primarySage, fontSize: 11, fontWeight: FontWeight.w600),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const Icon(Icons.verified_rounded, color: AppTheme.primarySage, size: 20),
-                ],
-              ),
-            );
-          }),
-      ],
-    );
-  }
-}
-
-// ─── Avatar & Profile Settings ────────────────────────────────────────────────
-
-class _AvatarSettings extends StatefulWidget {
-  final String userId;
-  final GamificationSnapshot snap;
-  final GamificationService gamificationService;
-  final VoidCallback onProfileUpdated;
-
-  const _AvatarSettings({
-    required this.userId,
-    required this.snap,
-    required this.gamificationService,
-    required this.onProfileUpdated,
-  });
-
-  @override
-  State<_AvatarSettings> createState() => _AvatarSettingsState();
-}
-
-class _AvatarSettingsState extends State<_AvatarSettings> {
-  Future<void> _pickImage() async {
-    final picker = ImagePicker();
-    final pickedFile = await picker.pickImage(
-      source: ImageSource.gallery,
-      imageQuality: 50,
-      maxWidth: 800,
-    );
-    if (pickedFile != null) {
-      final file = File(pickedFile.path);
-      final sizeBytes = await file.length();
-      if (sizeBytes > 5 * 1024 * 1024) {
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Image is too large (cap is ~5MB).')),
-        );
-        return;
-      }
-
-      await widget.gamificationService.updateProfile(
-        widget.userId,
-        widget.snap.userProfile.presetId,
-        pickedFile.path,
-      );
-      widget.onProfileUpdated();
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-    final cs = Theme.of(context).colorScheme;
-    final currentPresetId = widget.snap.userProfile.presetId;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            AvatarDisplay(
-              profile: widget.snap.userProfile,
-              size: 64,
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  OutlinedButton.icon(
-                    onPressed: _pickImage,
-                    icon: const Icon(Icons.photo_camera),
-                    label: const Text('Upload Custom Photo'),
-                  ),
-                  if (widget.snap.userProfile.customPhotoPath != null)
-                    TextButton(
-                      onPressed: () async {
-                        await widget.gamificationService.updateProfile(
-                          widget.userId,
-                          currentPresetId,
-                          null,
-                        );
-                        widget.onProfileUpdated();
-                      },
-                      child: const Text('Remove Photo'),
-                    ),
-                ],
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 24),
-        Text('Choose Preset', style: tt.labelLarge),
-        const SizedBox(height: 8),
-        SizedBox(
-          height: 90,
-          child: ListView(
-            scrollDirection: Axis.horizontal,
-            children: presetAvatars.map((preset) {
-              final isSelected = currentPresetId == preset.id;
-              return GestureDetector(
-                onTap: () async {
-                  await widget.gamificationService.updateProfile(
-                    widget.userId,
-                    preset.id,
-                    widget.snap.userProfile.customPhotoPath,
-                  );
-                  widget.onProfileUpdated();
-                },
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 250),
-                  margin: const EdgeInsets.only(right: 12),
-                  width: 80,
-                  decoration: BoxDecoration(
-                    color: isSelected
-                        ? AppTheme.accentLavender.withValues(alpha: 0.15)
-                        : cs.surfaceContainer,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(
-                      color: isSelected
-                          ? AppTheme.accentLavender
-                          : AppTheme.borderCream,
-                      width: isSelected ? 2 : 1.5,
-                    ),
-                  ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      SvgPicture.asset(
-                        preset.assetPath,
-                        width: 40,
-                        height: 40,
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        preset.name,
-                        style: tt.labelSmall?.copyWith(
-                          fontSize: 10,
-                          color: isSelected
-                              ? AppTheme.accentLavender
-                              : AppTheme.mutedForeground,
-                        ),
-                        textAlign: TextAlign.center,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            }).toList(),
-          ),
-        ),
-      ],
     );
   }
 }
@@ -890,7 +601,7 @@ class _EventTile extends StatelessWidget {
       ),
       EventType.journalEntry => (
         Icons.edit_note_rounded,
-        'Journal: pain ${event.payload['pain_level']}/5 · ${event.payload['mood']}',
+        'Journal: pain ${event.payload['pain_level']}/10 · ${event.payload['mood']}',
         AppTheme.secondaryCoral,
       ),
       EventType.angleLogged => (

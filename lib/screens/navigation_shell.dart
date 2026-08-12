@@ -4,6 +4,9 @@ import '../theme/app_transitions.dart';
 import 'today_screen.dart';
 import 'my_journey_screen.dart';
 import 'community_screen.dart';
+import 'me_screen.dart';
+import '../widgets/glass_nav_bar.dart';
+import 'profile_setup/living_background.dart';
 
 class NavigationShell extends StatefulWidget {
   const NavigationShell({super.key});
@@ -19,6 +22,7 @@ class _NavigationShellState extends State<NavigationShell> {
     TodayScreen(key: ValueKey(0)),
     MyJourneyScreen(key: ValueKey(1)),
     CommunityScreen(key: ValueKey(2)),
+    MeScreen(key: ValueKey(3)),
   ];
 
   void _onItemTapped(int index) {
@@ -31,36 +35,37 @@ class _NavigationShellState extends State<NavigationShell> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: PageTransitionSwitcher(
-        duration: const Duration(milliseconds: 300),
-        transitionBuilder: (child, primaryAnimation, secondaryAnimation) {
-          return AppTransitions.buildTopLevelTransition(
-            context: context,
-            animation: primaryAnimation,
-            secondaryAnimation: secondaryAnimation,
-            child: child,
-          );
-        },
-        child: _screens[_selectedIndex],
-      ),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _selectedIndex,
-        onDestinationSelected: _onItemTapped,
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.today_outlined),
-            selectedIcon: Icon(Icons.today_rounded),
-            label: 'Today',
+      extendBody: true, // Allows body to extend behind the floating nav bar
+      body: Stack(
+        children: [
+          // Dynamic mesh background behind all screens
+          const Positioned.fill(child: LivingBackground(step: 1)),
+          
+          // Page transitions
+          Positioned.fill(
+            child: PageTransitionSwitcher(
+              duration: const Duration(milliseconds: 400),
+              transitionBuilder: (child, primaryAnimation, secondaryAnimation) {
+                return AppTransitions.buildTopLevelTransition(
+                  context: context,
+                  animation: primaryAnimation,
+                  secondaryAnimation: secondaryAnimation,
+                  child: child,
+                );
+              },
+              child: _screens[_selectedIndex],
+            ),
           ),
-          NavigationDestination(
-            icon: Icon(Icons.show_chart_outlined),
-            selectedIcon: Icon(Icons.show_chart_rounded),
-            label: 'My Journey',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.people_outline_rounded),
-            selectedIcon: Icon(Icons.people_rounded),
-            label: 'Community',
+          
+          // Floating Glass Navigation Bar
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: GlassNavigationBar(
+              selectedIndex: _selectedIndex,
+              onItemSelected: _onItemTapped,
+            ),
           ),
         ],
       ),

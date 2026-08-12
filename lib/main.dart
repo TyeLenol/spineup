@@ -3,11 +3,11 @@ import 'theme/app_theme.dart';
 import 'theme/app_transitions.dart';
 import 'screens/splash_screen.dart';
 import 'screens/onboarding_screen.dart';
-import 'screens/illustrations/ob1_illustration.dart';
-import 'screens/illustrations/ob2_illustration.dart';
-import 'screens/illustrations/ob3_illustration.dart';
 import 'screens/navigation_shell.dart';
 import 'screens/auth_screen.dart';
+import 'screens/profile_setup/profile_setup_screen.dart';
+
+final ValueNotifier<ThemeMode> themeModeNotifier = ValueNotifier<ThemeMode>(ThemeMode.system);
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -22,21 +22,26 @@ class SpineUpApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'SpineUp',
-      debugShowCheckedModeBanner: false,
-      theme: AppTheme.lightTheme,
-      darkTheme: AppTheme.darkTheme,
-      themeMode: ThemeMode.system,
-      // Always keep cream canvas behind all routes — prevents black flash
-      // when one Scaffold fades out before the next one appears.
-      builder: (context, child) => Container(
-        color: AppTheme.backgroundCream,
-        child: child,
-      ),
-      home: SplashScreen(
-        duration: splashDuration ?? const Duration(milliseconds: 4500),
-      ),
+    return ValueListenableBuilder<ThemeMode>(
+      valueListenable: themeModeNotifier,
+      builder: (context, mode, child) {
+        return MaterialApp(
+          title: 'SpineUp',
+          debugShowCheckedModeBanner: false,
+          theme: AppTheme.lightTheme,
+          darkTheme: AppTheme.darkTheme,
+          themeMode: mode,
+          // Always keep cream canvas behind all routes — prevents black flash
+          // when one Scaffold fades out before the next one appears.
+          builder: (context, child) => Container(
+            color: AppTheme.backgroundCream,
+            child: child,
+          ),
+          home: SplashScreen(
+            duration: splashDuration ?? const Duration(milliseconds: 4500),
+          ),
+        );
+      },
     );
   }
 }
@@ -44,60 +49,10 @@ class SpineUpApp extends StatelessWidget {
 // ─── Page Routes ─────────────────────────────────────────────────────────────
 
 /// Pushes the onboarding screen with pure fade transition (no slide).
-Route<void> onboardingRoute(int step) {
+Route<void> onboardingRoute([int step = 1]) {
   return AppTransitions.buildFadeRoute<void>(
     duration: const Duration(milliseconds: 350),
-    pageBuilder: (context) {
-      if (step == 3) {
-        return OnboardingScreen(
-          step: 3,
-          titlePlain: 'Other people get it\n',
-          titleAccent: 'in here.',
-          accentColor: AppTheme.accentLavender,
-          description:
-              'Scoliosis is a weird thing to explain to people who don\'t '
-              'have it. In here, you don\'t have to. Share your streak, '
-              'your wins, or just lurk and nod along.',
-          illustration: const Ob3Illustration(),
-          isLast: true,
-          onNext: () => Navigator.of(context).push(authRoute(AuthMode.signup)),
-          onBack: () => Navigator.of(context).pop(),
-          onSkip: () => Navigator.of(context).push(authRoute(AuthMode.signup)),
-        );
-      }
-
-      if (step == 2) {
-        return OnboardingScreen(
-          step: 2,
-          titlePlain: 'Show up. ',
-          titleAccent: 'Vera keeps count.',
-          accentColor: AppTheme.primarySage,
-          description:
-              'Every stretch, log, and pain check adds to your streak. '
-              'Miss a day — no drama, just start again. '
-              'But keep going and watch what happens.',
-          illustration: const Ob2Illustration(),
-          onNext: () => Navigator.of(context).push(onboardingRoute(3)),
-          onBack: () => Navigator.of(context).pop(),
-          onSkip: () => Navigator.of(context).push(authRoute(AuthMode.signup)),
-        );
-      }
-
-      // Default: Step 1
-      return OnboardingScreen(
-        step: 1,
-        titlePlain: 'Physio is boring.\n',
-        titleAccent: 'Let\'s fix that.',
-        accentColor: AppTheme.secondaryCoral,
-        description:
-            'Doing 45-minute stretches every single day is hard to care about '
-            'when nothing changes overnight. SpineUp gives you XP, level ups, '
-            'and actual milestones every time you log a stretch or wear your brace.',
-        illustration: const Ob1Illustration(),
-        onNext: () => Navigator.of(context).push(onboardingRoute(2)),
-        onSkip: () => Navigator.of(context).push(authRoute(AuthMode.signup)),
-      );
-    },
+    pageBuilder: (context) => const OnboardingScreen(),
   );
 }
 
@@ -110,7 +65,7 @@ Route<void> authRoute(AuthMode mode, {bool isCrossFade = false}) {
       onSwitchMode: (newMode) {
         Navigator.of(context).pushReplacement(authRoute(newMode, isCrossFade: true));
       },
-      onSuccess: () => Navigator.of(context).pushReplacement(mainAppRoute()),
+      onSuccess: () => Navigator.of(context).pushAndRemoveUntil(profileSetupRoute(), (route) => false),
     );
   }
 
@@ -141,6 +96,14 @@ Route<void> mainAppRoute() {
         child: child,
       );
     },
+  );
+}
+
+/// Profile Setup route — fade in
+Route<void> profileSetupRoute() {
+  return AppTransitions.buildFadeRoute<void>(
+    duration: const Duration(milliseconds: 350),
+    pageBuilder: (context) => const ProfileSetupScreen(),
   );
 }
 

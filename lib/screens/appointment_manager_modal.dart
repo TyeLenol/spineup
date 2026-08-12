@@ -148,14 +148,15 @@ class _AppointmentManagerModalState extends State<AppointmentManagerModal>
                   child: const Icon(Icons.medical_services_rounded, color: AppTheme.primarySage),
                 ),
                 const SizedBox(width: 12),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Appointments', style: tt.titleLarge),
-                    Text('Schedule visits & claim +40 XP', style: tt.bodySmall?.copyWith(color: AppTheme.mutedForeground)),
-                  ],
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Appointments', style: tt.titleLarge),
+                      Text('Schedule visits & claim +40 XP', style: tt.bodySmall?.copyWith(color: AppTheme.mutedForeground)),
+                    ],
+                  ),
                 ),
-                const Spacer(),
                 FilledButton.icon(
                   onPressed: () => _openScheduleForm(),
                   icon: const Icon(Icons.add_rounded, size: 18),
