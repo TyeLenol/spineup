@@ -2,97 +2,78 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:spineup/theme/app_theme.dart';
 import 'package:spineup/screens/onboarding_screen.dart';
-import 'package:spineup/screens/illustrations/ob1_illustration.dart';
-import 'package:spineup/screens/illustrations/ob2_illustration.dart';
 
 void main() {
-  testWidgets(
-      'OnboardingScreen Step 1 renders headline, description, skip and next buttons',
+  testWidgets('OnboardingScreen renders Screen 1 headline, subtext, and Next button',
       (WidgetTester tester) async {
-    bool nextPressed = false;
-    bool skipPressed = false;
-
     await tester.pumpWidget(
       MaterialApp(
         theme: AppTheme.lightTheme,
-        home: OnboardingScreen(
-          step: 1,
-          titlePlain: 'Physio is boring.\n',
-          titleAccent: 'Let\'s fix that.',
-          description:
-              'Doing 45-minute stretches every single day is hard to care about '
-              'when nothing changes overnight. SpineUp gives you XP, level ups, '
-              'and actual milestones every time you log a stretch or wear your brace.',
-          illustration: const Ob1Illustration(),
-          onNext: () => nextPressed = true,
-          onSkip: () => skipPressed = true,
+        home: const MediaQuery(
+          data: MediaQueryData(disableAnimations: true),
+          child: OnboardingScreen(),
         ),
       ),
     );
 
-    // Advance past entry animations
-    await tester.pump();
-    await tester.pump(const Duration(seconds: 2));
+    await tester.pumpAndSettle();
 
-    // Verify headline text
-    expect(find.text('Physio is boring.'), findsOneWidget);
-    expect(find.text('Let\'s fix that.'), findsOneWidget);
+    // Verify Screen 1 headline text
+    expect(find.text('Your spine has a story.'), findsOneWidget);
+    expect(find.text("Let's track it."), findsOneWidget);
 
-    // Verify description text
+    // Verify subtext
     expect(
-      find.textContaining('Doing 45-minute stretches'),
+      find.textContaining('Log brace time and exercises daily'),
       findsOneWidget,
     );
 
-    // Verify Skip chip and 3D CTA button are rendered
+    // Verify Next CTA button
+    expect(find.text('Next'), findsOneWidget);
+
+    // Advance to Screen 2
+    await tester.tap(find.text('Next'));
+    await tester.pumpAndSettle();
+
+    // Verify Screen 2 content
+    expect(find.text('Every stretch counts'), findsOneWidget);
+    expect(find.text('toward something.'), findsOneWidget);
     expect(find.text('Skip'), findsOneWidget);
-    expect(find.text('Tap Vera for +30 XP →'), findsOneWidget);
-
-    // Verify callbacks fire directly
-    final screen = tester.widget<OnboardingScreen>(
-      find.byType(OnboardingScreen),
-    );
-    screen.onNext();
-    expect(nextPressed, isTrue);
-
-    screen.onSkip();
-    expect(skipPressed, isTrue);
   });
 
-  testWidgets(
-      'OnboardingScreen Step 2 renders back button and dynamic title color',
+  testWidgets('OnboardingScreen navigates through all 5 screens',
       (WidgetTester tester) async {
-    bool backPressed = false;
-
     await tester.pumpWidget(
       MaterialApp(
         theme: AppTheme.lightTheme,
-        home: OnboardingScreen(
-          step: 2,
-          titlePlain: 'Show up. ',
-          titleAccent: 'Vera keeps count.',
-          accentColor: AppTheme.primarySage,
-          description:
-              'Every stretch, log, and pain check adds to your streak. '
-              'Miss a day — no drama, just start again. '
-              'But keep going and watch what happens.',
-          illustration: const Ob2Illustration(),
-          onNext: () {},
-          onBack: () => backPressed = true,
-          onSkip: () {},
+        home: const MediaQuery(
+          data: MediaQueryData(disableAnimations: true),
+          child: OnboardingScreen(),
         ),
       ),
     );
 
-    await tester.pump();
-    await tester.pump(const Duration(seconds: 2));
+    await tester.pumpAndSettle();
 
-    // Verify back button chevron exists
-    expect(find.byIcon(Icons.chevron_left_rounded), findsOneWidget);
+    // Step 1 -> Step 2
+    await tester.tap(find.text('Next'));
+    await tester.pumpAndSettle();
+    expect(find.text('Every stretch counts'), findsOneWidget);
 
-    // Tap back button
-    await tester.tap(find.byIcon(Icons.chevron_left_rounded));
-    await tester.pump();
-    expect(backPressed, isTrue);
+    // Step 2 -> Step 3
+    await tester.tap(find.text('Next'));
+    await tester.pumpAndSettle();
+    expect(find.text('Show up,'), findsOneWidget);
+
+    // Step 3 -> Step 4
+    await tester.tap(find.text('Next'));
+    await tester.pumpAndSettle();
+    expect(find.text("You're not doing"), findsOneWidget);
+
+    // Step 4 -> Step 5
+    await tester.tap(find.text('Next'));
+    await tester.pumpAndSettle();
+    expect(find.text('Your data'), findsOneWidget);
+    expect(find.text('Get started'), findsOneWidget);
   });
 }

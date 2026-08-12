@@ -118,6 +118,14 @@ class GamificationService {
     return events.isEmpty;
   }
 
+  Future<bool> hasLoggedAngleToday(String userId) async {
+    final now = DateTime.now();
+    final startOfDay = DateTime(now.year, now.month, now.day);
+    final endOfDay = startOfDay.add(const Duration(days: 1));
+    final events = await _db.getEventsByDateRange(userId, startOfDay, endOfDay);
+    return events.any((e) => e.type == EventType.angleLogged);
+  }
+
   // ── Log an event ────────────────────────────────────────────────────────────
 
   Future<LogEventResult> logEvent({
@@ -126,9 +134,17 @@ class GamificationService {
     required EventType type,
     required Map<String, dynamic> payload,
   }) async {
-    final base = baseXpFor(type);
+    int base = baseXpFor(type);
 
     final firstToday = await isFirstEventToday(userId);
+
+    if (type == EventType.angleLogged) {
+      final alreadyLoggedToday = await hasLoggedAngleToday(userId);
+      if (alreadyLoggedToday) {
+        base = 0;
+      }
+    }
+
     final bonus = firstToday ? kXpDailyBonus : 0;
     final total = base + bonus;
 
@@ -164,13 +180,39 @@ class GamificationService {
     // await _db.reportPost(postId, userId);
   }
 
-  /// Update the user's selected preset and custom photo.
-  Future<void> updateProfile(String userId, String presetId, String? customPhotoPath) async {
-    _userProfile = UserProfile(
+  /// Update the user's selected profile details.
+  Future<void> updateProfile({
+    required String userId,
+    String? presetId,
+    String? customPhotoPath,
+    String? name,
+    String? diagnosis,
+    String? braceStatus,
+    String? ageRange,
+  }) async {
+    _userProfile = _userProfile.copyWith(
       presetId: presetId,
       customPhotoPath: customPhotoPath,
+      name: name,
+      diagnosis: diagnosis,
+      braceStatus: braceStatus,
+      ageRange: ageRange,
     );
-    await _db.updateUserProfile(userId, presetId, customPhotoPath);
+    await _db.updateUserProfile(
+      userId: userId,
+      presetId: _userProfile.presetId,
+      customPhotoPath: _userProfile.customPhotoPath,
+      name: _userProfile.name,
+      diagnosis: _userProfile.diagnosis,
+      braceStatus: _userProfile.braceStatus,
+      ageRange: _userProfile.ageRange,
+    );
+  }
+
+  /// Completely wipes all data for account deletion.
+  Future<void> clearAllUserData() async {
+    await _db.clearAllUserData();
+    _userProfile = UserProfile.defaultProfile();
   }
 
   /// Detect milestones that first become satisfied by [type] being logged and
@@ -196,6 +238,10 @@ class GamificationService {
             result.add(m);
           }
         }
+      } else if (m.requiredStreakDays != null) {
+        if (snapshot.streakDays == m.requiredStreakDays) {
+          result.add(m);
+        }
       }
     }
     return result;
@@ -210,8 +256,12 @@ class GamificationService {
     final userProfileMap = await _db.getUserProfile(userId);
     if (userProfileMap != null) {
       _userProfile = UserProfile(
-        presetId: userProfileMap['preset_id'] as String,
+        presetId: userProfileMap['preset_id'] as String? ?? 'preset_sun',
         customPhotoPath: userProfileMap['custom_photo_path'] as String?,
+        name: userProfileMap['name'] as String? ?? 'Alex',
+        diagnosis: userProfileMap['diagnosis'] as String? ?? 'Thoracic Curve',
+        braceStatus: userProfileMap['brace_status'] as String? ?? 'Yes',
+        ageRange: userProfileMap['age_range'] as String? ?? '13-17',
       );
     }
 
@@ -238,6 +288,7 @@ class GamificationService {
     final unlockedMilestones = _computeUnlockedMilestones(
       totalXp: totalXp,
       events: events,
+      streakDays: streak,
     );
 
     return GamificationSnapshot(
@@ -291,6 +342,7 @@ class GamificationService {
   List<Milestone> _computeUnlockedMilestones({
     required int totalXp,
     required List<Event> events,
+    required int streakDays,
   }) {
     final result = <Milestone>[];
     final eventCountByType = <EventType, int>{};
@@ -306,6 +358,8 @@ class GamificationService {
         if (count >= m.requiredEventCount!) {
           result.add(m);
         }
+      } else if (m.requiredStreakDays != null && streakDays >= m.requiredStreakDays!) {
+        result.add(m);
       }
     }
     return result;

@@ -135,15 +135,15 @@ void main() {
         payload: {'exercise_name': 'Cat-Cow'},
       );
 
-      // Verify 'first_stretch' unlocked milestone in snapshot
+      // Verify 'stretch_tier1' unlocked milestone in snapshot
       final snap = await gs.getSnapshot(uid);
-      expect(snap.unlockedMilestones.any((m) => m.id == 'first_stretch'), isTrue);
+      expect(snap.unlockedMilestones.any((m) => m.id == 'stretch_tier1'), isTrue);
 
       final events = await gs.getAllEvents(uid);
       final stretchEvent = events.firstWhere((e) => e.type == EventType.stretchCompleted);
 
       // Verify event timestamp matches achievement unlock date
-      final milestone = allMilestones.firstWhere((m) => m.id == 'first_stretch');
+      final milestone = allMilestones.firstWhere((m) => m.id == 'stretch_tier1');
       expect(milestone.requiredEventType, equals(EventType.stretchCompleted));
       expect(stretchEvent.timestamp, isNotNull);
     });

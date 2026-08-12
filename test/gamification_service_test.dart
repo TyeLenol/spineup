@@ -196,19 +196,25 @@ void main() {
       await gs.logEvent(
         eventId: 'e2',
         userId: _uid,
-        type: EventType.angleLogged,
-        payload: {'degrees': 28.0},
-      ); // 50 (no daily bonus) -> 105 total
+        type: EventType.appointmentAttended,
+        payload: {},
+      ); // 40
+      await gs.logEvent(
+        eventId: 'e3',
+        userId: _uid,
+        type: EventType.stretchCompleted,
+        payload: {},
+      ); // 30 -> 125 total
       
       var snap = await gs.getSnapshot(_uid);
-      expect(snap.totalXp, 105);
+      expect(snap.totalXp, 125);
       expect(snap.currentLevel, 2);
-      expect(snap.xpInLevel, 5); // 105 - 100 = 5
+      expect(snap.xpInLevel, 25); // 125 - 100 = 25
 
-      // Log 3 more appointments (40 each) -> 120 XP -> 225 total
-      await gs.logEvent(eventId: 'e3', userId: _uid, type: EventType.appointmentAttended, payload: {});
-      await gs.logEvent(eventId: 'e4', userId: _uid, type: EventType.appointmentAttended, payload: {});
-      await gs.logEvent(eventId: 'e5', userId: _uid, type: EventType.appointmentAttended, payload: {});
+      // Log 100 XP more -> 225 total (Level 3 boundary)
+      await gs.logEvent(eventId: 'e4', userId: _uid, type: EventType.appointmentAttended, payload: {}); // 40
+      await gs.logEvent(eventId: 'e5', userId: _uid, type: EventType.stretchCompleted, payload: {}); // 30
+      await gs.logEvent(eventId: 'e6', userId: _uid, type: EventType.stretchCompleted, payload: {}); // 30 -> 100 XP -> 225 total
       
       snap = await gs.getSnapshot(_uid);
       expect(snap.totalXp, 225);
@@ -252,7 +258,7 @@ void main() {
   });
 
   group('GamificationService — milestones', () {
-    test('first_stretch milestone unlocks after 1 stretch', () async {
+    test('stretch_tier1 milestone unlocks after 1 stretch', () async {
       final gs = await makeService();
       await gs.logEvent(
         eventId: 'e1',
@@ -262,12 +268,12 @@ void main() {
       );
       final snap = await gs.getSnapshot(_uid);
       expect(
-        snap.unlockedMilestones.any((m) => m.id == 'first_stretch'),
+        snap.unlockedMilestones.any((m) => m.id == 'stretch_tier1'),
         isTrue,
       );
     });
 
-    test('first_cobb milestone unlocks after 1 angle log', () async {
+    test('angle_tier1 milestone unlocks after 1 angle log', () async {
       final gs = await makeService();
       await gs.logEvent(
         eventId: 'e1',
@@ -277,12 +283,31 @@ void main() {
       );
       final snap = await gs.getSnapshot(_uid);
       expect(
-        snap.unlockedMilestones.any((m) => m.id == 'first_cobb'),
+        snap.unlockedMilestones.any((m) => m.id == 'angle_tier1'),
         isTrue,
       );
     });
 
-    test('first_appointment milestone unlocks after 1 appointment', () async {
+    test('subsequent Cobb angle log on same day awards 0 XP', () async {
+      final gs = await makeService();
+      final res1 = await gs.logEvent(
+        eventId: 'e1',
+        userId: _uid,
+        type: EventType.angleLogged,
+        payload: {'degrees': 28.0, 'method': 'manual'},
+      );
+      expect(res1.xpAwarded, greaterThan(0));
+
+      final res2 = await gs.logEvent(
+        eventId: 'e2',
+        userId: _uid,
+        type: EventType.angleLogged,
+        payload: {'degrees': 29.0, 'method': 'manual'},
+      );
+      expect(res2.xpAwarded, equals(0));
+    });
+
+    test('appointment_tier1 milestone unlocks after 1 appointment', () async {
       final gs = await makeService();
       await gs.logEvent(
         eventId: 'e1',
@@ -292,7 +317,7 @@ void main() {
       );
       final snap = await gs.getSnapshot(_uid);
       expect(
-        snap.unlockedMilestones.any((m) => m.id == 'first_appointment'),
+        snap.unlockedMilestones.any((m) => m.id == 'appointment_tier1'),
         isTrue,
       );
     });

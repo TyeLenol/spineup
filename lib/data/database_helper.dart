@@ -30,7 +30,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 3,
+      version: 4,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -57,7 +57,11 @@ class DatabaseHelper {
       CREATE TABLE user_profiles (
         user_id TEXT PRIMARY KEY,
         preset_id TEXT NOT NULL,
-        custom_photo_path TEXT
+        custom_photo_path TEXT,
+        name TEXT,
+        diagnosis TEXT,
+        brace_status TEXT,
+        age_range TEXT
       )
     ''');
     await db.execute('''
@@ -102,6 +106,20 @@ class DatabaseHelper {
         'CREATE INDEX idx_appointments_user_status ON appointments(user_id, status)',
       );
     }
+    if (oldVersion < 4) {
+      await db.execute('ALTER TABLE user_profiles ADD COLUMN name TEXT');
+      await db.execute('ALTER TABLE user_profiles ADD COLUMN diagnosis TEXT');
+      await db.execute('ALTER TABLE user_profiles ADD COLUMN brace_status TEXT');
+      await db.execute('ALTER TABLE user_profiles ADD COLUMN age_range TEXT');
+    }
+  }
+
+  /// Wipes all user data completely across all tables.
+  Future<void> clearAllUserData() async {
+    final db = await database;
+    await db.delete(tableName);
+    await db.delete('user_profiles');
+    await db.delete('appointments');
   }
 
   /// Insert a new event into the database.
@@ -180,19 +198,29 @@ class DatabaseHelper {
     return null;
   }
 
-  Future<void> updateUserProfile(
-    String userId,
-    String presetId,
+  Future<void> updateUserProfile({
+    required String userId,
+    required String presetId,
     String? customPhotoPath,
-  ) async {
+    String? name,
+    String? diagnosis,
+    String? braceStatus,
+    String? ageRange,
+  }) async {
     final db = await database;
+    final map = <String, dynamic>{
+      'user_id': userId,
+      'preset_id': presetId,
+      'custom_photo_path': customPhotoPath,
+    };
+    if (name != null) map['name'] = name;
+    if (diagnosis != null) map['diagnosis'] = diagnosis;
+    if (braceStatus != null) map['brace_status'] = braceStatus;
+    if (ageRange != null) map['age_range'] = ageRange;
+
     await db.insert(
       'user_profiles',
-      {
-        'user_id': userId,
-        'preset_id': presetId,
-        'custom_photo_path': customPhotoPath,
-      },
+      map,
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
   }

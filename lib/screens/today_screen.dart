@@ -1,13 +1,14 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:intl/intl.dart';
 import 'package:uuid/uuid.dart';
 import '../models/event.dart';
 import '../models/appointment.dart';
 import '../services/gamification_service.dart';
 import '../theme/app_theme.dart';
-import '../widgets/avatar_display.dart';
 import 'appointment_logger_modal.dart';
+import 'daily_check_in_screen.dart';
 
 // ─── Hardcoded user ID (mock auth) ───────────────────────────────────────────
 const String _kUserId = 'local_user_001';
@@ -266,16 +267,7 @@ class _TodayScreenState extends State<TodayScreen>
   List<Appointment> _appointments = [];
   final Set<String> _completedToday = {};
   bool _loadingSnap = true;
-
-  // Daily log fields
-  double _painLevel = 2;
-  double _braceHours = 0;
-  String _mood = '😊';
-  final Set<String> _selectedLocations = {};
-  String? _tightness;
-  String? _fatigue;
-  final _journalNotesController = TextEditingController();
-  bool _loggingJournal = false;
+  bool _allExpanded = false;
 
   // Celebration banner
   String? _xpBannerText;
@@ -289,7 +281,6 @@ class _TodayScreenState extends State<TodayScreen>
 
   @override
   void dispose() {
-    _journalNotesController.dispose();
     _bannerTimer?.cancel();
     super.dispose();
   }
@@ -317,7 +308,6 @@ class _TodayScreenState extends State<TodayScreen>
   }
 
   int get _todayXp => _todayEvents.fold(0, (sum, e) => sum + e.xpValue);
-  int get _stretchesTodayCount => _todayEvents.where((e) => e.type == EventType.stretchCompleted).length;
 
   Appointment? get _nextAppointment {
     final scheduled = _appointments.where((a) => a.isScheduled).toList();
@@ -353,27 +343,9 @@ class _TodayScreenState extends State<TodayScreen>
     _showBanner('+${result.xpAwarded} XP$bonus');
   }
 
-  Future<void> _submitJournal() async {
-    setState(() => _loggingJournal = true);
-    final result = await _gs.logEvent(
-      eventId: const Uuid().v4(),
-      userId: _kUserId,
-      type: EventType.journalEntry,
-      payload: {
-        'pain_level': _painLevel.round(),
-        'brace_hours': _braceHours.round(),
-        'mood': _mood,
-        'locations': _selectedLocations.toList(),
-        'tightness': _tightness,
-        'fatigue': _fatigue,
-        'notes': _journalNotesController.text.trim(),
-        'logged_at': DateTime.now().toIso8601String(),
-      },
-    );
-    await _loadSnapshot();
-    setState(() => _loggingJournal = false);
-    final bonus = result.dailyBonusAwarded ? ' +5 daily bonus!' : '';
-    _showBanner('+${result.xpAwarded} XP$bonus');
+  Event? get _latestJournalLogToday {
+    final journals = _todayEvents.where((e) => e.type == EventType.journalEntry).toList();
+    return journals.isNotEmpty ? journals.last : null;
   }
 
   @override
@@ -382,8 +354,21 @@ class _TodayScreenState extends State<TodayScreen>
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 
+    final now = DateTime.now();
+    final hour = now.hour;
+    String greeting;
+    if (hour < 12) {
+      greeting = 'Good morning';
+    } else if (hour < 17) {
+      greeting = 'Good afternoon';
+    } else {
+      greeting = 'Good evening';
+    }
+    final name = _snap.userProfile.name;
+    final dateStr = DateFormat('EEEE, MMM d').format(now).toUpperCase();
+
     return Scaffold(
-      backgroundColor: cs.surface,
+      backgroundColor: Colors.transparent,
       body: Stack(
         children: [
           CustomScrollView(
@@ -392,9 +377,18 @@ class _TodayScreenState extends State<TodayScreen>
               SliverAppBar(
                 floating: true,
                 snap: true,
-                backgroundColor: cs.surface,
+                toolbarHeight: 80,
+                backgroundColor: Colors.transparent,
                 surfaceTintColor: Colors.transparent,
-                title: Text('Today', style: tt.titleLarge),
+                title: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(dateStr, style: tt.labelSmall?.copyWith(color: AppTheme.mutedForeground, letterSpacing: 1.2, fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 2),
+                    Text('$greeting, $name', style: tt.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+                  ],
+                ),
                 actions: [
                   IconButton(
                     tooltip: 'Refresh',
@@ -408,27 +402,59 @@ class _TodayScreenState extends State<TodayScreen>
                 padding: const EdgeInsets.fromLTRB(16, 0, 16, 120),
                 sliver: SliverList(
                   delegate: SliverChildListDelegate([
-                    // ── Welcome back banner (presentational only) ─────────
-                    _WelcomeBackCard(snap: _snap, loading: _loadingSnap),
-                    const SizedBox(height: 16),
-
                     // ── Level & XP header ─────────────────────────────────
-                    _XpHeader(snap: _snap, loading: _loadingSnap),
+                    _LevelXpCard(snap: _snap, loading: _loadingSnap),
                     const SizedBox(height: 16),
-
-                    // ── Daily XP Target card ──────────────────────────────
-                    _DailyXpTargetCard(
+                    // ── Streak + Daily Goal ───────────────────────────────
+                    _StatPairSection(
+                      streakDays: _snap.streakDays,
                       todayXp: _todayXp,
                       targetXp: kDailyXpTarget,
                       loading: _loadingSnap,
                     ),
                     const SizedBox(height: 16),
 
-                    // ── Stat Chips (Next Appointment & Stretches Today) ────
-                    _DailyStatChipsCard(
+                    // ── Check-In & Routine Progress ───────────────────────
+                    IntrinsicHeight(
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Expanded(
+                          child: _DailyCheckInSummaryCard(
+                            latestLog: _latestJournalLogToday,
+                            onTap: () async {
+                              final result = await Navigator.push<LogEventResult>(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => DailyCheckInScreen(
+                                    userProfile: _snap.userProfile,
+                                    existingLogToday: _latestJournalLogToday,
+                                  ),
+                                ),
+                              );
+                              if (result != null) {
+                                await _loadSnapshot();
+                                final bonus = result.dailyBonusAwarded ? ' +5 daily bonus!' : '';
+                                _showBanner('+${result.xpAwarded} XP$bonus');
+                              }
+                            },
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: _RoutineProgressCard(
+                            completed: _completedToday.length,
+                            total: _exercises.length,
+                          ),
+                        ),
+                      ],
+                    )),
+                    const SizedBox(height: 16),
+
+                    // ── Next Appointment ──────────────────────────────────
+                    _NextAppointmentCard(
                       nextAppointment: _nextAppointment,
-                      stretchesTodayCount: _stretchesTodayCount,
-                      onAppointmentTap: () => showAppointmentLogger(
+                      onTap: () => showAppointmentLogger(
                         context: context,
                         userId: _kUserId,
                         gamificationService: _gs,
@@ -441,68 +467,46 @@ class _TodayScreenState extends State<TodayScreen>
                     ),
                     const SizedBox(height: 24),
 
-                    // ── Exercise cards ────────────────────────────────────
-                    Text('Stretch Library', style: tt.titleMedium),
+                    // ── Today's Routine ───────────────────────────────────
+                    Row(
+                      children: [
+                        Text('Today\'s Routine', style: tt.titleMedium),
+                        const Spacer(),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: cs.surfaceContainerHigh,
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: Text('${_exercises.length} EXERCISES', style: tt.labelSmall?.copyWith(fontSize: 10, fontWeight: FontWeight.bold, color: AppTheme.mutedForeground)),
+                        ),
+                      ],
+                    ),
                     const SizedBox(height: 12),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: TextButton(
+                        onPressed: () => setState(() => _allExpanded = !_allExpanded),
+                        style: TextButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          minimumSize: Size.zero,
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        ),
+                        child: Text(
+                          _allExpanded ? 'COLLAPSE ALL' : 'EXPAND ALL',
+                          style: tt.labelSmall?.copyWith(fontWeight: FontWeight.bold, color: AppTheme.primarySage, letterSpacing: 1.2),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
                     ..._exercises.map((ex) => _ExerciseCard(
                           exercise: ex,
                           done: _completedToday.contains(ex.id),
+                          forceExpanded: _allExpanded,
                           onMarkDone: () => _markExerciseDone(ex),
                         )),
                     const SizedBox(height: 24),
 
-                    // ── Daily log ─────────────────────────────────────────
-                    Text('Daily Check-In', style: tt.titleMedium),
-                    const SizedBox(height: 12),
-                    _DailyLogCard(
-                      painLevel: _painLevel,
-                      braceHours: _braceHours,
-                      mood: _mood,
-                      selectedLocations: _selectedLocations,
-                      tightness: _tightness,
-                      fatigue: _fatigue,
-                      isFirstLogToday: _todayEvents.isEmpty,
-                      notesController: _journalNotesController,
-                      loading: _loggingJournal,
-                      onPainChanged: (v) => setState(() => _painLevel = v),
-                      onBraceChanged: (v) => setState(() => _braceHours = v),
-                      onMoodChanged: (v) => setState(() => _mood = v),
-                      onLocationToggled: (loc) {
-                        setState(() {
-                          if (_selectedLocations.contains(loc)) {
-                            _selectedLocations.remove(loc);
-                          } else {
-                            _selectedLocations.add(loc);
-                          }
-                        });
-                      },
-                      onTightnessChanged: (v) => setState(() => _tightness = v),
-                      onFatigueChanged: (v) => setState(() => _fatigue = v),
-                      onSubmit: _submitJournal,
-                    ),
-                    const SizedBox(height: 16),
-
-                    // ── Log appointment button ────────────────────────────
-                    _AppointmentButton(
-                      onTap: () => showAppointmentLogger(
-                        context: context,
-                        userId: _kUserId,
-                        gamificationService: _gs,
-                        onLogged: (result) async {
-                          await _loadSnapshot();
-                          final bonus =
-                              result.dailyBonusAwarded ? ' +5 daily bonus!' : '';
-                          _showBanner('+${result.xpAwarded} XP$bonus');
-                        },
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-
-                    // ── Today's Timeline ──────────────────────────────────
-                    _TodayTimelineSection(
-                      todayEvents: _todayEvents,
-                      loading: _loadingSnap,
-                    ),
                   ]),
                 ),
               ),
@@ -523,83 +527,12 @@ class _TodayScreenState extends State<TodayScreen>
   }
 }
 
-// ─── Welcome Back Card ────────────────────────────────────────────────────────
+// ─── Level & XP Card ────────────────────────────────────────────────────────
 
-class _WelcomeBackCard extends StatelessWidget {
+class _LevelXpCard extends StatelessWidget {
   final GamificationSnapshot snap;
   final bool loading;
-  const _WelcomeBackCard({required this.snap, required this.loading});
-
-  @override
-  Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            AppTheme.primarySage.withValues(alpha: 0.15),
-            AppTheme.accentLavender.withValues(alpha: 0.1),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppTheme.primarySage.withValues(alpha: 0.3)),
-      ),
-      child: loading
-          ? const SizedBox(height: 36, child: Center(child: LinearProgressIndicator()))
-          : Row(
-              children: [
-                AvatarDisplay(
-                  profile: snap.userProfile,
-                  size: 48,
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('Welcome back 👋', style: tt.titleSmall),
-                      const SizedBox(height: 2),
-                      Text(
-                        'You\'re on a ${snap.streakDays}-day streak · Level ${snap.currentLevel} — ${snap.currentTitle}',
-                        style: tt.bodySmall?.copyWith(
-                            color: AppTheme.mutedForeground),
-                      ),
-                    ],
-                  ),
-                ),
-                if (snap.streakDays > 0)
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: AppTheme.secondaryCoral.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Row(
-                      children: [
-                        const Text('🔥', style: TextStyle(fontSize: 16)),
-                        const SizedBox(width: 4),
-                        Text('${snap.streakDays}',
-                            style: tt.labelLarge?.copyWith(
-                              color: AppTheme.secondaryCoral,
-                              fontWeight: FontWeight.bold,
-                            )),
-                      ],
-                    ),
-                  ),
-              ],
-            ),
-    );
-  }
-}
-
-// ─── XP Header ────────────────────────────────────────────────────────────────
-
-class _XpHeader extends StatelessWidget {
-  final GamificationSnapshot snap;
-  final bool loading;
-  const _XpHeader({required this.snap, required this.loading});
+  const _LevelXpCard({required this.snap, required this.loading});
 
   @override
   Widget build(BuildContext context) {
@@ -607,102 +540,141 @@ class _XpHeader extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     if (loading) return const SizedBox.shrink();
 
+    // Determine next title (if any)
+    final nextXpReq = 100 + (snap.currentLevel - 1) * 25; // using existing logic
+    final xpNeeded = nextXpReq - snap.xpInLevel;
+
+    // We can infer next title or just use a generic one if we don't have the full list accessible here.
+    // The existing titles are Newcomer → Mover → Wonder → Voyager → Guardian → Wizard.
+    String nextTitle = 'Next Level';
+    if (snap.currentLevel == 1) {
+      nextTitle = 'Mover';
+    } else if (snap.currentLevel == 2) {
+      nextTitle = 'Wonder';
+    } else if (snap.currentLevel == 3) {
+      nextTitle = 'Voyager';
+    } else if (snap.currentLevel == 4) {
+      nextTitle = 'Guardian';
+    } else if (snap.currentLevel == 5) {
+      nextTitle = 'Wizard';
+    } else if (snap.currentLevel >= 6) {
+      nextTitle = 'Max Level';
+    }
+
     return Container(
-      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: cs.surfaceContainer,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppTheme.borderCream),
+        color: cs.surfaceContainerHigh,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: AppTheme.primarySage.withValues(alpha: 0.3), width: 1.5),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Stack(
+        clipBehavior: Clip.none,
         children: [
+          Positioned(
+            right: -10,
+            top: -30,
+            child: Text(
+              snap.currentLevel < 10 ? '0${snap.currentLevel}' : '${snap.currentLevel}',
+              style: TextStyle(
+                fontSize: 160,
+                fontWeight: FontWeight.w900,
+                height: 1.0,
+                color: cs.onSurface.withValues(alpha: 0.04),
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Level badge
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: AppTheme.accentLavender,
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Text(
-                  'Level ${snap.currentLevel} — ${snap.currentTitle}',
-                  style: tt.labelSmall?.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
               Expanded(
-                child: Text(
-                  '${snap.totalXp} XP total',
-                  style: tt.bodySmall?.copyWith(color: AppTheme.mutedForeground),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: AppTheme.primarySage.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        'LEVEL ${snap.currentLevel}',
+                        style: tt.labelSmall?.copyWith(
+                          color: AppTheme.primarySage,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1.2,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      snap.currentTitle,
+                      style: tt.headlineSmall?.copyWith(fontWeight: FontWeight.bold, color: cs.onSurface),
+                    ),
+                  ],
                 ),
               ),
-              // Streak
-              if (snap.streakDays > 0)
-                Text(
-                  '🔥 ${snap.streakDays}-day streak',
-                  style: tt.labelSmall?.copyWith(
-                    color: AppTheme.secondaryCoral,
-                    fontWeight: FontWeight.w600,
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    '${snap.totalXp}',
+                    style: tt.headlineMedium?.copyWith(fontWeight: FontWeight.bold, color: cs.onSurface),
                   ),
-                ),
+                  Text(
+                    'TOTAL XP',
+                    style: tt.labelSmall?.copyWith(color: AppTheme.mutedForeground, letterSpacing: 1.2),
+                  ),
+                ],
+              ),
             ],
           ),
-          const SizedBox(height: 10),
-
-          // XP progress bar
+          const SizedBox(height: 32),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'NEXT: ${nextTitle.toUpperCase()}',
+                style: tt.labelSmall?.copyWith(color: AppTheme.mutedForeground, letterSpacing: 1.1, fontWeight: FontWeight.bold),
+              ),
+              Text(
+                '$xpNeeded XP NEEDED',
+                style: tt.labelSmall?.copyWith(color: AppTheme.primarySage, fontWeight: FontWeight.bold, letterSpacing: 1.1),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
           Stack(
             children: [
               Container(
                 height: 10,
                 decoration: BoxDecoration(
-                  color: AppTheme.borderCream,
+                  color: cs.onSurface.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(5),
                 ),
               ),
               AnimatedFractionallySizedBox(
                 duration: const Duration(milliseconds: 600),
                 curve: Curves.easeOut,
+                alignment: Alignment.centerLeft,
                 widthFactor: snap.levelProgress,
                 child: Container(
                   height: 10,
                   decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [AppTheme.primarySage, AppTheme.accentLavender],
-                    ),
+                    color: AppTheme.primarySage,
                     borderRadius: BorderRadius.circular(5),
                   ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 6),
-          Text(
-            '${snap.xpInLevel} / ${100 + (snap.currentLevel - 1) * 25} XP to next level',
-            style: tt.labelSmall?.copyWith(color: AppTheme.mutedForeground),
+        ],
+      ),
           ),
-
-          // Milestones row
-          if (snap.unlockedMilestones.isNotEmpty) ...[
-            const SizedBox(height: 12),
-            Wrap(
-              spacing: 6,
-              runSpacing: 6,
-              children: snap.unlockedMilestones
-                  .take(4)
-                  .map((m) => Tooltip(
-                        message: m.label,
-                        child: Text(m.emoji,
-                            style: const TextStyle(fontSize: 20)),
-                      ))
-                  .toList(),
-            ),
-          ],
         ],
       ),
     );
@@ -711,16 +683,39 @@ class _XpHeader extends StatelessWidget {
 
 // ─── Exercise Card ────────────────────────────────────────────────────────────
 
-class _ExerciseCard extends StatelessWidget {
+class _ExerciseCard extends StatefulWidget {
   final _Exercise exercise;
   final bool done;
+  final bool forceExpanded;
   final VoidCallback onMarkDone;
 
   const _ExerciseCard({
     required this.exercise,
     required this.done,
+    this.forceExpanded = false,
     required this.onMarkDone,
   });
+
+  @override
+  State<_ExerciseCard> createState() => _ExerciseCardState();
+}
+
+class _ExerciseCardState extends State<_ExerciseCard> {
+  late bool _expanded;
+
+  @override
+  void initState() {
+    super.initState();
+    _expanded = widget.forceExpanded;
+  }
+
+  @override
+  void didUpdateWidget(_ExerciseCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.forceExpanded != widget.forceExpanded) {
+      _expanded = widget.forceExpanded;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -731,61 +726,98 @@ class _ExerciseCard extends StatelessWidget {
       duration: const Duration(milliseconds: 300),
       margin: const EdgeInsets.only(bottom: 10),
       decoration: BoxDecoration(
-        color: done
-            ? AppTheme.primarySage.withValues(alpha: 0.08)
-            : cs.surfaceContainer,
+        color: widget.done ? cs.surface : cs.surfaceContainer,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: done
-              ? AppTheme.primarySage.withValues(alpha: 0.4)
-              : AppTheme.borderCream,
-          width: 1.5,
-        ),
+        border: (!widget.done && _expanded) 
+            ? Border.all(color: AppTheme.primarySage, width: 1.5) 
+            : Border.all(color: cs.onSurface.withValues(alpha: 0.1), width: 1.0),
       ),
       child: Material(
         color: Colors.transparent,
         borderRadius: BorderRadius.circular(16),
-        child: ListTile(
-          onTap: () => _showExerciseInstructions(context, exercise, onMarkDone: onMarkDone),
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        leading: Container(
-          padding: const EdgeInsets.all(10),
-          decoration: BoxDecoration(
-            color: done
-                ? AppTheme.primarySage.withValues(alpha: 0.15)
-                : AppTheme.borderCream.withValues(alpha: 0.6),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Icon(
-            done ? Icons.check_rounded : exercise.icon,
-            color: done ? AppTheme.primarySage : AppTheme.mutedForeground,
-          ),
-        ),
-        title: Text(
-          exercise.name,
-          style: tt.titleSmall?.copyWith(
-            decoration: done ? TextDecoration.lineThrough : null,
-            color: done ? AppTheme.mutedForeground : null,
-          ),
-        ),
-        subtitle: Row(
-          children: [
-            Text(
-              '${exercise.duration} · +$kXpStretch XP',
-              style: tt.bodySmall?.copyWith(color: AppTheme.mutedForeground),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: () => setState(() => _expanded = !_expanded),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
+                  children: [
+                    Opacity(
+                      opacity: widget.done ? 0.5 : 1.0,
+                      child: Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: cs.surfaceContainerHighest,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          widget.exercise.icon,
+                          color: AppTheme.mutedForeground,
+                          size: 20,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Opacity(
+                        opacity: widget.done ? 0.5 : 1.0,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _AnimatedSquigglyStrikethrough(
+                              isStruck: widget.done,
+                              child: Text(
+                                widget.exercise.name,
+                                style: tt.titleSmall?.copyWith(
+                                  color: widget.done ? AppTheme.mutedForeground : cs.onSurface,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              '${widget.exercise.duration}  ·  +$kXpStretch XP',
+                              style: tt.bodySmall?.copyWith(
+                                color: AppTheme.mutedForeground,
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    Icon(
+                      widget.done ? Icons.check_circle_rounded : Icons.circle_outlined,
+                      color: widget.done 
+                          ? AppTheme.primarySage 
+                          : _expanded 
+                              ? AppTheme.primarySage 
+                              : AppTheme.mutedForeground.withValues(alpha: 0.5),
+                      size: 28,
+                    ),
+                  ],
+                ),
+                if (_expanded) ...[
+                  const SizedBox(height: 16),
+                  const Divider(),
+                  const SizedBox(height: 12),
+                  Text(widget.exercise.description, style: tt.bodyMedium),
+                  const SizedBox(height: 12),
+                  FilledButton.icon(
+                    onPressed: () => _showExerciseInstructions(context, widget.exercise, onMarkDone: widget.onMarkDone),
+                    icon: const Icon(Icons.play_arrow_rounded),
+                    label: const Text('Start Exercise'),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: AppTheme.primarySage,
+                    ),
+                  ),
+                ],
+              ],
             ),
-            const SizedBox(width: 6),
-            const Icon(Icons.info_outline_rounded, size: 14, color: AppTheme.primarySage),
-          ],
-        ),
-        trailing: done
-            ? const Icon(Icons.check_circle_rounded,
-                color: AppTheme.primarySage)
-            : FilledButton.tonal(
-                onPressed: onMarkDone,
-                child: const Text('Done'),
-              ),
+          ),
         ),
       ),
     );
@@ -1089,7 +1121,7 @@ class _ExerciseGuidedFlowSheetState extends State<_ExerciseGuidedFlowSheet> {
                   child: OutlinedButton.icon(
                     onPressed: () => _goToStep(_currentStepIndex - 1),
                     icon: const Icon(Icons.arrow_back_rounded, size: 16),
-                    label: const Text('Previous'),
+                    label: const FittedBox(fit: BoxFit.scaleDown, child: Text('Previous')),
                   ),
                 ),
               if (_currentStepIndex > 0) const SizedBox(width: 12),
@@ -1098,7 +1130,7 @@ class _ExerciseGuidedFlowSheetState extends State<_ExerciseGuidedFlowSheet> {
                 child: FilledButton.icon(
                   onPressed: isLastStep ? widget.onComplete : () => _goToStep(_currentStepIndex + 1),
                   icon: Icon(isLastStep ? Icons.check_circle_rounded : Icons.arrow_forward_rounded, size: 18),
-                  label: Text(isLastStep ? 'Mark Complete (+30 XP)' : 'Next Step'),
+                  label: FittedBox(fit: BoxFit.scaleDown, child: Text(isLastStep ? 'Mark Complete (+30 XP)' : 'Next Step')),
                   style: FilledButton.styleFrom(
                     backgroundColor: _stepCompleted || isLastStep ? AppTheme.primarySage : cs.primary,
                   ),
@@ -1112,300 +1144,139 @@ class _ExerciseGuidedFlowSheetState extends State<_ExerciseGuidedFlowSheet> {
   }
 }
 
-// ─── Daily Log Card ───────────────────────────────────────────────────────────
+// ─── Daily Check-In Summary Card ──────────────────────────────────────────────
 
-class _DailyLogCard extends StatelessWidget {
-  final double painLevel;
-  final double braceHours;
-  final String mood;
-  final Set<String> selectedLocations;
-  final String? tightness;
-  final String? fatigue;
-  final bool isFirstLogToday;
-  final TextEditingController notesController;
-  final bool loading;
-  final ValueChanged<double> onPainChanged;
-  final ValueChanged<double> onBraceChanged;
-  final ValueChanged<String> onMoodChanged;
-  final ValueChanged<String> onLocationToggled;
-  final ValueChanged<String?> onTightnessChanged;
-  final ValueChanged<String?> onFatigueChanged;
-  final VoidCallback onSubmit;
+class _DailyCheckInSummaryCard extends StatelessWidget {
+  final Event? latestLog;
+  final VoidCallback onTap;
 
-  const _DailyLogCard({
-    required this.painLevel,
-    required this.braceHours,
-    required this.mood,
-    required this.selectedLocations,
-    required this.tightness,
-    required this.fatigue,
-    required this.isFirstLogToday,
-    required this.notesController,
-    required this.loading,
-    required this.onPainChanged,
-    required this.onBraceChanged,
-    required this.onMoodChanged,
-    required this.onLocationToggled,
-    required this.onTightnessChanged,
-    required this.onFatigueChanged,
-    required this.onSubmit,
+  const _DailyCheckInSummaryCard({
+    required this.latestLog,
+    required this.onTap,
   });
-
-  Color _painColor(double v) {
-    if (v <= 3) return Colors.green;
-    if (v <= 6) return Colors.orange;
-    return Colors.red;
-  }
-
-  String _painLabel(double v) {
-    final roundV = v.round();
-    if (v <= 3) return 'Mild ($roundV/10) 🟢';
-    if (v <= 6) return 'Moderate ($roundV/10) 🟡';
-    return 'Severe ($roundV/10) 🔴';
-  }
 
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
-    final cs = Theme.of(context).colorScheme;
-    const moods = ['😊', '😐', '😣'];
+    final logged = latestLog != null;
 
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: cs.surfaceContainer,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppTheme.borderCream),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
+    return Card(
+      elevation: 0,
+      margin: EdgeInsets.zero,
+      color: AppTheme.primarySage,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(24),
+        child: Container(
+          width: double.infinity,
+          constraints: const BoxConstraints(minHeight: 140),
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Pain Level', style: tt.titleSmall),
-              const Spacer(),
-              Text(_painLabel(painLevel),
-                  style: tt.labelSmall?.copyWith(
-                      color: _painColor(painLevel),
-                      fontWeight: FontWeight.bold)),
-            ],
-          ),
-          Slider(
-            value: painLevel,
-            min: 0,
-            max: 10,
-            divisions: 10,
-            label: painLevel.round().toString(),
-            onChanged: onPainChanged,
-          ),
-          const SizedBox(height: 12),
-
-          // Location Chip Group
-          Text('Pain Location (optional)', style: tt.titleSmall),
-          const SizedBox(height: 6),
-          Wrap(
-            spacing: 6,
-            runSpacing: 6,
-            children: ['Neck', 'Upper Back', 'Lower Back', 'Left Hip', 'Right Hip', 'Other'].map((loc) {
-              final selected = selectedLocations.contains(loc);
-              return FilterChip(
-                label: Text(loc, style: TextStyle(fontSize: 12, color: selected ? Colors.white : cs.onSurface)),
-                selected: selected,
-                selectedColor: AppTheme.primarySage,
-                onSelected: (_) => onLocationToggled(loc),
-              );
-            }).toList(),
-          ),
-          const SizedBox(height: 12),
-
-          // Tightness & Fatigue 3-point scales
-          Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Tightness', style: tt.titleSmall),
-                    const SizedBox(height: 4),
-                    DropdownButtonFormField<String>(
-                      value: tightness,
-                      decoration: InputDecoration(
-                        isDense: true,
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                      ),
-                      hint: const Text('Select'),
-                      items: const [
-                        DropdownMenuItem(value: 'Mild', child: Text('Mild')),
-                        DropdownMenuItem(value: 'Moderate', child: Text('Moderate')),
-                        DropdownMenuItem(value: 'Severe', child: Text('Severe')),
-                      ],
-                      onChanged: onTightnessChanged,
-                    ),
-                  ],
+              Text(
+                'Daily Check-in',
+                style: tt.labelSmall?.copyWith(
+                  fontWeight: FontWeight.w900,
+                  color: Colors.black54,
+                  letterSpacing: 1.1,
                 ),
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Fatigue', style: tt.titleSmall),
-                    const SizedBox(height: 4),
-                    DropdownButtonFormField<String>(
-                      value: fatigue,
-                      decoration: InputDecoration(
-                        isDense: true,
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                      ),
-                      hint: const Text('Select'),
-                      items: const [
-                        DropdownMenuItem(value: 'Mild', child: Text('Mild')),
-                        DropdownMenuItem(value: 'Moderate', child: Text('Moderate')),
-                        DropdownMenuItem(value: 'Severe', child: Text('Severe')),
-                      ],
-                      onChanged: onFatigueChanged,
-                    ),
-                  ],
+              const SizedBox(height: 8),
+              Text(
+                logged ? 'Done for today!' : 'How is your spine feeling?',
+                style: tt.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w900,
+                  color: Colors.black,
+                  fontSize: 18,
+                  height: 1.2,
                 ),
               ),
-            ],
-          ),
-          const SizedBox(height: 12),
-
-          Row(
-            children: [
-              Text('Brace Wear', style: tt.titleSmall),
-              const Spacer(),
-              Text('${braceHours.round()} hrs',
-                  style: tt.labelSmall?.copyWith(
-                      color: AppTheme.primarySage,
-                      fontWeight: FontWeight.bold)),
-            ],
-          ),
-          Slider(
-            value: braceHours,
-            min: 0,
-            max: 24,
-            divisions: 24,
-            label: '${braceHours.round()}h',
-            onChanged: onBraceChanged,
-          ),
-          const SizedBox(height: 12),
-
-          Text('Mood', style: tt.titleSmall),
-          const SizedBox(height: 8),
-          Row(
-            children: moods.map((m) {
-              final selected = m == mood;
-              return GestureDetector(
-                onTap: () => onMoodChanged(m),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  margin: const EdgeInsets.only(right: 12),
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: selected
-                        ? AppTheme.accentLavender.withValues(alpha: 0.15)
-                        : Colors.transparent,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: selected
-                          ? AppTheme.accentLavender
-                          : Colors.transparent,
-                      width: 2,
+              const SizedBox(height: 32),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 4.0),
+                    child: Text(
+                      logged ? 'COMPLETE' : 'CHECK IN',
+                      style: tt.labelSmall?.copyWith(
+                        fontWeight: FontWeight.w900,
+                        color: Colors.black,
+                        letterSpacing: 1.2,
+                      ),
                     ),
                   ),
-                  child: Text(m, style: const TextStyle(fontSize: 28)),
-                ),
-              );
-            }).toList(),
-          ),
-          const SizedBox(height: 16),
-
-          // Optional Journal Notes
-          TextField(
-            controller: notesController,
-            maxLines: 2,
-            textCapitalization: TextCapitalization.sentences,
-            decoration: InputDecoration(
-              labelText: 'Journal Notes (optional)',
-              hintText: 'e.g. "Stiff after long sitting today"',
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
-
-          // Itemized XP breakdown display
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            decoration: BoxDecoration(
-              color: AppTheme.primarySage.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Row(
-              children: [
-                const Icon(Icons.stars_rounded, color: AppTheme.primarySage, size: 18),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    isFirstLogToday
-                        ? 'Journal +$kXpJournal, Daily First-Log Bonus +$kXpDailyBonus → Total +${kXpJournal + kXpDailyBonus} XP'
-                        : 'Journal +$kXpJournal XP',
-                    style: tt.labelSmall?.copyWith(
+                  const Spacer(),
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: const BoxDecoration(
+                      color: Colors.black,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      logged ? Icons.check_rounded : Icons.chevron_right_rounded,
                       color: AppTheme.primarySage,
-                      fontWeight: FontWeight.bold,
+                      size: 20,
                     ),
                   ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 12),
-
-          SizedBox(
-            width: double.infinity,
-            child: FilledButton.icon(
-              onPressed: loading ? null : onSubmit,
-              icon: loading
-                  ? const SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2))
-                  : const Icon(Icons.save_rounded),
-              label: Text(
-                loading
-                    ? 'Saving…'
-                    : isFirstLogToday
-                        ? 'Confirm Log  +${kXpJournal + kXpDailyBonus} XP'
-                        : 'Confirm Log  +$kXpJournal XP',
+                ],
               ),
-            ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
 }
 
-// ─── Appointment button ───────────────────────────────────────────────────────
-
-class _AppointmentButton extends StatelessWidget {
-  final VoidCallback onTap;
-  const _AppointmentButton({required this.onTap});
+// ─── Routine Progress Card ────────────────────────────────────────────────
+class _RoutineProgressCard extends StatelessWidget {
+  final int completed;
+  final int total;
+  
+  const _RoutineProgressCard({
+    required this.completed,
+    required this.total,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return OutlinedButton.icon(
-      onPressed: onTap,
-      icon: const Icon(Icons.medical_services_outlined),
-      label: const Text('Manage Appointments'),
-      style: OutlinedButton.styleFrom(
-        minimumSize: const Size(double.infinity, 52),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    
+    return Container(
+      width: double.infinity,
+      constraints: const BoxConstraints(minHeight: 140),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: cs.surfaceContainer,
+        borderRadius: BorderRadius.circular(24),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Wrap(
+            spacing: 4,
+            runSpacing: 4,
+            children: List.generate(total, (index) {
+              final isActive = index < completed;
+              return Container(
+                width: 12,
+                height: 12,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: isActive ? AppTheme.primarySage : cs.surfaceContainerHighest,
+                ),
+              );
+            }),
+          ),
+          const Spacer(),
+          Text('$completed / $total', style: tt.titleLarge?.copyWith(fontWeight: FontWeight.bold, color: cs.onSurface)),
+          const SizedBox(height: 4),
+          Text('ROUTINE', style: tt.labelSmall?.copyWith(color: AppTheme.mutedForeground, letterSpacing: 1.1, fontWeight: FontWeight.bold)),
+        ],
       ),
     );
   }
@@ -1451,200 +1322,66 @@ class _XpBanner extends StatelessWidget {
   }
 }
 
-// ─── Daily XP Target Card ─────────────────────────────────────────────────────
+// ─── Stat Pair Section (Streak + Daily Goal) ────────────────────────────────
 
-class _DailyXpTargetCard extends StatelessWidget {
+class _StatPairSection extends StatelessWidget {
+  final int streakDays;
   final int todayXp;
   final int targetXp;
   final bool loading;
 
-  const _DailyXpTargetCard({
+  const _StatPairSection({
+    required this.streakDays,
     required this.todayXp,
     required this.targetXp,
     required this.loading,
   });
 
-  String get encouragement {
-    if (todayXp == 0) {
-      return 'Start your day with a quick stretch or check-in!';
-    } else if (todayXp < targetXp * 0.8) {
-      return 'Great start! Keep going to hit today\'s goal.';
-    } else if (todayXp < targetXp) {
-      return 'Almost there — one more log to hit today\'s goal.';
-    } else {
-      return 'Goal smashed! Outstanding commitment today! 🎉';
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
+    if (loading) return const SizedBox.shrink();
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
-    final progress = loading ? 0.0 : (todayXp / targetXp).clamp(0.0, 1.0);
-
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: cs.surfaceContainer,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppTheme.borderCream),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Icon(Icons.flag_rounded, color: AppTheme.primarySage, size: 20),
-              const SizedBox(width: 8),
-              Text("Today's Goal", style: tt.titleSmall?.copyWith(fontWeight: FontWeight.bold)),
-              const Spacer(),
-              Text(
-                '$todayXp / $targetXp XP',
-                style: tt.labelMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: AppTheme.primarySage,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: LinearProgressIndicator(
-              value: progress,
-              minHeight: 10,
-              backgroundColor: AppTheme.borderCream,
-              valueColor: const AlwaysStoppedAnimation<Color>(AppTheme.primarySage),
-            ),
-          ),
-          const SizedBox(height: 10),
-          Text(
-            encouragement,
-            style: tt.bodySmall?.copyWith(
-              color: AppTheme.mutedForeground,
-              fontStyle: FontStyle.italic,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ─── Stat Chips Card ──────────────────────────────────────────────────────────
-
-class _DailyStatChipsCard extends StatelessWidget {
-  final Appointment? nextAppointment;
-  final int stretchesTodayCount;
-  final VoidCallback onAppointmentTap;
-
-  const _DailyStatChipsCard({
-    required this.nextAppointment,
-    required this.stretchesTodayCount,
-    required this.onAppointmentTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
-
-    String aptTitle = 'No upcoming visits';
-    String aptTimeStr = '+ Schedule';
-    if (nextAppointment != null) {
-      final dt = nextAppointment!.scheduledDateTime;
-      aptTitle = nextAppointment!.title;
-      aptTimeStr = '${dt.month}/${dt.day} at ${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
-    }
+    final progress = (todayXp / targetXp).clamp(0.0, 1.0);
+    final percentage = (progress * 100).toInt();
 
     return Row(
       children: [
-        // Appointment Chip Card
         Expanded(
-          child: Card(
-            elevation: 0,
-            margin: EdgeInsets.zero,
-            color: cs.surfaceContainer,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-              side: const BorderSide(color: AppTheme.borderCream),
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: cs.surfaceContainer,
+              borderRadius: BorderRadius.circular(24),
             ),
-            child: InkWell(
-              onTap: onAppointmentTap,
-              borderRadius: BorderRadius.circular(16),
-              child: Padding(
-                padding: const EdgeInsets.all(12),
-                child: Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: AppTheme.accentLavender.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: const Icon(Icons.medical_services_outlined, size: 20, color: AppTheme.accentLavender),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            aptTitle,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: tt.labelMedium?.copyWith(fontWeight: FontWeight.bold),
-                          ),
-                          Text(
-                            aptTimeStr,
-                            style: tt.bodySmall?.copyWith(color: AppTheme.mutedForeground, fontSize: 11),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Icon(Icons.local_fire_department_rounded, color: AppTheme.secondaryCoral, size: 24),
+                const SizedBox(height: 24),
+                Text('$streakDays', style: tt.headlineMedium?.copyWith(fontWeight: FontWeight.bold, color: cs.onSurface)),
+                const SizedBox(height: 4),
+                Text('Day Streak', style: tt.labelSmall?.copyWith(color: AppTheme.mutedForeground)),
+              ],
             ),
           ),
         ),
-        const SizedBox(width: 10),
-
-        // Stretches Today Chip Card
-        Card(
-          elevation: 0,
-          margin: EdgeInsets.zero,
-          color: cs.surfaceContainer,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-            side: const BorderSide(color: AppTheme.borderCream),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-            child: Row(
+        const SizedBox(width: 16),
+        Expanded(
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: cs.surfaceContainer,
+              borderRadius: BorderRadius.circular(24),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: AppTheme.primarySage.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: const Icon(Icons.self_improvement_rounded, size: 20, color: AppTheme.primarySage),
-                ),
-                const SizedBox(width: 10),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '$stretchesTodayCount Stretches',
-                      style: tt.labelMedium?.copyWith(fontWeight: FontWeight.bold),
-                    ),
-                    Text(
-                      'Completed today',
-                      style: tt.bodySmall?.copyWith(color: AppTheme.mutedForeground, fontSize: 11),
-                    ),
-                  ],
-                ),
+                const Icon(Icons.flag_rounded, color: AppTheme.primarySage, size: 24),
+                const SizedBox(height: 24),
+                Text('$percentage%', style: tt.headlineMedium?.copyWith(fontWeight: FontWeight.bold, color: cs.onSurface)),
+                const SizedBox(height: 4),
+                Text('Daily Goal', style: tt.labelSmall?.copyWith(color: AppTheme.mutedForeground)),
               ],
             ),
           ),
@@ -1654,131 +1391,157 @@ class _DailyStatChipsCard extends StatelessWidget {
   }
 }
 
-// ─── Today's Timeline Section ─────────────────────────────────────────────────
 
-class _TodayTimelineSection extends StatelessWidget {
-  final List<Event> todayEvents;
-  final bool loading;
+// ─── Next Appointment Card ──────────────────────────────────────────────────
 
-  const _TodayTimelineSection({
-    required this.todayEvents,
-    required this.loading,
+class _NextAppointmentCard extends StatelessWidget {
+  final Appointment? nextAppointment;
+  final VoidCallback onTap;
+
+  const _NextAppointmentCard({
+    required this.nextAppointment,
+    required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Text("Today's Timeline", style: tt.titleMedium),
-            const Spacer(),
-            Text('${todayEvents.length} events', style: tt.bodySmall?.copyWith(color: AppTheme.mutedForeground)),
-          ],
-        ),
-        const SizedBox(height: 12),
-        if (todayEvents.isEmpty)
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surfaceContainer,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: AppTheme.borderCream),
-            ),
-            child: Center(
-              child: Text(
-                'No activity logged today yet.\nComplete a stretch or check-in above!',
-                textAlign: TextAlign.center,
-                style: tt.bodySmall?.copyWith(color: AppTheme.mutedForeground),
+    String monthStr = '';
+    String dayStr = '';
+    String titleStr = 'No upcoming appointments';
+    String timeStr = 'Tap to schedule';
+
+    if (nextAppointment != null) {
+      final dt = nextAppointment!.scheduledDateTime;
+      final months = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
+      monthStr = months[dt.month - 1];
+      dayStr = '${dt.day}';
+      titleStr = nextAppointment!.title;
+
+      String hour = dt.hour > 12 ? '${dt.hour - 12}' : (dt.hour == 0 ? '12' : '${dt.hour}');
+      String minute = dt.minute.toString().padLeft(2, '0');
+      String ampm = dt.hour >= 12 ? 'PM' : 'AM';
+      timeStr = '$hour:$minute $ampm';
+    }
+
+    return Card(
+      elevation: 0,
+      margin: EdgeInsets.zero,
+      color: Colors.transparent,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(24),
+        side: BorderSide(color: AppTheme.primarySage.withValues(alpha: 0.3), width: 1.5),
+      ),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(24),
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Row(
+            children: [
+              Container(
+                width: 56,
+                height: 56,
+                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+                decoration: BoxDecoration(
+                  color: cs.onSurface,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                alignment: Alignment.center,
+                child: nextAppointment != null
+                    ? Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(monthStr, style: tt.labelSmall?.copyWith(color: AppTheme.primarySage, fontWeight: FontWeight.bold, fontSize: 10, letterSpacing: 0.5)),
+                          Text(dayStr, style: tt.titleMedium?.copyWith(color: cs.surface, fontWeight: FontWeight.w900, height: 1.1)),
+                        ],
+                      )
+                    : Icon(Icons.add_rounded, color: AppTheme.primarySage, size: 28),
               ),
-            ),
-          )
-        else
-          ...todayEvents.map((e) => _TodayEventTile(event: e)),
-      ],
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('NEXT APPOINTMENT', style: tt.labelSmall?.copyWith(color: AppTheme.mutedForeground, fontSize: 10, letterSpacing: 1.1, fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 2),
+                    if (nextAppointment != null)
+                      Text('$titleStr • $timeStr', style: tt.labelLarge?.copyWith(fontWeight: FontWeight.bold))
+                    else
+                      Text(titleStr, style: tt.labelLarge?.copyWith(fontWeight: FontWeight.bold, color: AppTheme.primarySage)),
+                  ],
+                ),
+              ),
+              const Icon(Icons.chevron_right_rounded, color: AppTheme.mutedForeground),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
 
-class _TodayEventTile extends StatelessWidget {
-  final Event event;
-  const _TodayEventTile({required this.event});
+// ─── Animated Squiggly Strikethrough ──────────────────────────────────────────
+
+class _AnimatedSquigglyStrikethrough extends StatelessWidget {
+  final Widget child;
+  final bool isStruck;
+
+  const _AnimatedSquigglyStrikethrough({required this.child, required this.isStruck});
 
   @override
   Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-    final cs = Theme.of(context).colorScheme;
-
-    final (icon, label, color) = switch (event.type) {
-      EventType.stretchCompleted => (
-        Icons.self_improvement_rounded,
-        'Stretch: ${event.payload['exercise_name'] ?? 'Session'}',
-        AppTheme.primarySage,
-      ),
-      EventType.journalEntry => (
-        Icons.edit_note_rounded,
-        'Journal: pain ${event.payload['pain_level']}/5 · ${event.payload['mood']}',
-        AppTheme.secondaryCoral,
-      ),
-      EventType.angleLogged => (
-        Icons.architecture_rounded,
-        'Cobb angle: ${(event.payload['degrees'] as num?)?.toStringAsFixed(1) ?? '?'}°',
-        AppTheme.accentLavender,
-      ),
-      EventType.appointmentAttended => (
-        Icons.medical_services_rounded,
-        'Doctor appointment: ${event.payload['title'] ?? 'Visit'}',
-        AppTheme.primarySage,
-      ),
-    };
-
-    final timeStr = '${event.timestamp.hour.toString().padLeft(2, '0')}:${event.timestamp.minute.toString().padLeft(2, '0')}';
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      decoration: BoxDecoration(
-        color: cs.surfaceContainer,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppTheme.borderCream),
-      ),
-      child: Row(
-        children: [
-          Icon(icon, color: color, size: 20),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(label, style: tt.bodySmall?.copyWith(fontWeight: FontWeight.w600)),
-                Text(
-                  timeStr,
-                  style: tt.bodySmall?.copyWith(color: AppTheme.mutedForeground, fontSize: 11),
-                ),
-              ],
-            ),
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-            decoration: BoxDecoration(
-              color: AppTheme.primarySage.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(6),
-            ),
-            child: Text(
-              '+${event.xpValue} XP',
-              style: const TextStyle(
-                color: AppTheme.primarySage,
-                fontSize: 11,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-        ],
-      ),
+    return TweenAnimationBuilder<double>(
+      tween: Tween<double>(begin: 0.0, end: isStruck ? 1.0 : 0.0),
+      duration: const Duration(milliseconds: 600),
+      curve: Curves.easeOutCubic,
+      builder: (context, value, childWidget) {
+        return CustomPaint(
+          foregroundPainter: value > 0 ? _SquigglyPainter(progress: value) : null,
+          child: childWidget,
+        );
+      },
+      child: child,
     );
   }
 }
+
+class _SquigglyPainter extends CustomPainter {
+  final double progress;
+
+  _SquigglyPainter({required this.progress});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (progress <= 0) return;
+    
+    final paint = Paint()
+      ..color = AppTheme.primarySage
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 3.0
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
+
+    final path = Path();
+    final yCenter = size.height / 2;
+    
+    // An imperfect, hand-drawn-like curve
+    path.moveTo(0, yCenter + 2);
+    path.quadraticBezierTo(size.width * 0.25, yCenter - 4, size.width * 0.5, yCenter + 1);
+    path.quadraticBezierTo(size.width * 0.75, yCenter + 5, size.width, yCenter - 2);
+
+    final metrics = path.computeMetrics().toList();
+    if (metrics.isEmpty) return;
+    
+    final metric = metrics.first;
+    final extractPath = metric.extractPath(0.0, metric.length * progress);
+    
+    canvas.drawPath(extractPath, paint);
+  }
+
+  @override
+  bool shouldRepaint(_SquigglyPainter old) => old.progress != progress;
+}
+

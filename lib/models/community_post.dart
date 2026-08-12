@@ -42,6 +42,7 @@ class CommunityPost {
   final bool upvotedByMe;
   final List<CommunityReply> replies;
   final bool reported;
+  final bool isSaved;
 
   const CommunityPost({
     required this.id,
@@ -53,6 +54,7 @@ class CommunityPost {
     this.upvotedByMe = false,
     this.replies = const [],
     this.reported = false,
+    this.isSaved = false,
   });
 
   CommunityPost copyWith({
@@ -65,6 +67,7 @@ class CommunityPost {
     bool? upvotedByMe,
     List<CommunityReply>? replies,
     bool? reported,
+    bool? isSaved,
   }) {
     return CommunityPost(
       id: id ?? this.id,
@@ -76,6 +79,7 @@ class CommunityPost {
       upvotedByMe: upvotedByMe ?? this.upvotedByMe,
       replies: replies ?? this.replies,
       reported: reported ?? this.reported,
+      isSaved: isSaved ?? this.isSaved,
     );
   }
 
@@ -89,6 +93,7 @@ class CommunityPost {
         'upvotedByMe': upvotedByMe,
         'replies': replies.map((r) => r.toJson()).toList(),
         'reported': reported,
+        'isSaved': isSaved,
       };
 
   factory CommunityPost.fromJson(Map<String, dynamic> j) => CommunityPost(
@@ -105,6 +110,7 @@ class CommunityPost {
                 .toList() ??
             [],
         reported: (j['reported'] as bool?) ?? false,
+        isSaved: (j['isSaved'] as bool?) ?? false,
       );
 }
 
@@ -115,7 +121,7 @@ List<CommunityPost> seedCommunityPosts() {
     CommunityPost(
       id: 'post_seed_1',
       authorName: 'Maya K.',
-      milestoneBadge: '🏅 14-Day Streak!',
+      milestoneBadge: 'streak_tier2',
       body: 'Two weeks straight. My physio actually noticed a difference in '
           'my posture yesterday — first time in months I felt genuinely proud '
           'of something spine-related.',
@@ -143,7 +149,7 @@ List<CommunityPost> seedCommunityPosts() {
     CommunityPost(
       id: 'post_seed_3',
       authorName: 'Priya S.',
-      milestoneBadge: '📐 First Cobb Log',
+      milestoneBadge: 'angle_tier1',
       body: 'Finally figured out how to use the Cobb angle tool. My curve '
           'went from 32° to 29° over 3 months. Not sure what to feel — '
           'happy but also still processing it.',

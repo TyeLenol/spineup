@@ -15,6 +15,42 @@ class AvatarDisplay extends StatelessWidget {
     this.forcePreset = false,
   });
 
+  static Widget buildPresetGraphic(AvatarPreset preset, {double size = 40.0}) {
+    return ClipOval(
+      child: SvgPicture.asset(
+        preset.assetPath,
+        width: size,
+        height: size,
+        fit: BoxFit.cover,
+        placeholderBuilder: (_) => buildFallbackShape(preset, size),
+        errorBuilder: (_, _, _) => buildFallbackShape(preset, size),
+      ),
+    );
+  }
+
+  static Widget buildFallbackShape(AvatarPreset preset, double size) {
+    final (bg, fg, icon) = switch (preset.id) {
+      'preset_sun' => (const Color(0xFFFFF3E0), const Color(0xFFFF9800), Icons.wb_sunny_rounded),
+      'preset_cloud' => (const Color(0xFFE3F2FD), const Color(0xFF64B5F6), Icons.cloud_rounded),
+      'preset_leaf' => (const Color(0xFFE8F5E9), const Color(0xFF66BB6A), Icons.eco_rounded),
+      'preset_star' => (const Color(0xFFFFF8E1), const Color(0xFFFFCA28), Icons.star_rounded),
+      'preset_pebble' => (const Color(0xFFEFEBE9), const Color(0xFF8D6E63), Icons.circle_rounded),
+      _ => (const Color(0xFFFFF3E0), const Color(0xFFFF9800), Icons.face_rounded),
+    };
+
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        color: bg,
+        shape: BoxShape.circle,
+      ),
+      child: Center(
+        child: Icon(icon, color: fg, size: size * 0.55),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     if (!forcePreset && profile.customPhotoPath != null) {
@@ -30,16 +66,8 @@ class AvatarDisplay extends StatelessWidget {
         );
       }
     }
-    
-    // Fallback to preset
+
     final preset = profile.preset;
-    return ClipOval(
-      child: SvgPicture.asset(
-        preset.assetPath,
-        width: size,
-        height: size,
-        fit: BoxFit.cover,
-      ),
-    );
+    return buildPresetGraphic(preset, size: size);
   }
 }
