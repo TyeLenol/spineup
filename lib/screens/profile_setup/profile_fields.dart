@@ -1,27 +1,46 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../theme/app_theme.dart';
+import '../learn_screen.dart';
 
 class ProfileField extends StatelessWidget {
   final String label;
   final String? hint;
+  final String? helpTopicId;
   final Widget child;
 
-  const ProfileField({super.key, required this.label, this.hint, required this.child});
+  const ProfileField({
+    super.key,
+    required this.label,
+    this.hint,
+    this.helpTopicId,
+    required this.child,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          label.toUpperCase(),
-          style: GoogleFonts.outfit(
-            fontSize: 12,
-            fontWeight: FontWeight.w700,
-            letterSpacing: 1.0,
-            color: AppTheme.foregroundDark,
-          ),
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                label.toUpperCase(),
+                style: GoogleFonts.outfit(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 1.0,
+                  color: AppTheme.foregroundDark,
+                ),
+              ),
+            ),
+            if (helpTopicId != null)
+              ContextualHelpIcon(
+                topicId: helpTopicId!,
+                tooltip: 'Learn about $label',
+              ),
+          ],
         ),
         const SizedBox(height: 8),
         child,
@@ -85,17 +104,28 @@ class ProfileTextInput extends StatelessWidget {
         hintStyle: GoogleFonts.outfit(
           fontSize: 16,
           fontWeight: FontWeight.w500,
-          color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+          color: Theme.of(
+            context,
+          ).colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
         ),
         filled: false,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 16,
+        ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(20),
-          borderSide: BorderSide(color: Theme.of(context).colorScheme.outlineVariant, width: 1.5),
+          borderSide: BorderSide(
+            color: Theme.of(context).colorScheme.outlineVariant,
+            width: 1.5,
+          ),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(20),
-          borderSide: BorderSide(color: Theme.of(context).colorScheme.primary, width: 2.5),
+          borderSide: BorderSide(
+            color: Theme.of(context).colorScheme.primary,
+            width: 2.5,
+          ),
         ),
       ),
     );
@@ -138,8 +168,9 @@ class ProfileChipGroup<T> extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         final spacing = 8.0;
-        final width = (constraints.maxWidth - (spacing * (columns - 1))) / columns;
-        
+        final width =
+            (constraints.maxWidth - (spacing * (columns - 1))) / columns;
+
         return Wrap(
           spacing: spacing,
           runSpacing: spacing,
@@ -151,12 +182,19 @@ class ProfileChipGroup<T> extends StatelessWidget {
                 duration: const Duration(milliseconds: 200),
                 width: width,
                 constraints: const BoxConstraints(minHeight: 52),
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 12,
+                ),
                 decoration: BoxDecoration(
-                  color: on ? Theme.of(context).colorScheme.primary : Colors.transparent,
+                  color: on
+                      ? Theme.of(context).colorScheme.primary
+                      : Colors.transparent,
                   borderRadius: BorderRadius.circular(32),
                   border: Border.all(
-                    color: on ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.outlineVariant,
+                    color: on
+                        ? Theme.of(context).colorScheme.primary
+                        : Theme.of(context).colorScheme.outlineVariant,
                     width: on ? 2.5 : 1.5,
                   ),
                 ),
@@ -169,7 +207,9 @@ class ProfileChipGroup<T> extends StatelessWidget {
                       style: GoogleFonts.outfit(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
-                        color: on ? Theme.of(context).colorScheme.onPrimary : Theme.of(context).colorScheme.onSurface,
+                        color: on
+                            ? Theme.of(context).colorScheme.onPrimary
+                            : Theme.of(context).colorScheme.onSurface,
                       ),
                     ),
                     if (opt.hint != null) ...[
@@ -179,7 +219,11 @@ class ProfileChipGroup<T> extends StatelessWidget {
                         style: GoogleFonts.outfit(
                           fontSize: 11,
                           fontWeight: FontWeight.w500,
-                          color: on ? Theme.of(context).colorScheme.onPrimary.withValues(alpha: 0.8) : Theme.of(context).colorScheme.onSurfaceVariant,
+                          color: on
+                              ? Theme.of(
+                                  context,
+                                ).colorScheme.onPrimary.withValues(alpha: 0.8)
+                              : Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
                       ),
                     ],
@@ -189,7 +233,7 @@ class ProfileChipGroup<T> extends StatelessWidget {
             );
           }).toList(),
         );
-      }
+      },
     );
   }
 }
@@ -238,10 +282,7 @@ class ProfileSlider extends StatelessWidget {
         Container(
           width: 44,
           height: 44,
-          decoration: BoxDecoration(
-            color: tint,
-            shape: BoxShape.circle,
-          ),
+          decoration: BoxDecoration(color: tint, shape: BoxShape.circle),
           alignment: Alignment.center,
           child: Text(
             value.round().toString(),

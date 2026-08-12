@@ -5,7 +5,7 @@ import '../models/care_subject.dart';
 import '../services/session_service.dart';
 import '../theme/app_transitions.dart';
 import '../widgets/glass_nav_bar.dart';
-import 'community_screen.dart';
+import 'learn_screen.dart';
 import 'me_screen.dart';
 import 'my_journey_screen.dart';
 import 'profile_setup/living_background.dart';
@@ -24,7 +24,7 @@ class _NavigationShellState extends State<NavigationShell> {
   static const List<Widget> _screens = [
     TodayScreen(key: ValueKey(0)),
     MyJourneyScreen(key: ValueKey(1)),
-    CommunityScreen(key: ValueKey(2)),
+    LearnScreen(key: ValueKey(2)),
     MeScreen(key: ValueKey(3)),
   ];
 

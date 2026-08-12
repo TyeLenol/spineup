@@ -8,11 +8,7 @@ class StepCurve extends StatefulWidget {
   final ProfileData initialData;
   final ValueChanged<ProfileData> onSave;
 
-  const StepCurve({
-    super.key,
-    required this.initialData,
-    required this.onSave,
-  });
+  const StepCurve({super.key, required this.initialData, required this.onSave});
 
   @override
   State<StepCurve> createState() => _StepCurveState();
@@ -28,11 +24,17 @@ class _StepCurveState extends State<StepCurve> {
   @override
   void initState() {
     super.initState();
-    _primaryController = TextEditingController(text: widget.initialData.curve.cobbPrimary?.toString() ?? '');
-    _secondaryController = TextEditingController(text: widget.initialData.curve.cobbSecondary?.toString() ?? '');
-    _risserController = TextEditingController(text: widget.initialData.curve.risser?.toString() ?? '');
+    _primaryController = TextEditingController(
+      text: widget.initialData.curve.cobbPrimary?.toString() ?? '',
+    );
+    _secondaryController = TextEditingController(
+      text: widget.initialData.curve.cobbSecondary?.toString() ?? '',
+    );
+    _risserController = TextEditingController(
+      text: widget.initialData.curve.risser?.toString() ?? '',
+    );
     _curveType = widget.initialData.curve.curveType;
-    
+
     _primaryController.addListener(_save);
     _secondaryController.addListener(_save);
     _risserController.addListener(_save);
@@ -51,14 +53,16 @@ class _StepCurveState extends State<StepCurve> {
     final s = double.tryParse(_secondaryController.text.trim());
     final r = int.tryParse(_risserController.text.trim());
 
-    widget.onSave(widget.initialData.copyWith(
-      curve: ProfileCurve(
-        cobbPrimary: p,
-        cobbSecondary: s,
-        curveType: _curveType,
-        risser: r,
+    widget.onSave(
+      widget.initialData.copyWith(
+        curve: ProfileCurve(
+          cobbPrimary: p,
+          cobbSecondary: s,
+          curveType: _curveType,
+          risser: r,
+        ),
       ),
-    ));
+    );
   }
 
   @override
@@ -74,6 +78,7 @@ class _StepCurveState extends State<StepCurve> {
       children: [
         ProfileField(
           label: 'Primary Cobb angle (°)',
+          helpTopicId: 'cobb-angle',
           hint: 'The main curve angle from your X-ray.',
           child: ProfileTextInput(
             controller: _primaryController,
@@ -93,9 +98,15 @@ class _StepCurveState extends State<StepCurve> {
               _save();
             },
             options: const [
-              ChipOption(value: CurveType.thoracic, label: 'Thoracic (upper back)'),
+              ChipOption(
+                value: CurveType.thoracic,
+                label: 'Thoracic (upper back)',
+              ),
               ChipOption(value: CurveType.lumbar, label: 'Lumbar (lower back)'),
-              ChipOption(value: CurveType.thoracolumbar, label: 'Thoracolumbar (mid)'),
+              ChipOption(
+                value: CurveType.thoracolumbar,
+                label: 'Thoracolumbar (mid)',
+              ),
               ChipOption(value: CurveType.doubleS, label: 'Double / S-shaped'),
               ChipOption(value: CurveType.unsure, label: 'Not sure'),
             ],
@@ -113,7 +124,11 @@ class _StepCurveState extends State<StepCurve> {
                 AnimatedRotation(
                   turns: _advanced ? 0.5 : 0.0,
                   duration: const Duration(milliseconds: 200),
-                  child: Icon(Icons.expand_more_rounded, size: 16, color: AppTheme.primarySage),
+                  child: Icon(
+                    Icons.expand_more_rounded,
+                    size: 16,
+                    color: AppTheme.primarySage,
+                  ),
                 ),
                 const SizedBox(width: 4),
                 Text(
@@ -143,7 +158,9 @@ class _StepCurveState extends State<StepCurve> {
                         controller: _secondaryController,
                         labelText: 'Secondary Cobb',
                         hintText: 'e.g. 18',
-                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                        keyboardType: const TextInputType.numberWithOptions(
+                          decimal: true,
+                        ),
                       ),
                     ),
                     const SizedBox(height: 24),

@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../../models/profile_data.dart';
 import '../../../theme/app_theme.dart';
+import '../../learn_screen.dart';
 
 class StepConsent extends StatefulWidget {
   final ProfileData initialData;
@@ -50,6 +51,7 @@ class _StepConsentState extends State<StepConsent> {
         const _ConsentRow(
           icon: Icons.folder_shared_outlined,
           title: 'Your data should be portable',
+          helpTopicId: 'export-import',
           body:
               'Before release, protected export and import will let you move a human-readable copy to a new phone. Import will show a preview and ask before changing anything.',
         ),
@@ -87,11 +89,13 @@ class _ConsentRow extends StatelessWidget {
   final IconData icon;
   final String title;
   final String body;
+  final String? helpTopicId;
 
   const _ConsentRow({
     required this.icon,
     required this.title,
     required this.body,
+    this.helpTopicId,
   });
 
   @override
@@ -121,13 +125,24 @@ class _ConsentRow extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  title,
-                  style: GoogleFonts.outfit(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
-                    color: AppTheme.foregroundDark,
-                  ),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        title,
+                        style: GoogleFonts.outfit(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: AppTheme.foregroundDark,
+                        ),
+                      ),
+                    ),
+                    if (helpTopicId != null)
+                      ContextualHelpIcon(
+                        topicId: helpTopicId!,
+                        tooltip: 'Learn about $title',
+                      ),
+                  ],
                 ),
                 const SizedBox(height: 2),
                 Text(

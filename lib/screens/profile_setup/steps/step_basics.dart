@@ -128,6 +128,7 @@ class _StepBasicsState extends State<StepBasics> {
         const SizedBox(height: 24),
         ProfileField(
           label: 'Sex assigned at birth (optional)',
+          helpTopicId: 'sex-assigned-at-birth',
           hint:
               'Optional. This is kept only as part of the local profile; you can skip it.',
           child: ProfileChipGroup<Sex>(

@@ -4,6 +4,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_expandable_fab/flutter_expandable_fab.dart';
 import '../models/event.dart';
+import 'learn_screen.dart';
 import '../services/gamification_service.dart';
 import '../services/session_service.dart';
 import '../theme/app_theme.dart';
@@ -153,7 +154,16 @@ class _MyJourneyScreenState extends State<MyJourneyScreen>
                         const SizedBox(height: 20),
 
                         // ── Cobb angle graph ───────────────────────────────
-                        _SectionHeader(title: 'Your Recorded Measurements'),
+                        Row(
+                          children: [
+                            const Expanded(
+                              child: _SectionHeader(
+                                title: 'Your Recorded Measurements',
+                              ),
+                            ),
+                            ContextualHelpIcon(topicId: 'measurement-log'),
+                          ],
+                        ),
                         const SizedBox(height: 12),
 
                         // Time Range & Overlay Filter Bar (Scrollable to prevent edge clipping)

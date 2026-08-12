@@ -47,7 +47,8 @@ const List<OnboardingScreenData> kOnboardingScreens = [
     tintSoft: Color(0xFFC6EAD9),
     deep: Color(0xFF04342C),
     headline: ['Your spine has a story.', "Let's track it."],
-    subtext: 'Log brace time and exercises daily, and watch the picture of your curve come together.',
+    subtext:
+        'Log brace time and exercises daily, and watch the picture of your curve come together.',
     cta: 'Next',
     overshoot: false,
   ),
@@ -62,7 +63,8 @@ const List<OnboardingScreenData> kOnboardingScreens = [
     tintSoft: Color(0xFFC5BFF2),
     deep: Color(0xFF221D55),
     headline: ['Every stretch counts', 'toward something.'],
-    subtext: 'Brace hours and stretches feed one daily ring — fill it and your streak keeps going.',
+    subtext:
+        'Brace hours and stretches feed one daily ring — fill it and your streak keeps going.',
     cta: 'Next',
     overshoot: true,
   ),
@@ -77,7 +79,8 @@ const List<OnboardingScreenData> kOnboardingScreens = [
     tintSoft: Color(0xFFF5C6AE),
     deep: Color(0xFF5C2210),
     headline: ['Show up,', 'level up.'],
-    subtext: 'Real actions earn real XP, so every session pushes your level and streak forward.',
+    subtext:
+        'Real actions earn real XP, so every session pushes your level and streak forward.',
     cta: 'Next',
     overshoot: true,
   ),
@@ -91,8 +94,9 @@ const List<OnboardingScreenData> kOnboardingScreens = [
     tint: Color(0xFFE6F5FA),
     tintSoft: Color(0xFFB9E2F0),
     deep: Color(0xFF052430),
-    headline: ["You're not doing", 'this alone.'],
-    subtext: "Follow others managing scoliosis, swap what actually helps, and cheer each other's streaks on.",
+    headline: ['Clear answers,', 'when you need them.'],
+    subtext:
+        'Open plain-language explanations and source-linked Learn topics whenever a term feels unfamiliar.',
     cta: 'Next',
     overshoot: true,
   ),
@@ -107,7 +111,8 @@ const List<OnboardingScreenData> kOnboardingScreens = [
     tintSoft: Color(0xFFC5BFF2),
     deep: Color(0xFF221D55),
     headline: ['Your data', 'stays yours.'],
-    subtext: 'Stored on this device, never sold or shared, and deletable anytime in Settings.',
+    subtext:
+        'Stored on this device, never sold or shared, and deletable anytime in Settings.',
     cta: 'Get started',
     overshoot: false,
   ),
@@ -152,9 +157,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   void _handleKeyEvent(KeyEvent event) {
     if (event is KeyDownEvent) {
-      if (event.logicalKey == LogicalKeyboardKey.arrowRight && _currentStep < kOnboardingScreens.length) {
+      if (event.logicalKey == LogicalKeyboardKey.arrowRight &&
+          _currentStep < kOnboardingScreens.length) {
         _next();
-      } else if (event.logicalKey == LogicalKeyboardKey.arrowLeft && _currentStep > 1) {
+      } else if (event.logicalKey == LogicalKeyboardKey.arrowLeft &&
+          _currentStep > 1) {
         _goToStep(_currentStep - 1);
       }
     }
@@ -188,7 +195,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             child: Column(
               children: [
                 StepAnnouncer(
-                  message: 'Step $_currentStep of $total. ${s.headline[0]} ${s.headline[1]}. ${s.subtext}',
+                  message:
+                      'Step $_currentStep of $total. ${s.headline[0]} ${s.headline[1]}. ${s.subtext}',
                 ),
 
                 // ── Header Chrome ───────────────────────────────────────────────
@@ -267,10 +275,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           ),
 
                         if (_currentStep == 3)
-                          CountUpWidget(
-                            to: 120,
-                            color: s.tint,
-                          ),
+                          CountUpWidget(to: 120, color: s.tint),
                       ],
                     ),
                   ),
