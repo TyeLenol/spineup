@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:spineup/models/care_subject.dart';
+import 'package:spineup/models/profile_data.dart';
 import 'package:spineup/screens/navigation_shell.dart';
 import 'package:spineup/screens/today_screen.dart';
 import 'package:spineup/screens/my_journey_screen.dart';
