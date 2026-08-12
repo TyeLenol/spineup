@@ -4,6 +4,7 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:uuid/uuid.dart';
 
 import 'package:spineup/data/database_helper.dart';
+import 'package:spineup/models/appointment.dart';
 import 'package:spineup/models/event.dart';
 import 'package:spineup/models/profile_data.dart';
 import 'package:spineup/services/gamification_service.dart';
@@ -135,6 +136,44 @@ void main() {
     expect(updatedEvents.single.id, original.id);
     expect(updatedEvents.single.xpValue, original.xpValue);
     expect(updatedEvents.single.payload['notes'], 'updated');
+  });
+
+  test('completing an appointment twice is rejected without a second event', () async {
+    final service = GamificationService(db: dbHelper);
+    final appointment = Appointment(
+      id: uuid.v4(),
+      userId: userId,
+      title: 'Spine clinic',
+      scheduledDateTime: DateTime.now().subtract(const Duration(minutes: 1)),
+    );
+    await dbHelper.insertAppointment(appointment);
+
+    await service.completeAppointment(
+      appointmentId: appointment.id,
+      userId: userId,
+    );
+    expect(
+      await dbHelper.getEventsByUserAndType(
+        userId,
+        EventType.appointmentAttended,
+      ),
+      hasLength(1),
+    );
+
+    await expectLater(
+      service.completeAppointment(
+        appointmentId: appointment.id,
+        userId: userId,
+      ),
+      throwsStateError,
+    );
+    expect(
+      await dbHelper.getEventsByUserAndType(
+        userId,
+        EventType.appointmentAttended,
+      ),
+      hasLength(1),
+    );
   });
 
   test('profile mapper produces one runtime summary from onboarding data', () {

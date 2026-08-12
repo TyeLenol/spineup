@@ -468,6 +468,15 @@ class GamificationService {
     if (appointment == null) {
       throw ArgumentError('Appointment not found: $appointmentId');
     }
+    if (appointment.userId != userId) {
+      throw StateError('Appointment does not belong to the active user.');
+    }
+    if (appointment.isCompleted || appointment.completedEventId != null) {
+      throw StateError('Appointment has already been completed.');
+    }
+    if (appointment.isCancelled) {
+      throw StateError('Cannot complete a cancelled appointment.');
+    }
     if (appointment.scheduledDateTime.isAfter(DateTime.now())) {
       throw StateError('Cannot complete future appointment before scheduled date/time.');
     }
