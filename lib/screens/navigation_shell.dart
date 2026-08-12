@@ -21,12 +21,15 @@ class NavigationShell extends StatefulWidget {
 class _NavigationShellState extends State<NavigationShell> {
   int _selectedIndex = 0;
 
-  static const List<Widget> _screens = [
-    TodayScreen(key: ValueKey(0)),
-    MyJourneyScreen(key: ValueKey(1)),
-    LearnScreen(key: ValueKey(2)),
-    MeScreen(key: ValueKey(3)),
-  ];
+  Widget _screenFor(int index, String subjectId) {
+    return switch (index) {
+      0 => TodayScreen(key: ValueKey('today-$subjectId')),
+      1 => MyJourneyScreen(key: ValueKey('journey-$subjectId')),
+      2 => const LearnScreen(key: ValueKey('learn')),
+      3 => MeScreen(key: ValueKey('me-$subjectId')),
+      _ => TodayScreen(key: ValueKey('today-$subjectId')),
+    };
+  }
 
   void _onItemTapped(int index) {
     if (index == _selectedIndex) return;
@@ -41,17 +44,24 @@ class _NavigationShellState extends State<NavigationShell> {
         children: [
           const Positioned.fill(child: LivingBackground(step: 1)),
           Positioned.fill(
-            child: PageTransitionSwitcher(
-              duration: const Duration(milliseconds: 400),
-              transitionBuilder: (child, primaryAnimation, secondaryAnimation) {
-                return AppTransitions.buildTopLevelTransition(
-                  context: context,
-                  animation: primaryAnimation,
-                  secondaryAnimation: secondaryAnimation,
-                  child: child,
+            child: ValueListenableBuilder<CareSubject?>(
+              valueListenable: SessionService.activeCareSubjectNotifier,
+              builder: (_, subject, _) {
+                final subjectId = subject?.id ?? SessionService.currentUserId;
+                return PageTransitionSwitcher(
+                  duration: const Duration(milliseconds: 400),
+                  transitionBuilder:
+                      (child, primaryAnimation, secondaryAnimation) {
+                        return AppTransitions.buildTopLevelTransition(
+                          context: context,
+                          animation: primaryAnimation,
+                          secondaryAnimation: secondaryAnimation,
+                          child: child,
+                        );
+                      },
+                  child: _screenFor(_selectedIndex, subjectId),
                 );
               },
-              child: _screens[_selectedIndex],
             ),
           ),
           ValueListenableBuilder<CareSubject?>(
