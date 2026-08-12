@@ -1,8 +1,10 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:uuid/uuid.dart';
 
 import '../../main.dart';
+import '../../models/event.dart';
 import '../../models/profile_data.dart';
 import '../../services/gamification_service.dart';
 import '../../services/profile_mapper.dart';
@@ -79,7 +81,8 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
         userId: userId,
         data: _data,
       );
-      await GamificationService().updateProfile(
+      final gamification = GamificationService();
+      await gamification.updateProfile(
         userId: userId,
         presetId: runtimeProfile.presetId,
         customPhotoPath: runtimeProfile.customPhotoPath,
@@ -88,6 +91,21 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
         braceStatus: runtimeProfile.braceStatus,
         ageRange: runtimeProfile.ageRange,
       );
+
+      final hasCompletionEvent = (await gamification.getAllEvents(userId))
+          .any((event) => event.type == EventType.profileCompleted);
+      if (!hasCompletionEvent) {
+        await gamification.logEvent(
+          eventId: const Uuid().v4(),
+          userId: userId,
+          type: EventType.profileCompleted,
+          includeDailyBonus: false,
+          payload: {
+            'goals': _data.goals.map((goal) => goal.name).toList(),
+            'completed_at': DateTime.now().toIso8601String(),
+          },
+        );
+      }
 
       if (!mounted) return;
       Navigator.of(context).pushAndRemoveUntil(

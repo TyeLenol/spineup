@@ -12,6 +12,7 @@ const int kXpStretch = 30;
 const int kXpJournal = 25;
 const int kXpAngle = 50;
 const int kXpAppointment = 40;
+const int kXpProfileCompletion = 250;
 const int kXpDailyBonus = 5;
 const int kDailyXpTarget = 600;
 
@@ -105,6 +106,8 @@ class GamificationService {
         return kXpAngle;
       case EventType.appointmentAttended:
         return kXpAppointment;
+      case EventType.profileCompleted:
+        return kXpProfileCompletion;
     }
   }
 
@@ -133,6 +136,7 @@ class GamificationService {
     required String userId,
     required EventType type,
     required Map<String, dynamic> payload,
+    bool includeDailyBonus = true,
   }) async {
     int base = baseXpFor(type);
 
@@ -150,7 +154,7 @@ class GamificationService {
       }
     }
 
-    final bonus = firstToday ? kXpDailyBonus : 0;
+    final bonus = includeDailyBonus && firstToday ? kXpDailyBonus : 0;
     final total = base + bonus;
 
     final event = Event(

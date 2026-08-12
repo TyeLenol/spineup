@@ -227,7 +227,6 @@ class ProfileData {
   final List<Goal> goals;
   final ProfileCompanion companion;
   final DateTime? completedAt;
-  final int xp;
 
   const ProfileData({
     this.consent = const ProfileConsent(),
@@ -241,7 +240,6 @@ class ProfileData {
     this.goals = const [],
     this.companion = const ProfileCompanion(),
     this.completedAt,
-    this.xp = 0,
   });
 
   ProfileData copyWith({
@@ -256,7 +254,6 @@ class ProfileData {
     List<Goal>? goals,
     ProfileCompanion? companion,
     DateTime? completedAt,
-    int? xp,
   }) {
     return ProfileData(
       consent: consent ?? this.consent,
@@ -270,7 +267,6 @@ class ProfileData {
       goals: goals ?? this.goals,
       companion: companion ?? this.companion,
       completedAt: completedAt ?? this.completedAt,
-      xp: xp ?? this.xp,
     );
   }
 
@@ -286,7 +282,6 @@ class ProfileData {
         'goals': goals.map((e) => e.name).toList(),
         'companion': companion.toJson(),
         'completedAt': completedAt?.toIso8601String(),
-        'xp': xp,
       };
 
   factory ProfileData.fromJson(Map<String, dynamic> json) => ProfileData(
@@ -301,6 +296,5 @@ class ProfileData {
         goals: (json['goals'] as List<dynamic>?)?.map((e) => Goal.values.firstWhere((g) => g.name == e, orElse: () => Goal.exploring)).toList() ?? [],
         companion: json['companion'] != null ? ProfileCompanion.fromJson(json['companion']) : const ProfileCompanion(),
         completedAt: json['completedAt'] != null ? DateTime.tryParse(json['completedAt']) : null,
-        xp: json['xp'] ?? 0,
       );
 }

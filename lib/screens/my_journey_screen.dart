@@ -614,6 +614,11 @@ class _EventTile extends StatelessWidget {
         'Doctor appointment',
         AppTheme.primarySage,
       ),
+      EventType.profileCompleted => (
+        Icons.person_rounded,
+        'Profile completed',
+        AppTheme.accentLavender,
+      ),
     };
 
     return Container(

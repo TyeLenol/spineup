@@ -4,7 +4,8 @@ enum EventType {
   stretchCompleted('stretch_completed'),
   journalEntry('journal_entry'),
   appointmentAttended('appointment_attended'),
-  angleLogged('angle_logged');
+  angleLogged('angle_logged'),
+  profileCompleted('profile_completed');
 
   final String value;
   const EventType(this.value);

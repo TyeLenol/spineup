@@ -138,6 +138,21 @@ void main() {
     expect(updatedEvents.single.payload['notes'], 'updated');
   });
 
+  test('profile completion uses the authoritative ledger reward', () async {
+    final service = GamificationService(db: dbHelper);
+    final result = await service.logEvent(
+      eventId: uuid.v4(),
+      userId: userId,
+      type: EventType.profileCompleted,
+      includeDailyBonus: false,
+      payload: {'goals': ['reducePain']},
+    );
+
+    expect(result.xpAwarded, 250);
+    expect(result.dailyBonusAwarded, isFalse);
+    expect((await service.getSnapshot(userId)).totalXp, 250);
+  });
+
   test('completing an appointment twice is rejected without a second event', () async {
     final service = GamificationService(db: dbHelper);
     final appointment = Appointment(

@@ -48,7 +48,6 @@ class _StepGoalsState extends State<StepGoals> {
   void _save() {
     widget.onSave(widget.initialData.copyWith(
       goals: _goals,
-      xp: (widget.initialData.xp == 0 ? 250 : widget.initialData.xp),
       completedAt: DateTime.now(),
     ));
   }
