@@ -180,7 +180,7 @@ class GamificationService {
 
     return LogEventResult(
       xpAwarded: total,
-      dailyBonusAwarded: firstToday,
+      dailyBonusAwarded: includeDailyBonus && firstToday,
       newMilestones: newMilestones,
     );
   }
