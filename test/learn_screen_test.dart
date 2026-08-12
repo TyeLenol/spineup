@@ -30,6 +30,11 @@ void main() {
       findsOneWidget,
     );
     expect(find.byTooltip('Close'), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.text('Sources'),
+      500,
+      scrollable: find.byType(Scrollable).last,
+    );
     expect(find.text('Sources'), findsOneWidget);
   });
 
@@ -58,6 +63,11 @@ void main() {
     await tester.tap(find.text('Learn more'));
     await tester.pumpAndSettle();
 
+    await tester.scrollUntilVisible(
+      find.text('Sources'),
+      500,
+      scrollable: find.byType(Scrollable).last,
+    );
     expect(find.text('Sources'), findsOneWidget);
     expect(find.text('Scoliosis Research Society'), findsNothing);
     expect(find.text('SOSORT'), findsOneWidget);
