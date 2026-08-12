@@ -1,44 +1,38 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+
 import '../../../models/profile_data.dart';
 import '../../../theme/app_theme.dart';
 
 class StepConsent extends StatefulWidget {
   final ProfileData initialData;
   final ValueChanged<ProfileData> onSave;
-  final VoidCallback onNext;
+  final bool isCaregiverMode;
 
-  const StepConsent({super.key, required this.initialData, required this.onSave, required this.onNext});
+  const StepConsent({
+    super.key,
+    required this.initialData,
+    required this.onSave,
+    required this.isCaregiverMode,
+  });
 
   @override
   State<StepConsent> createState() => _StepConsentState();
 }
 
 class _StepConsentState extends State<StepConsent> {
-  late bool analytics;
-
   @override
   void initState() {
     super.initState();
-    analytics = widget.initialData.consent.analytics;
+    WidgetsBinding.instance.addPostFrameCallback((_) => _accept());
   }
 
   void _accept() {
-    widget.onSave(widget.initialData.copyWith(
-      consent: ProfileConsent(
-        onDevice: true,
-        analytics: analytics,
-        acceptedAt: DateTime.now(),
+    widget.onSave(
+      widget.initialData.copyWith(
+        consent: ProfileConsent(onDevice: true, acceptedAt: DateTime.now()),
       ),
-    ));
-  }
-
-  @override
-  void didUpdateWidget(covariant StepConsent oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    // Whenever parent saves (e.g. going to next step), we trigger save
-    _accept();
+    );
   }
 
   @override
@@ -46,30 +40,38 @@ class _StepConsentState extends State<StepConsent> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _ConsentRow(
-          icon: Icons.security_rounded,
+        const _ConsentRow(
+          icon: Icons.phone_android_rounded,
           title: 'On-device by default',
-          body: 'Your profile lives in local storage on this phone. No account, no cloud, unless you turn it on later.',
-          locked: true,
+          body:
+              'Your profile is stored locally on this phone. SpineUp does not use analytics, and cloud backup is not enabled in this prototype.',
+        ),
+        const SizedBox(height: 12),
+        const _ConsentRow(
+          icon: Icons.folder_shared_outlined,
+          title: 'Your data should be portable',
+          body:
+              'Before release, protected export and import will let you move a human-readable copy to a new phone. Import will show a preview and ask before changing anything.',
         ),
         const SizedBox(height: 12),
         _ConsentRow(
-          icon: Icons.cloud_rounded,
-          title: 'Cloud sync',
-          body: 'Off. Enable later in Settings if you want to sync across devices.',
-          locked: true,
+          icon: Icons.delete_outline_rounded,
+          title: 'Deletion scope',
+          body:
+              'You can edit your information later. In this prototype, the Settings deletion action removes all local data for this app session; subject-only deletion will be added before caregiver release.',
         ),
-        const SizedBox(height: 12),
-        _ConsentRow(
-          icon: Icons.bar_chart_rounded,
-          title: 'Anonymous usage analytics',
-          body: 'Help us improve SpineUp with anonymised, non-medical usage data.',
-          toggleValue: analytics,
-          onToggle: (v) => setState(() => analytics = v),
-        ),
+        if (widget.isCaregiverMode) ...[
+          const SizedBox(height: 12),
+          const _ConsentRow(
+            icon: Icons.people_alt_outlined,
+            title: 'Separate caregiver profile',
+            body:
+                'This profile belongs to the person you care for. Their records are kept separate from your own and are not shared with a clinician or service by default.',
+          ),
+        ],
         const SizedBox(height: 16),
         Text(
-          'Every clinical question in setup is optional. You can skip anything, edit later, and delete your profile any time from Settings.',
+          'Every health question in setup is optional. SpineUp records what you choose to enter and explains terms; it does not diagnose, predict progression, or prescribe treatment.',
           style: GoogleFonts.outfit(
             fontSize: 11,
             height: 1.5,
@@ -85,17 +87,11 @@ class _ConsentRow extends StatelessWidget {
   final IconData icon;
   final String title;
   final String body;
-  final bool locked;
-  final bool? toggleValue;
-  final ValueChanged<bool>? onToggle;
 
   const _ConsentRow({
     required this.icon,
     required this.title,
     required this.body,
-    this.locked = false,
-    this.toggleValue,
-    this.onToggle,
   });
 
   @override
@@ -145,32 +141,6 @@ class _ConsentRow extends StatelessWidget {
               ],
             ),
           ),
-          if (locked) ...[
-            const SizedBox(width: 8),
-            Container(
-              margin: const EdgeInsets.only(top: 4),
-              child: Text(
-                'DEFAULT',
-                style: GoogleFonts.outfit(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w800,
-                  color: AppTheme.primarySage,
-                  letterSpacing: 1.0,
-                ),
-              ),
-            ),
-          ],
-          if (toggleValue != null && onToggle != null) ...[
-            const SizedBox(width: 8),
-            Transform.scale(
-              scale: 0.85,
-              child: CupertinoSwitch(
-                value: toggleValue!,
-                onChanged: onToggle,
-                activeTrackColor: AppTheme.primarySage,
-              ),
-            ),
-          ],
         ],
       ),
     );

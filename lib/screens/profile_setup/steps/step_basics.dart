@@ -4,12 +4,14 @@ import '../profile_fields.dart';
 
 class StepBasics extends StatefulWidget {
   final ProfileData initialData;
+  final bool isCaregiverMode;
   final ValueChanged<ProfileData> onSave;
   final ValueChanged<bool> onValidityChanged;
 
   const StepBasics({
     super.key,
     required this.initialData,
+    required this.isCaregiverMode,
     required this.onSave,
     required this.onValidityChanged,
   });
@@ -27,14 +29,18 @@ class _StepBasicsState extends State<StepBasics> {
   @override
   void initState() {
     super.initState();
-    _nameController = TextEditingController(text: widget.initialData.basics.displayName);
+    _nameController = TextEditingController(
+      text: widget.initialData.basics.displayName,
+    );
     _dobController = TextEditingController(text: widget.initialData.basics.dob);
     _sex = widget.initialData.basics.sex;
     _stage = widget.initialData.story.treatmentStage;
-    
+
     _nameController.addListener(_validate);
     _dobController.addListener(_validate);
-    
+    _nameController.addListener(_save);
+    _dobController.addListener(_save);
+
     // Initial validation
     WidgetsBinding.instance.addPostFrameCallback((_) => _validate());
   }
@@ -54,16 +60,16 @@ class _StepBasicsState extends State<StepBasics> {
   }
 
   void _save() {
-    widget.onSave(widget.initialData.copyWith(
-      basics: ProfileBasics(
-        displayName: _nameController.text.trim(),
-        dob: _dobController.text.trim(),
-        sex: _sex,
+    widget.onSave(
+      widget.initialData.copyWith(
+        basics: ProfileBasics(
+          displayName: _nameController.text.trim(),
+          dob: _dobController.text.trim(),
+          sex: _sex,
+        ),
+        story: widget.initialData.story.copyWith(treatmentStage: _stage),
       ),
-      story: widget.initialData.story.copyWith(
-        treatmentStage: _stage,
-      ),
-    ));
+    );
   }
 
   @override
@@ -90,17 +96,24 @@ class _StepBasicsState extends State<StepBasics> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         ProfileField(
-          label: 'What should Spry call you?',
+          label: widget.isCaregiverMode
+              ? 'What should we call them?'
+              : 'What should Spry call you?',
           child: ProfileTextInput(
             controller: _nameController,
             labelText: 'Name',
-            hintText: 'Your first name or nickname',
+            hintText: widget.isCaregiverMode
+                ? 'Their first name or nickname'
+                : 'Your first name or nickname',
           ),
         ),
         const SizedBox(height: 24),
         ProfileField(
-          label: 'Date of birth',
-          hint: 'Used for age-appropriate content and growth tracking.',
+          label: widget.isCaregiverMode
+              ? 'Their date of birth'
+              : 'Date of birth',
+          hint:
+              'Used only to present age-appropriate information and recordkeeping.',
           child: GestureDetector(
             onTap: _pickDate,
             child: AbsorbPointer(
@@ -115,11 +128,13 @@ class _StepBasicsState extends State<StepBasics> {
         const SizedBox(height: 24),
         ProfileField(
           label: 'Sex assigned at birth (optional)',
-          hint: 'Scoliosis progression risk differs — you can skip this.',
+          hint:
+              'Optional. This is kept only as part of the local profile; you can skip it.',
           child: ProfileChipGroup<Sex>(
             selectedValue: _sex,
             onChanged: (v) {
               setState(() => _sex = (_sex == v) ? Sex.none : v);
+              _save();
               _validate();
             },
             options: const [
@@ -132,21 +147,40 @@ class _StepBasicsState extends State<StepBasics> {
         ),
         const SizedBox(height: 24),
         ProfileField(
-          label: 'Where are you in your journey?',
-          hint: 'Shapes what Spry cheers you on for. You can change this any time.',
+          label: widget.isCaregiverMode
+              ? 'Where are they in their journey?'
+              : 'Where are you in your journey?',
+          hint: 'Shapes tracking and reminders. You can change this any time.',
           child: ProfileChipGroup<TreatmentStage>(
             columns: 1,
             selectedValue: _stage,
             onChanged: (v) {
               setState(() => _stage = v);
+              _save();
               _validate();
             },
             options: const [
-              ChipOption(value: TreatmentStage.observation, label: 'Being monitored', hint: 'Watch-and-wait, no brace yet'),
-              ChipOption(value: TreatmentStage.bracing, label: 'Wearing a brace'),
-              ChipOption(value: TreatmentStage.preOp, label: 'Preparing for surgery'),
-              ChipOption(value: TreatmentStage.postOp, label: 'Recovering from surgery'),
-              ChipOption(value: TreatmentStage.adult, label: 'Adult with scoliosis'),
+              ChipOption(
+                value: TreatmentStage.observation,
+                label: 'Being monitored',
+                hint: 'Watch-and-wait, no brace yet',
+              ),
+              ChipOption(
+                value: TreatmentStage.bracing,
+                label: 'Wearing a brace',
+              ),
+              ChipOption(
+                value: TreatmentStage.preOp,
+                label: 'Preparing for surgery',
+              ),
+              ChipOption(
+                value: TreatmentStage.postOp,
+                label: 'Recovering from surgery',
+              ),
+              ChipOption(
+                value: TreatmentStage.adult,
+                label: 'Adult with scoliosis',
+              ),
               ChipOption(value: TreatmentStage.unsure, label: 'Not sure yet'),
             ],
           ),

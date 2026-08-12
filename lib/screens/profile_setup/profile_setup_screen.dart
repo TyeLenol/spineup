@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../data/database_helper.dart';
 import '../../main.dart';
 import '../../models/event.dart';
 import '../../models/profile_data.dart';
@@ -17,6 +18,7 @@ import 'steps/step_care.dart';
 import 'steps/step_consent.dart';
 import 'steps/step_curve.dart';
 import 'steps/step_goals.dart';
+import 'steps/step_ownership.dart';
 
 class ProfileSetupScreen extends StatefulWidget {
   const ProfileSetupScreen({super.key});
@@ -40,17 +42,16 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
   Future<void> _loadInitialData() async {
     final data = await ProfileStore.loadProfile(
       userId: SessionService.currentUserId,
+      careSubjectId: SessionService.currentCareSubjectId,
     );
     if (mounted) {
-      setState(() {
-        _data = data;
-      });
+      setState(() => _data = data);
     }
   }
 
   void _nextStep() {
     if (_finishing) return;
-    if (_step < 5) {
+    if (_step < 6) {
       setState(() {
         _step++;
         _stepValid = false;
@@ -69,21 +70,46 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
     }
   }
 
+  void _saveOwnership(ProfileData data) {
+    final changedToWard =
+        _data.ownership.subjectType != data.ownership.subjectType &&
+        data.ownership.isWard;
+
+    // A ward must never inherit a caregiver's locally saved health profile.
+    // Retain only the explicit ownership selection when the flow switches mode.
+    setState(() {
+      _data = changedToWard ? ProfileData(ownership: data.ownership) : data;
+    });
+  }
+
   Future<void> _finish() async {
     if (_finishing) return;
     setState(() => _finishing = true);
 
     try {
-      final userId = SessionService.currentUserId;
+      final ownerUserId = SessionService.currentUserId;
+      final existingSubject = SessionService.activeCareSubject;
+      final careSubjectId =
+          existingSubject?.id ??
+          (_data.ownership.isSelf ? ownerUserId : const Uuid().v4());
+      final careSubject = ProfileMapper.toCareSubject(
+        id: careSubjectId,
+        ownerUserId: ownerUserId,
+        data: _data,
+        existing: existingSubject,
+      );
       final runtimeProfile = ProfileMapper.toRuntimeProfile(_data);
 
+      await DatabaseHelper().upsertCareSubject(careSubject);
       await ProfileStore.saveProfile(
-        userId: userId,
+        userId: ownerUserId,
+        careSubjectId: careSubject.id,
         data: _data,
       );
+
       final gamification = GamificationService();
       await gamification.updateProfile(
-        userId: userId,
+        userId: careSubject.id,
         presetId: runtimeProfile.presetId,
         customPhotoPath: runtimeProfile.customPhotoPath,
         name: runtimeProfile.name,
@@ -92,12 +118,13 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
         ageRange: runtimeProfile.ageRange,
       );
 
-      final hasCompletionEvent = (await gamification.getAllEvents(userId))
-          .any((event) => event.type == EventType.profileCompleted);
+      final hasCompletionEvent = (await gamification.getAllEvents(
+        careSubject.id,
+      )).any((event) => event.type == EventType.profileCompleted);
       if (!hasCompletionEvent) {
         await gamification.logEvent(
           eventId: const Uuid().v4(),
-          userId: userId,
+          userId: careSubject.id,
           type: EventType.profileCompleted,
           includeDailyBonus: false,
           payload: {
@@ -106,12 +133,12 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
           },
         );
       }
+      SessionService.setActiveCareSubject(careSubject);
 
       if (!mounted) return;
-      Navigator.of(context).pushAndRemoveUntil(
-        mainAppRoute(),
-        (route) => false,
-      );
+      Navigator.of(
+        context,
+      ).pushAndRemoveUntil(mainAppRoute(), (route) => false);
     } finally {
       if (mounted) setState(() => _finishing = false);
     }
@@ -126,24 +153,16 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
     VoidCallback onPrimaryTap = _nextStep;
     String? secondaryLabel;
     VoidCallback? onSecondaryTap;
+    final isWard = _data.ownership.isWard;
 
     switch (_step) {
       case 1:
-        title = 'Your data, your body, your rules.';
-        explainer = 'Health info is sensitive. Everything you enter stays on this device by default. You choose what — if anything — to share.';
-        child = StepConsent(
+        title = 'Who is this profile for?';
+        explainer =
+            'Choose whose information you are setting up. Each person’s records stay in their own private workspace.';
+        child = StepOwnership(
           initialData: _data,
-          onSave: (d) => _data = d,
-          onNext: _nextStep,
-        );
-        _stepValid = true;
-        break;
-      case 2:
-        title = 'Nice to meet you.';
-        explainer = 'Just the essentials so Spry can tailor your journey. Sex-at-birth is optional — it only affects progression-risk insights.';
-        child = StepBasics(
-          initialData: _data,
-          onSave: (d) => _data = d,
+          onSave: _saveOwnership,
           onValidityChanged: (valid) {
             WidgetsBinding.instance.addPostFrameCallback((_) {
               if (mounted && _stepValid != valid) {
@@ -153,25 +172,54 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
           },
         );
         break;
-      case 3:
-        title = 'Curve details.';
-        explainer = 'Only fill what you know from your last clinic visit. If you don\'t have your X-ray report handy, skip — you can add these later.';
-        secondaryLabel = 'I don\'t have this info';
-        onSecondaryTap = _nextStep;
-        child = StepCurve(
+      case 2:
+        title = 'Your data, your body, your rules.';
+        explainer = isWard
+            ? 'You are creating a separate local profile for someone you care for. We explain what stays on this device and what you can export or delete.'
+            : 'Health information is sensitive. We explain what stays on this device and what you can export or delete.';
+        child = StepConsent(
           initialData: _data,
-          onSave: (d) => _data = d,
+          onSave: (data) => _data = data,
+          isCaregiverMode: isWard,
         );
         _stepValid = true;
         break;
+      case 3:
+        title = isWard ? 'Nice to meet them.' : 'Nice to meet you.';
+        explainer = isWard
+            ? 'Add only the essentials you know. Sex assigned at birth is optional and can be skipped.'
+            : 'Add only the essentials you are comfortable sharing. Sex assigned at birth is optional and can be skipped.';
+        child = StepBasics(
+          initialData: _data,
+          isCaregiverMode: isWard,
+          onSave: (data) => _data = data,
+          onValidityChanged: (valid) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (mounted && _stepValid != valid) {
+                setState(() => _stepValid = valid);
+              }
+            });
+          },
+        );
+        break;
       case 4:
-        title = 'Your care routine.';
-        explainer = 'A quick snapshot of your brace and physio — we\'ll use it to shape your daily quests and reminders.';
+        title = isWard ? 'Their curve details.' : 'Curve details.';
+        explainer =
+            'Only fill in what you know from a clinic visit or report. If you do not have it handy, skip it and add it later.';
+        secondaryLabel = 'I don\'t have this info';
+        onSecondaryTap = _nextStep;
+        child = StepCurve(initialData: _data, onSave: (data) => _data = data);
+        _stepValid = true;
+        break;
+      case 5:
+        title = isWard ? 'Their care routine.' : 'Your care routine.';
+        explainer =
+            'A quick snapshot of brace and physiotherapy information. You can change it later; it does not replace a clinician’s plan.';
         secondaryLabel = 'Skip';
         onSecondaryTap = _nextStep;
         child = StepCare(
           initialData: _data,
-          onSave: (d) => _data = d,
+          onSave: (data) => _data = data,
           onValidityChanged: (valid) {
             WidgetsBinding.instance.addPostFrameCallback((_) {
               if (mounted && _stepValid != valid) {
@@ -181,13 +229,17 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
           },
         );
         break;
-      case 5:
-        title = 'Pick your quests.';
-        explainer = 'What matters to you right now? Pick at least one — this shapes your daily quests, XP goals, and home screen.';
-        primaryLabel = _finishing ? 'Saving profile…' : 'Complete profile · +250 XP';
+      case 6:
+        title = isWard ? 'Pick their goals.' : 'Pick your goals.';
+        explainer = isWard
+            ? 'Choose what would be helpful to track together. These shape reminders and app activities, not a treatment plan.'
+            : 'Choose what would be helpful to track. These shape reminders and app activities, not a treatment plan.';
+        primaryLabel = _finishing
+            ? 'Saving profile…'
+            : 'Complete profile · +250 XP';
         child = StepGoals(
           initialData: _data,
-          onSave: (d) => _data = d,
+          onSave: (data) => _data = data,
           onValidityChanged: (valid) {
             WidgetsBinding.instance.addPostFrameCallback((_) {
               if (mounted && _stepValid != valid) {
@@ -203,7 +255,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
 
     return ProfileShell(
       step: _step,
-      totalSteps: 5,
+      totalSteps: 6,
       title: title,
       explainer: explainer,
       primaryLabel: primaryLabel,
@@ -212,10 +264,9 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
       secondaryLabel: secondaryLabel,
       onSecondaryTap: _finishing ? null : onSecondaryTap,
       onBack: _finishing ? null : _prevStep,
-      onClose: () => Navigator.of(context).pushAndRemoveUntil(
-        authRoute(AuthMode.signup),
-        (route) => false,
-      ),
+      onClose: () => Navigator.of(
+        context,
+      ).pushAndRemoveUntil(authRoute(AuthMode.signup), (route) => false),
       child: child,
     );
   }

@@ -15,7 +15,6 @@ import '../widgets/badge_icon.dart';
 import 'auth_screen.dart';
 import 'profile_setup/profile_fields.dart';
 
-
 class MeScreen extends StatefulWidget {
   const MeScreen({super.key});
 
@@ -41,8 +40,8 @@ class _MeScreenState extends State<MeScreen>
 
   Future<void> _loadAll() async {
     setState(() => _loading = true);
-    final snap = await _gs.getSnapshot(SessionService.currentUserId);
-    final events = await _gs.getAllEvents(SessionService.currentUserId);
+    final snap = await _gs.getSnapshot(SessionService.currentCareSubjectId);
+    final events = await _gs.getAllEvents(SessionService.currentCareSubjectId);
     if (mounted) {
       setState(() {
         _snap = snap;
@@ -76,7 +75,7 @@ class _MeScreenState extends State<MeScreen>
                   _SectionHeader(title: 'Profile Info'),
                   const SizedBox(height: 12),
                   _ProfileInfoSection(
-                    userId: SessionService.currentUserId,
+                    userId: SessionService.currentCareSubjectId,
                     snap: _snap,
                     gamificationService: _gs,
                     onProfileUpdated: _loadAll,
@@ -86,7 +85,7 @@ class _MeScreenState extends State<MeScreen>
                   _SectionHeader(title: 'Avatar & Identity'),
                   const SizedBox(height: 12),
                   _AvatarSettings(
-                    userId: SessionService.currentUserId,
+                    userId: SessionService.currentCareSubjectId,
                     snap: _snap,
                     gamificationService: _gs,
                     onProfileUpdated: _loadAll,
@@ -195,7 +194,9 @@ class _BadgesSection extends StatelessWidget {
                       : cs.surfaceContainer.withValues(alpha: 0.5),
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(
-                    color: isUnlocked ? AppTheme.primarySage : AppTheme.borderCream,
+                    color: isUnlocked
+                        ? AppTheme.primarySage
+                        : AppTheme.borderCream,
                     width: isUnlocked ? 1.5 : 1.0,
                   ),
                 ),
@@ -211,8 +212,12 @@ class _BadgesSection extends StatelessWidget {
                       textAlign: TextAlign.center,
                       style: tt.labelSmall?.copyWith(
                         fontSize: 10,
-                        fontWeight: isUnlocked ? FontWeight.bold : FontWeight.normal,
-                        color: isUnlocked ? AppTheme.primarySage : AppTheme.mutedForeground,
+                        fontWeight: isUnlocked
+                            ? FontWeight.bold
+                            : FontWeight.normal,
+                        color: isUnlocked
+                            ? AppTheme.primarySage
+                            : AppTheme.mutedForeground,
                       ),
                     ),
                   ],
@@ -232,14 +237,13 @@ class _AchievementsSection extends StatelessWidget {
   final GamificationSnapshot snap;
   final List<Event> allEvents;
 
-  const _AchievementsSection({
-    required this.snap,
-    required this.allEvents,
-  });
+  const _AchievementsSection({required this.snap, required this.allEvents});
 
   DateTime? _findEarnedDate(Milestone m) {
     if (m.requiredEventType != null) {
-      final matching = allEvents.where((e) => e.type == m.requiredEventType).toList();
+      final matching = allEvents
+          .where((e) => e.type == m.requiredEventType)
+          .toList();
       if (matching.isNotEmpty) {
         matching.sort((a, b) => a.timestamp.compareTo(b.timestamp));
         final reqCount = m.requiredEventCount ?? 1;
@@ -249,7 +253,8 @@ class _AchievementsSection extends StatelessWidget {
       }
     } else if (m.requiredXp != null) {
       int cumulative = 0;
-      final sorted = List<Event>.from(allEvents)..sort((a, b) => a.timestamp.compareTo(b.timestamp));
+      final sorted = List<Event>.from(allEvents)
+        ..sort((a, b) => a.timestamp.compareTo(b.timestamp));
       for (final e in sorted) {
         cumulative += e.xpValue;
         if (cumulative >= m.requiredXp!) {
@@ -328,15 +333,28 @@ class _AchievementsSection extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(m.label, style: tt.titleSmall?.copyWith(fontWeight: FontWeight.bold)),
+                        Text(
+                          m.label,
+                          style: tt.titleSmall?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                         Text(
                           dateStr,
-                          style: tt.bodySmall?.copyWith(color: AppTheme.primarySage, fontSize: 11, fontWeight: FontWeight.w600),
+                          style: tt.bodySmall?.copyWith(
+                            color: AppTheme.primarySage,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ],
                     ),
                   ),
-                  const Icon(Icons.verified_rounded, color: AppTheme.primarySage, size: 20),
+                  const Icon(
+                    Icons.verified_rounded,
+                    color: AppTheme.primarySage,
+                    size: 20,
+                  ),
                 ],
               ),
             );
@@ -404,10 +422,7 @@ class _AvatarSettingsState extends State<_AvatarSettings> {
       children: [
         Row(
           children: [
-            AvatarDisplay(
-              profile: widget.snap.userProfile,
-              size: 64,
-            ),
+            AvatarDisplay(profile: widget.snap.userProfile, size: 64),
             const SizedBox(width: 16),
             Expanded(
               child: Column(
@@ -562,7 +577,10 @@ class _ProfileInfoSection extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Edit Profile Info', style: Theme.of(context).textTheme.titleLarge),
+                  Text(
+                    'Edit Profile Info',
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
                   const SizedBox(height: 16),
                   ProfileTextInput(
                     controller: nameCtrl,
@@ -578,7 +596,9 @@ class _ProfileInfoSection extends StatelessWidget {
                       onChanged: (val) {
                         setSheetState(() => selectedDiagnosis = val);
                       },
-                      options: diagnoses.map((d) => ChipOption(value: d, label: d)).toList(),
+                      options: diagnoses
+                          .map((d) => ChipOption(value: d, label: d))
+                          .toList(),
                     ),
                   ),
                   const SizedBox(height: 24),
@@ -590,7 +610,9 @@ class _ProfileInfoSection extends StatelessWidget {
                       onChanged: (val) {
                         setSheetState(() => selectedBraceStatus = val);
                       },
-                      options: braceStatuses.map((b) => ChipOption(value: b, label: b)).toList(),
+                      options: braceStatuses
+                          .map((b) => ChipOption(value: b, label: b))
+                          .toList(),
                     ),
                   ),
                   const SizedBox(height: 24),
@@ -602,7 +624,9 @@ class _ProfileInfoSection extends StatelessWidget {
                       onChanged: (val) {
                         setSheetState(() => selectedAgeRange = val);
                       },
-                      options: ageRanges.map((a) => ChipOption(value: a, label: a)).toList(),
+                      options: ageRanges
+                          .map((a) => ChipOption(value: a, label: a))
+                          .toList(),
                     ),
                   ),
                   const SizedBox(height: 20),
@@ -648,9 +672,7 @@ class _ProfileInfoSection extends StatelessWidget {
     return Card(
       elevation: 0,
       color: Theme.of(context).colorScheme.surfaceContainerHigh,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(24),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -658,7 +680,10 @@ class _ProfileInfoSection extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('User Details', style: tt.titleSmall?.copyWith(fontWeight: FontWeight.bold)),
+                Text(
+                  'User Details',
+                  style: tt.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+                ),
                 TextButton.icon(
                   onPressed: () => _showEditSheet(context),
                   icon: const Icon(Icons.edit_rounded, size: 16),
@@ -667,10 +692,26 @@ class _ProfileInfoSection extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 16),
-            _ProfileDetailRow(label: 'Name', value: profile.name, icon: Icons.person_outline),
-            _ProfileDetailRow(label: 'Diagnosis', value: profile.diagnosis, icon: Icons.medical_services_outlined),
-            _ProfileDetailRow(label: 'Brace Status', value: profile.braceStatus, icon: Icons.shield_outlined),
-            _ProfileDetailRow(label: 'Age Range', value: profile.ageRange, icon: Icons.calendar_today_outlined),
+            _ProfileDetailRow(
+              label: 'Name',
+              value: profile.name,
+              icon: Icons.person_outline,
+            ),
+            _ProfileDetailRow(
+              label: 'Diagnosis',
+              value: profile.diagnosis,
+              icon: Icons.medical_services_outlined,
+            ),
+            _ProfileDetailRow(
+              label: 'Brace Status',
+              value: profile.braceStatus,
+              icon: Icons.shield_outlined,
+            ),
+            _ProfileDetailRow(
+              label: 'Age Range',
+              value: profile.ageRange,
+              icon: Icons.calendar_today_outlined,
+            ),
           ],
         ),
       ),
@@ -683,7 +724,11 @@ class _ProfileDetailRow extends StatelessWidget {
   final String value;
   final IconData icon;
 
-  const _ProfileDetailRow({required this.label, required this.value, required this.icon});
+  const _ProfileDetailRow({
+    required this.label,
+    required this.value,
+    required this.icon,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -697,16 +742,31 @@ class _ProfileDetailRow extends StatelessWidget {
               color: Theme.of(context).colorScheme.primaryContainer,
               borderRadius: BorderRadius.circular(12),
             ),
-            child: Icon(icon, size: 20, color: Theme.of(context).colorScheme.onPrimaryContainer),
+            child: Icon(
+              icon,
+              size: 20,
+              color: Theme.of(context).colorScheme.onPrimaryContainer,
+            ),
           ),
           const SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(label, style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant)),
+                Text(
+                  label,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
                 const SizedBox(height: 2),
-                Text(value, style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600, color: Theme.of(context).colorScheme.onSurface)),
+                Text(
+                  value,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ),
+                ),
               ],
             ),
           ),
@@ -779,8 +839,8 @@ class _SettingsSectionState extends State<_SettingsSection> {
         return AlertDialog(
           title: const Text('Privacy & Data'),
           content: const Text(
-            'SpineUp keeps all health data local to your device. '
-            'Your symptom logs, Cobb angle entries, and streak data are stored locally in an encrypted database sandbox.',
+            'SpineUp keeps health data local to this device by default. '
+            'This prototype does not send analytics or enable cloud backup. Database encryption and protected export/import are planned safeguards, not features available here yet.',
           ),
           actions: [
             TextButton(
@@ -800,7 +860,7 @@ class _SettingsSectionState extends State<_SettingsSection> {
         return AlertDialog(
           title: const Text('Delete Account & Data?'),
           content: const Text(
-            'This action is irreversible. All your health history, Cobb angle history, streak progress, badges, and settings will be permanently wiped.',
+            'This action is irreversible. It permanently removes all local health history, measurements, appointments, progress, and settings for every profile owned by this app session.',
           ),
           actions: [
             TextButton(
@@ -812,7 +872,7 @@ class _SettingsSectionState extends State<_SettingsSection> {
                 Navigator.pop(ctx);
                 final userId = SessionService.currentUserId;
                 await widget.gamificationService.clearUserData(userId: userId);
-                await ProfileStore.clearProfile(userId: userId);
+                await ProfileStore.clearProfilesForOwner(userId: userId);
                 SessionService.signOut();
                 if (!mounted) return;
                 Navigator.of(context).pushAndRemoveUntil(
@@ -870,8 +930,14 @@ class _SettingsSectionState extends State<_SettingsSection> {
           ),
           const Divider(height: 1),
           ListTile(
-            leading: const Icon(Icons.delete_forever_outlined, color: Colors.red),
-            title: const Text('Delete Account', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+            leading: const Icon(
+              Icons.delete_forever_outlined,
+              color: Colors.red,
+            ),
+            title: const Text(
+              'Delete Account',
+              style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+            ),
             subtitle: const Text('Wipe all local health & event data'),
             onTap: _confirmDeleteAccount,
           ),

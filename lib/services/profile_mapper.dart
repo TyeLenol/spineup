@@ -1,13 +1,9 @@
+import '../models/care_subject.dart';
 import '../models/profile_data.dart';
 import '../models/user_profile.dart';
 
-/// Converts the structured onboarding profile into the compact profile used by
-/// the current runtime and gamification surfaces.
-///
-/// ProfileData remains the onboarding/editing DTO, while UserProfile remains
-/// the runtime summary until the two models are replaced by one domain
-/// aggregate. Keeping this mapping explicit prevents screens from silently
-/// maintaining different conversion rules.
+/// Converts structured onboarding data into the smaller models used by current
+/// runtime surfaces and by the care-subject ownership boundary.
 class ProfileMapper {
   ProfileMapper._();
 
@@ -29,6 +25,36 @@ class ProfileMapper {
       diagnosis: _diagnosisLabel(data.curve.curveType) ?? fallback.diagnosis,
       braceStatus: _braceStatus(data.brace.wears) ?? fallback.braceStatus,
       ageRange: _ageRange(data.basics.dob) ?? fallback.ageRange,
+    );
+  }
+
+  /// Creates the subject index record for the profile being completed. The
+  /// complete health questionnaire stays attached in [profileData] and is saved
+  /// separately through [ProfileStore] under this subject's ID.
+  static CareSubject toCareSubject({
+    required String id,
+    required String ownerUserId,
+    required ProfileData data,
+    CareSubject? existing,
+    DateTime? now,
+  }) {
+    final timestamp = now ?? DateTime.now();
+    final requestedName = data.basics.displayName.trim();
+    final fallbackName = data.ownership.isSelf ? 'You' : 'Someone I care for';
+
+    return CareSubject(
+      id: id,
+      ownerUserId: ownerUserId,
+      type: data.ownership.subjectType,
+      displayName: requestedName.isEmpty
+          ? existing?.displayName ?? fallbackName
+          : requestedName,
+      relationship: data.ownership.isWard
+          ? data.ownership.relationship?.trim()
+          : null,
+      profileData: data,
+      createdAt: existing?.createdAt ?? timestamp,
+      updatedAt: timestamp,
     );
   }
 
@@ -60,7 +86,8 @@ class ProfileMapper {
 
     final now = DateTime.now();
     var age = now.year - birthDate.year;
-    final birthdayHasPassed = (now.month > birthDate.month) ||
+    final birthdayHasPassed =
+        (now.month > birthDate.month) ||
         (now.month == birthDate.month && now.day >= birthDate.day);
     if (!birthdayHasPassed) age--;
 

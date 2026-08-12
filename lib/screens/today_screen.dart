@@ -11,9 +11,7 @@ import '../theme/app_theme.dart';
 import 'appointment_logger_modal.dart';
 import 'daily_check_in_screen.dart';
 
-
 // ─── Exercise catalogue ───────────────────────────────────────────────────────
-
 
 class ExerciseStep {
   final String stepText;
@@ -54,17 +52,20 @@ const List<_Exercise> _exercises = [
     icon: Icons.self_improvement_rounded,
     steps: [
       ExerciseStep(
-        stepText: 'Start on all fours with hands under shoulders and knees directly beneath hips.',
+        stepText:
+            'Start on all fours with hands under shoulders and knees directly beneath hips.',
         durationSeconds: 10,
         cueTags: ['Positioning', 'Neutral spine'],
       ),
       ExerciseStep(
-        stepText: 'Inhale as you arch your back gently, dropping stomach toward floor and looking up (Cow).',
+        stepText:
+            'Inhale as you arch your back gently, dropping stomach toward floor and looking up (Cow).',
         durationSeconds: 15,
         cueTags: ['Deep inhale', 'Gentle arch'],
       ),
       ExerciseStep(
-        stepText: 'Exhale as you draw belly button in, rounding your spine toward ceiling (Cat).',
+        stepText:
+            'Exhale as you draw belly button in, rounding your spine toward ceiling (Cat).',
         durationSeconds: 15,
         cueTags: ['Slow exhale', 'Core activation'],
       ),
@@ -83,12 +84,14 @@ const List<_Exercise> _exercises = [
     icon: Icons.fitness_center_rounded,
     steps: [
       ExerciseStep(
-        stepText: 'Lie on your side with elbow directly beneath shoulder and legs straight.',
+        stepText:
+            'Lie on your side with elbow directly beneath shoulder and legs straight.',
         durationSeconds: 10,
         cueTags: ['Alignment'],
       ),
       ExerciseStep(
-        stepText: 'Engage your core and lift hips off the floor until your body forms a straight line.',
+        stepText:
+            'Engage your core and lift hips off the floor until your body forms a straight line.',
         durationSeconds: 25,
         cueTags: ['Core hold', 'Hips level'],
       ),
@@ -112,12 +115,14 @@ const List<_Exercise> _exercises = [
         cueTags: ['Flat back'],
       ),
       ExerciseStep(
-        stepText: 'Rest one leg vertically against the wall while keeping the other flat on floor.',
+        stepText:
+            'Rest one leg vertically against the wall while keeping the other flat on floor.',
         durationSeconds: 20,
         cueTags: ['Leg vertical', 'Hold 20s'],
       ),
       ExerciseStep(
-        stepText: 'Flex your foot gently until a deep stretch is felt in the hamstring.',
+        stepText:
+            'Flex your foot gently until a deep stretch is felt in the hamstring.',
         durationSeconds: 20,
         cueTags: ['Flex foot', 'Switch leg'],
       ),
@@ -131,7 +136,8 @@ const List<_Exercise> _exercises = [
     icon: Icons.accessibility_new_rounded,
     steps: [
       ExerciseStep(
-        stepText: 'Sit upright in a firm chair or place a foam roller under mid-back.',
+        stepText:
+            'Sit upright in a firm chair or place a foam roller under mid-back.',
         durationSeconds: 10,
         cueTags: ['Seated upright'],
       ),
@@ -160,7 +166,8 @@ const List<_Exercise> _exercises = [
         cueTags: ['Quadruped'],
       ),
       ExerciseStep(
-        stepText: 'Reach right arm forward and extend left leg straight back simultaneously.',
+        stepText:
+            'Reach right arm forward and extend left leg straight back simultaneously.',
         durationSeconds: 20,
         cueTags: ['Opposite reach', 'Hold 3s'],
       ),
@@ -184,7 +191,8 @@ const List<_Exercise> _exercises = [
         cueTags: ['Supine position'],
       ),
       ExerciseStep(
-        stepText: 'Flatten lower back against floor by tightening core muscles.',
+        stepText:
+            'Flatten lower back against floor by tightening core muscles.',
         durationSeconds: 20,
         cueTags: ['Tuck pelvis', 'Core firm'],
       ),
@@ -213,7 +221,8 @@ const List<_Exercise> _exercises = [
         cueTags: ['Reach forward'],
       ),
       ExerciseStep(
-        stepText: 'Walk both hands 45 degrees to one side to target lateral spine curve.',
+        stepText:
+            'Walk both hands 45 degrees to one side to target lateral spine curve.',
         durationSeconds: 20,
         cueTags: ['Lateral reach', 'Deep rib stretch'],
       ),
@@ -227,17 +236,20 @@ const List<_Exercise> _exercises = [
     icon: Icons.auto_awesome_rounded,
     steps: [
       ExerciseStep(
-        stepText: 'Stand with back, head, and buttocks flat against a smooth wall.',
+        stepText:
+            'Stand with back, head, and buttocks flat against a smooth wall.',
         durationSeconds: 10,
         cueTags: ['Posture reset'],
       ),
       ExerciseStep(
-        stepText: 'Raise arms to 90 degrees (cactus arms), keeping elbows and wrists touching wall.',
+        stepText:
+            'Raise arms to 90 degrees (cactus arms), keeping elbows and wrists touching wall.',
         durationSeconds: 25,
         cueTags: ['Cactus arms', 'Wrists on wall'],
       ),
       ExerciseStep(
-        stepText: 'Slowly slide arms overhead along wall without arching lower back.',
+        stepText:
+            'Slowly slide arms overhead along wall without arching lower back.',
         durationSeconds: 25,
         cueTags: ['Overhead slide', 'Repeat 5x'],
       ),
@@ -285,9 +297,13 @@ class _TodayScreenState extends State<TodayScreen>
   }
 
   Future<void> _loadSnapshot() async {
-    final snap = await _gs.getSnapshot(SessionService.currentUserId);
-    final todayEvents = await _gs.getTodayEvents(SessionService.currentUserId);
-    final appointments = await _gs.getAppointments(SessionService.currentUserId);
+    final snap = await _gs.getSnapshot(SessionService.currentCareSubjectId);
+    final todayEvents = await _gs.getTodayEvents(
+      SessionService.currentCareSubjectId,
+    );
+    final appointments = await _gs.getAppointments(
+      SessionService.currentCareSubjectId,
+    );
 
     final completedIds = todayEvents
         .where((e) => e.type == EventType.stretchCompleted)
@@ -311,7 +327,9 @@ class _TodayScreenState extends State<TodayScreen>
   Appointment? get _nextAppointment {
     final scheduled = _appointments.where((a) => a.isScheduled).toList();
     if (scheduled.isEmpty) return null;
-    scheduled.sort((a, b) => a.scheduledDateTime.compareTo(b.scheduledDateTime));
+    scheduled.sort(
+      (a, b) => a.scheduledDateTime.compareTo(b.scheduledDateTime),
+    );
     return scheduled.first;
   }
 
@@ -328,7 +346,7 @@ class _TodayScreenState extends State<TodayScreen>
     setState(() => _completedToday.add(ex.id));
     final result = await _gs.logEvent(
       eventId: const Uuid().v4(),
-      userId: SessionService.currentUserId,
+      userId: SessionService.currentCareSubjectId,
       type: EventType.stretchCompleted,
       payload: {
         'exercise_id': ex.id,
@@ -343,7 +361,9 @@ class _TodayScreenState extends State<TodayScreen>
   }
 
   Event? get _latestJournalLogToday {
-    final journals = _todayEvents.where((e) => e.type == EventType.journalEntry).toList();
+    final journals = _todayEvents
+        .where((e) => e.type == EventType.journalEntry)
+        .toList();
     return journals.isNotEmpty ? journals.last : null;
   }
 
@@ -383,9 +403,21 @@ class _TodayScreenState extends State<TodayScreen>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text(dateStr, style: tt.labelSmall?.copyWith(color: AppTheme.mutedForeground, letterSpacing: 1.2, fontWeight: FontWeight.bold)),
+                    Text(
+                      dateStr,
+                      style: tt.labelSmall?.copyWith(
+                        color: AppTheme.mutedForeground,
+                        letterSpacing: 1.2,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                     const SizedBox(height: 2),
-                    Text('$greeting, $name', style: tt.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+                    Text(
+                      '$greeting, $name',
+                      style: tt.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ],
                 ),
                 actions: [
@@ -417,37 +449,44 @@ class _TodayScreenState extends State<TodayScreen>
                     IntrinsicHeight(
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Expanded(
-                          child: _DailyCheckInSummaryCard(
-                            latestLog: _latestJournalLogToday,
-                            onTap: () async {
-                              final result = await Navigator.push<LogEventResult>(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => DailyCheckInScreen(
-                                    userProfile: _snap.userProfile,
-                                    existingLogToday: _latestJournalLogToday,
-                                  ),
-                                ),
-                              );
-                              if (result != null) {
-                                await _loadSnapshot();
-                                final bonus = result.dailyBonusAwarded ? ' +5 daily bonus!' : '';
-                                _showBanner('+${result.xpAwarded} XP$bonus');
-                              }
-                            },
+                        children: [
+                          Expanded(
+                            child: _DailyCheckInSummaryCard(
+                              latestLog: _latestJournalLogToday,
+                              onTap: () async {
+                                final result =
+                                    await Navigator.push<LogEventResult>(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) => DailyCheckInScreen(
+                                          userId: SessionService
+                                              .currentCareSubjectId,
+                                          userProfile: _snap.userProfile,
+                                          existingLogToday:
+                                              _latestJournalLogToday,
+                                        ),
+                                      ),
+                                    );
+                                if (result != null) {
+                                  await _loadSnapshot();
+                                  final bonus = result.dailyBonusAwarded
+                                      ? ' +5 daily bonus!'
+                                      : '';
+                                  _showBanner('+${result.xpAwarded} XP$bonus');
+                                }
+                              },
+                            ),
                           ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: _RoutineProgressCard(
-                            completed: _completedToday.length,
-                            total: _exercises.length,
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: _RoutineProgressCard(
+                              completed: _completedToday.length,
+                              total: _exercises.length,
+                            ),
                           ),
-                        ),
-                      ],
-                    )),
+                        ],
+                      ),
+                    ),
                     const SizedBox(height: 16),
 
                     // ── Next Appointment ──────────────────────────────────
@@ -455,11 +494,13 @@ class _TodayScreenState extends State<TodayScreen>
                       nextAppointment: _nextAppointment,
                       onTap: () => showAppointmentLogger(
                         context: context,
-                        userId: SessionService.currentUserId,
+                        userId: SessionService.currentCareSubjectId,
                         gamificationService: _gs,
                         onLogged: (result) async {
                           await _loadSnapshot();
-                          final bonus = result.dailyBonusAwarded ? ' +5 daily bonus!' : '';
+                          final bonus = result.dailyBonusAwarded
+                              ? ' +5 daily bonus!'
+                              : '';
                           _showBanner('+${result.xpAwarded} XP$bonus');
                         },
                       ),
@@ -472,12 +513,22 @@ class _TodayScreenState extends State<TodayScreen>
                         Text('Today\'s Routine', style: tt.titleMedium),
                         const Spacer(),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 4,
+                          ),
                           decoration: BoxDecoration(
                             color: cs.surfaceContainerHigh,
                             borderRadius: BorderRadius.circular(16),
                           ),
-                          child: Text('${_exercises.length} EXERCISES', style: tt.labelSmall?.copyWith(fontSize: 10, fontWeight: FontWeight.bold, color: AppTheme.mutedForeground)),
+                          child: Text(
+                            '${_exercises.length} EXERCISES',
+                            style: tt.labelSmall?.copyWith(
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                              color: AppTheme.mutedForeground,
+                            ),
+                          ),
                         ),
                       ],
                     ),
@@ -485,27 +536,36 @@ class _TodayScreenState extends State<TodayScreen>
                     Align(
                       alignment: Alignment.centerRight,
                       child: TextButton(
-                        onPressed: () => setState(() => _allExpanded = !_allExpanded),
+                        onPressed: () =>
+                            setState(() => _allExpanded = !_allExpanded),
                         style: TextButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
                           minimumSize: Size.zero,
                           tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                         ),
                         child: Text(
                           _allExpanded ? 'COLLAPSE ALL' : 'EXPAND ALL',
-                          style: tt.labelSmall?.copyWith(fontWeight: FontWeight.bold, color: AppTheme.primarySage, letterSpacing: 1.2),
+                          style: tt.labelSmall?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: AppTheme.primarySage,
+                            letterSpacing: 1.2,
+                          ),
                         ),
                       ),
                     ),
                     const SizedBox(height: 8),
-                    ..._exercises.map((ex) => _ExerciseCard(
-                          exercise: ex,
-                          done: _completedToday.contains(ex.id),
-                          forceExpanded: _allExpanded,
-                          onMarkDone: () => _markExerciseDone(ex),
-                        )),
+                    ..._exercises.map(
+                      (ex) => _ExerciseCard(
+                        exercise: ex,
+                        done: _completedToday.contains(ex.id),
+                        forceExpanded: _allExpanded,
+                        onMarkDone: () => _markExerciseDone(ex),
+                      ),
+                    ),
                     const SizedBox(height: 24),
-
                   ]),
                 ),
               ),
@@ -540,7 +600,8 @@ class _LevelXpCard extends StatelessWidget {
     if (loading) return const SizedBox.shrink();
 
     // Determine next title (if any)
-    final nextXpReq = 100 + (snap.currentLevel - 1) * 25; // using existing logic
+    final nextXpReq =
+        100 + (snap.currentLevel - 1) * 25; // using existing logic
     final xpNeeded = nextXpReq - snap.xpInLevel;
 
     // We can infer next title or just use a generic one if we don't have the full list accessible here.
@@ -564,7 +625,10 @@ class _LevelXpCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: cs.surfaceContainerHigh,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: AppTheme.primarySage.withValues(alpha: 0.3), width: 1.5),
+        border: Border.all(
+          color: AppTheme.primarySage.withValues(alpha: 0.3),
+          width: 1.5,
+        ),
       ),
       child: Stack(
         clipBehavior: Clip.none,
@@ -573,7 +637,9 @@ class _LevelXpCard extends StatelessWidget {
             right: -10,
             top: -30,
             child: Text(
-              snap.currentLevel < 10 ? '0${snap.currentLevel}' : '${snap.currentLevel}',
+              snap.currentLevel < 10
+                  ? '0${snap.currentLevel}'
+                  : '${snap.currentLevel}',
               style: TextStyle(
                 fontSize: 160,
                 fontWeight: FontWeight.w900,
@@ -587,92 +653,114 @@ class _LevelXpCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: Column(
+                Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: AppTheme.primarySage.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(
-                        'LEVEL ${snap.currentLevel}',
-                        style: tt.labelSmall?.copyWith(
-                          color: AppTheme.primarySage,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 1.2,
-                        ),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppTheme.primarySage.withValues(
+                                alpha: 0.15,
+                              ),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              'LEVEL ${snap.currentLevel}',
+                              style: tt.labelSmall?.copyWith(
+                                color: AppTheme.primarySage,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 1.2,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            snap.currentTitle,
+                            style: tt.headlineSmall?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: cs.onSurface,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                    const SizedBox(height: 8),
-                    Text(
-                      snap.currentTitle,
-                      style: tt.headlineSmall?.copyWith(fontWeight: FontWeight.bold, color: cs.onSurface),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text(
+                          '${snap.totalXp}',
+                          style: tt.headlineMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: cs.onSurface,
+                          ),
+                        ),
+                        Text(
+                          'TOTAL XP',
+                          style: tt.labelSmall?.copyWith(
+                            color: AppTheme.mutedForeground,
+                            letterSpacing: 1.2,
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    '${snap.totalXp}',
-                    style: tt.headlineMedium?.copyWith(fontWeight: FontWeight.bold, color: cs.onSurface),
-                  ),
-                  Text(
-                    'TOTAL XP',
-                    style: tt.labelSmall?.copyWith(color: AppTheme.mutedForeground, letterSpacing: 1.2),
-                  ),
-                ],
-              ),
-            ],
-          ),
-          const SizedBox(height: 32),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'NEXT: ${nextTitle.toUpperCase()}',
-                style: tt.labelSmall?.copyWith(color: AppTheme.mutedForeground, letterSpacing: 1.1, fontWeight: FontWeight.bold),
-              ),
-              Text(
-                '$xpNeeded XP NEEDED',
-                style: tt.labelSmall?.copyWith(color: AppTheme.primarySage, fontWeight: FontWeight.bold, letterSpacing: 1.1),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Stack(
-            children: [
-              Container(
-                height: 10,
-                decoration: BoxDecoration(
-                  color: cs.onSurface.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(5),
+                const SizedBox(height: 32),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'NEXT: ${nextTitle.toUpperCase()}',
+                      style: tt.labelSmall?.copyWith(
+                        color: AppTheme.mutedForeground,
+                        letterSpacing: 1.1,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Text(
+                      '$xpNeeded XP NEEDED',
+                      style: tt.labelSmall?.copyWith(
+                        color: AppTheme.primarySage,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 1.1,
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-              AnimatedFractionallySizedBox(
-                duration: const Duration(milliseconds: 600),
-                curve: Curves.easeOut,
-                alignment: Alignment.centerLeft,
-                widthFactor: snap.levelProgress,
-                child: Container(
-                  height: 10,
-                  decoration: BoxDecoration(
-                    color: AppTheme.primarySage,
-                    borderRadius: BorderRadius.circular(5),
-                  ),
+                const SizedBox(height: 8),
+                Stack(
+                  children: [
+                    Container(
+                      height: 10,
+                      decoration: BoxDecoration(
+                        color: cs.onSurface.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(5),
+                      ),
+                    ),
+                    AnimatedFractionallySizedBox(
+                      duration: const Duration(milliseconds: 600),
+                      curve: Curves.easeOut,
+                      alignment: Alignment.centerLeft,
+                      widthFactor: snap.levelProgress,
+                      child: Container(
+                        height: 10,
+                        decoration: BoxDecoration(
+                          color: AppTheme.primarySage,
+                          borderRadius: BorderRadius.circular(5),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-            ],
-          ),
-        ],
-      ),
+              ],
+            ),
           ),
         ],
       ),
@@ -727,9 +815,12 @@ class _ExerciseCardState extends State<_ExerciseCard> {
       decoration: BoxDecoration(
         color: widget.done ? cs.surface : cs.surfaceContainer,
         borderRadius: BorderRadius.circular(16),
-        border: (!widget.done && _expanded) 
-            ? Border.all(color: AppTheme.primarySage, width: 1.5) 
-            : Border.all(color: cs.onSurface.withValues(alpha: 0.1), width: 1.0),
+        border: (!widget.done && _expanded)
+            ? Border.all(color: AppTheme.primarySage, width: 1.5)
+            : Border.all(
+                color: cs.onSurface.withValues(alpha: 0.1),
+                width: 1.0,
+              ),
       ),
       child: Material(
         color: Colors.transparent,
@@ -771,7 +862,9 @@ class _ExerciseCardState extends State<_ExerciseCard> {
                               child: Text(
                                 widget.exercise.name,
                                 style: tt.titleSmall?.copyWith(
-                                  color: widget.done ? AppTheme.mutedForeground : cs.onSurface,
+                                  color: widget.done
+                                      ? AppTheme.mutedForeground
+                                      : cs.onSurface,
                                 ),
                               ),
                             ),
@@ -789,12 +882,14 @@ class _ExerciseCardState extends State<_ExerciseCard> {
                       ),
                     ),
                     Icon(
-                      widget.done ? Icons.check_circle_rounded : Icons.circle_outlined,
-                      color: widget.done 
-                          ? AppTheme.primarySage 
-                          : _expanded 
-                              ? AppTheme.primarySage 
-                              : AppTheme.mutedForeground.withValues(alpha: 0.5),
+                      widget.done
+                          ? Icons.check_circle_rounded
+                          : Icons.circle_outlined,
+                      color: widget.done
+                          ? AppTheme.primarySage
+                          : _expanded
+                          ? AppTheme.primarySage
+                          : AppTheme.mutedForeground.withValues(alpha: 0.5),
                       size: 28,
                     ),
                   ],
@@ -806,7 +901,11 @@ class _ExerciseCardState extends State<_ExerciseCard> {
                   Text(widget.exercise.description, style: tt.bodyMedium),
                   const SizedBox(height: 12),
                   FilledButton.icon(
-                    onPressed: () => _showExerciseInstructions(context, widget.exercise, onMarkDone: widget.onMarkDone),
+                    onPressed: () => _showExerciseInstructions(
+                      context,
+                      widget.exercise,
+                      onMarkDone: widget.onMarkDone,
+                    ),
                     icon: const Icon(Icons.play_arrow_rounded),
                     label: const Text('Start Exercise'),
                     style: FilledButton.styleFrom(
@@ -860,7 +959,8 @@ class _ExerciseGuidedFlowSheet extends StatefulWidget {
   });
 
   @override
-  State<_ExerciseGuidedFlowSheet> createState() => _ExerciseGuidedFlowSheetState();
+  State<_ExerciseGuidedFlowSheet> createState() =>
+      _ExerciseGuidedFlowSheetState();
 }
 
 class _ExerciseGuidedFlowSheetState extends State<_ExerciseGuidedFlowSheet> {
@@ -988,7 +1088,10 @@ class _ExerciseGuidedFlowSheetState extends State<_ExerciseGuidedFlowSheet> {
               TextButton.icon(
                 onPressed: widget.onFinishEarly,
                 icon: const Icon(Icons.fast_forward_rounded, size: 16),
-                label: const Text('Finish early', style: TextStyle(fontSize: 12)),
+                label: const Text(
+                  'Finish early',
+                  style: TextStyle(fontSize: 12),
+                ),
               ),
             ],
           ),
@@ -999,7 +1102,10 @@ class _ExerciseGuidedFlowSheetState extends State<_ExerciseGuidedFlowSheet> {
             children: [
               Text(
                 'Step ${_currentStepIndex + 1} of ${steps.length}',
-                style: tt.labelSmall?.copyWith(color: AppTheme.primarySage, fontWeight: FontWeight.bold),
+                style: tt.labelSmall?.copyWith(
+                  color: AppTheme.primarySage,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const Spacer(),
               Text(
@@ -1015,7 +1121,9 @@ class _ExerciseGuidedFlowSheetState extends State<_ExerciseGuidedFlowSheet> {
               value: progress,
               minHeight: 6,
               backgroundColor: AppTheme.borderCream,
-              valueColor: const AlwaysStoppedAnimation<Color>(AppTheme.primarySage),
+              valueColor: const AlwaysStoppedAnimation<Color>(
+                AppTheme.primarySage,
+              ),
             ),
           ),
           const SizedBox(height: 20),
@@ -1027,7 +1135,9 @@ class _ExerciseGuidedFlowSheetState extends State<_ExerciseGuidedFlowSheet> {
               color: cs.surfaceContainer,
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                color: _stepCompleted ? AppTheme.primarySage.withValues(alpha: 0.5) : AppTheme.borderCream,
+                color: _stepCompleted
+                    ? AppTheme.primarySage.withValues(alpha: 0.5)
+                    : AppTheme.borderCream,
                 width: _stepCompleted ? 1.5 : 1.0,
               ),
             ),
@@ -1045,14 +1155,22 @@ class _ExerciseGuidedFlowSheetState extends State<_ExerciseGuidedFlowSheet> {
                     runSpacing: 6,
                     children: step.cueTags.map((tag) {
                       return Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
-                          color: AppTheme.accentLavender.withValues(alpha: 0.15),
+                          color: AppTheme.accentLavender.withValues(
+                            alpha: 0.15,
+                          ),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
                           tag,
-                          style: tt.labelSmall?.copyWith(color: AppTheme.accentLavender, fontSize: 11),
+                          style: tt.labelSmall?.copyWith(
+                            color: AppTheme.accentLavender,
+                            fontSize: 11,
+                          ),
                         ),
                       );
                     }).toList(),
@@ -1060,10 +1178,14 @@ class _ExerciseGuidedFlowSheetState extends State<_ExerciseGuidedFlowSheet> {
                 ],
 
                 // Timer display if set
-                if (step.durationSeconds != null && step.durationSeconds! > 0) ...[
+                if (step.durationSeconds != null &&
+                    step.durationSeconds! > 0) ...[
                   const SizedBox(height: 16),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 10,
+                    ),
                     decoration: BoxDecoration(
                       color: _stepCompleted
                           ? AppTheme.primarySage.withValues(alpha: 0.15)
@@ -1073,8 +1195,12 @@ class _ExerciseGuidedFlowSheetState extends State<_ExerciseGuidedFlowSheet> {
                     child: Row(
                       children: [
                         Icon(
-                          _stepCompleted ? Icons.check_circle_rounded : Icons.timer_rounded,
-                          color: _stepCompleted ? AppTheme.primarySage : AppTheme.accentLavender,
+                          _stepCompleted
+                              ? Icons.check_circle_rounded
+                              : Icons.timer_rounded,
+                          color: _stepCompleted
+                              ? AppTheme.primarySage
+                              : AppTheme.accentLavender,
                           size: 22,
                         ),
                         const SizedBox(width: 10),
@@ -1086,21 +1212,32 @@ class _ExerciseGuidedFlowSheetState extends State<_ExerciseGuidedFlowSheet> {
                                   ? 'Step Timer Completed! ✓'
                                   : '${_secondsRemaining.toString().padLeft(2, '0')}s remaining',
                               style: tt.labelMedium?.copyWith(
-                                color: _stepCompleted ? AppTheme.primarySage : AppTheme.accentLavender,
+                                color: _stepCompleted
+                                    ? AppTheme.primarySage
+                                    : AppTheme.accentLavender,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
                             if (!_stepCompleted)
                               Text(
                                 'Tap Next when ready',
-                                style: tt.bodySmall?.copyWith(fontSize: 10, color: AppTheme.mutedForeground),
+                                style: tt.bodySmall?.copyWith(
+                                  fontSize: 10,
+                                  color: AppTheme.mutedForeground,
+                                ),
                               ),
                           ],
                         ),
                         const Spacer(),
                         IconButton(
-                          icon: Icon(_timerRunning ? Icons.pause_circle_filled_rounded : Icons.play_circle_fill_rounded),
-                          color: _stepCompleted ? AppTheme.primarySage : AppTheme.accentLavender,
+                          icon: Icon(
+                            _timerRunning
+                                ? Icons.pause_circle_filled_rounded
+                                : Icons.play_circle_fill_rounded,
+                          ),
+                          color: _stepCompleted
+                              ? AppTheme.primarySage
+                              : AppTheme.accentLavender,
                           onPressed: _toggleTimer,
                         ),
                       ],
@@ -1120,18 +1257,35 @@ class _ExerciseGuidedFlowSheetState extends State<_ExerciseGuidedFlowSheet> {
                   child: OutlinedButton.icon(
                     onPressed: () => _goToStep(_currentStepIndex - 1),
                     icon: const Icon(Icons.arrow_back_rounded, size: 16),
-                    label: const FittedBox(fit: BoxFit.scaleDown, child: Text('Previous')),
+                    label: const FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text('Previous'),
+                    ),
                   ),
                 ),
               if (_currentStepIndex > 0) const SizedBox(width: 12),
               Expanded(
                 flex: 2,
                 child: FilledButton.icon(
-                  onPressed: isLastStep ? widget.onComplete : () => _goToStep(_currentStepIndex + 1),
-                  icon: Icon(isLastStep ? Icons.check_circle_rounded : Icons.arrow_forward_rounded, size: 18),
-                  label: FittedBox(fit: BoxFit.scaleDown, child: Text(isLastStep ? 'Mark Complete (+30 XP)' : 'Next Step')),
+                  onPressed: isLastStep
+                      ? widget.onComplete
+                      : () => _goToStep(_currentStepIndex + 1),
+                  icon: Icon(
+                    isLastStep
+                        ? Icons.check_circle_rounded
+                        : Icons.arrow_forward_rounded,
+                    size: 18,
+                  ),
+                  label: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      isLastStep ? 'Mark Complete (+30 XP)' : 'Next Step',
+                    ),
+                  ),
                   style: FilledButton.styleFrom(
-                    backgroundColor: _stepCompleted || isLastStep ? AppTheme.primarySage : cs.primary,
+                    backgroundColor: _stepCompleted || isLastStep
+                        ? AppTheme.primarySage
+                        : cs.primary,
                   ),
                 ),
               ),
@@ -1215,7 +1369,9 @@ class _DailyCheckInSummaryCard extends StatelessWidget {
                       shape: BoxShape.circle,
                     ),
                     child: Icon(
-                      logged ? Icons.check_rounded : Icons.chevron_right_rounded,
+                      logged
+                          ? Icons.check_rounded
+                          : Icons.chevron_right_rounded,
                       color: AppTheme.primarySage,
                       size: 20,
                     ),
@@ -1234,17 +1390,14 @@ class _DailyCheckInSummaryCard extends StatelessWidget {
 class _RoutineProgressCard extends StatelessWidget {
   final int completed;
   final int total;
-  
-  const _RoutineProgressCard({
-    required this.completed,
-    required this.total,
-  });
+
+  const _RoutineProgressCard({required this.completed, required this.total});
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
-    
+
     return Container(
       width: double.infinity,
       constraints: const BoxConstraints(minHeight: 140),
@@ -1266,15 +1419,30 @@ class _RoutineProgressCard extends StatelessWidget {
                 height: 12,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: isActive ? AppTheme.primarySage : cs.surfaceContainerHighest,
+                  color: isActive
+                      ? AppTheme.primarySage
+                      : cs.surfaceContainerHighest,
                 ),
               );
             }),
           ),
           const Spacer(),
-          Text('$completed / $total', style: tt.titleLarge?.copyWith(fontWeight: FontWeight.bold, color: cs.onSurface)),
+          Text(
+            '$completed / $total',
+            style: tt.titleLarge?.copyWith(
+              fontWeight: FontWeight.bold,
+              color: cs.onSurface,
+            ),
+          ),
           const SizedBox(height: 4),
-          Text('ROUTINE', style: tt.labelSmall?.copyWith(color: AppTheme.mutedForeground, letterSpacing: 1.1, fontWeight: FontWeight.bold)),
+          Text(
+            'ROUTINE',
+            style: tt.labelSmall?.copyWith(
+              color: AppTheme.mutedForeground,
+              letterSpacing: 1.1,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
         ],
       ),
     );
@@ -1356,11 +1524,26 @@ class _StatPairSection extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Icon(Icons.local_fire_department_rounded, color: AppTheme.secondaryCoral, size: 24),
+                const Icon(
+                  Icons.local_fire_department_rounded,
+                  color: AppTheme.secondaryCoral,
+                  size: 24,
+                ),
                 const SizedBox(height: 24),
-                Text('$streakDays', style: tt.headlineMedium?.copyWith(fontWeight: FontWeight.bold, color: cs.onSurface)),
+                Text(
+                  '$streakDays',
+                  style: tt.headlineMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: cs.onSurface,
+                  ),
+                ),
                 const SizedBox(height: 4),
-                Text('Day Streak', style: tt.labelSmall?.copyWith(color: AppTheme.mutedForeground)),
+                Text(
+                  'Day Streak',
+                  style: tt.labelSmall?.copyWith(
+                    color: AppTheme.mutedForeground,
+                  ),
+                ),
               ],
             ),
           ),
@@ -1376,11 +1559,26 @@ class _StatPairSection extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Icon(Icons.flag_rounded, color: AppTheme.primarySage, size: 24),
+                const Icon(
+                  Icons.flag_rounded,
+                  color: AppTheme.primarySage,
+                  size: 24,
+                ),
                 const SizedBox(height: 24),
-                Text('$percentage%', style: tt.headlineMedium?.copyWith(fontWeight: FontWeight.bold, color: cs.onSurface)),
+                Text(
+                  '$percentage%',
+                  style: tt.headlineMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: cs.onSurface,
+                  ),
+                ),
                 const SizedBox(height: 4),
-                Text('Daily Goal', style: tt.labelSmall?.copyWith(color: AppTheme.mutedForeground)),
+                Text(
+                  'Daily Goal',
+                  style: tt.labelSmall?.copyWith(
+                    color: AppTheme.mutedForeground,
+                  ),
+                ),
               ],
             ),
           ),
@@ -1389,7 +1587,6 @@ class _StatPairSection extends StatelessWidget {
     );
   }
 }
-
 
 // ─── Next Appointment Card ──────────────────────────────────────────────────
 
@@ -1414,12 +1611,27 @@ class _NextAppointmentCard extends StatelessWidget {
 
     if (nextAppointment != null) {
       final dt = nextAppointment!.scheduledDateTime;
-      final months = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
+      final months = [
+        'JAN',
+        'FEB',
+        'MAR',
+        'APR',
+        'MAY',
+        'JUN',
+        'JUL',
+        'AUG',
+        'SEP',
+        'OCT',
+        'NOV',
+        'DEC',
+      ];
       monthStr = months[dt.month - 1];
       dayStr = '${dt.day}';
       titleStr = nextAppointment!.title;
 
-      String hour = dt.hour > 12 ? '${dt.hour - 12}' : (dt.hour == 0 ? '12' : '${dt.hour}');
+      String hour = dt.hour > 12
+          ? '${dt.hour - 12}'
+          : (dt.hour == 0 ? '12' : '${dt.hour}');
       String minute = dt.minute.toString().padLeft(2, '0');
       String ampm = dt.hour >= 12 ? 'PM' : 'AM';
       timeStr = '$hour:$minute $ampm';
@@ -1431,7 +1643,10 @@ class _NextAppointmentCard extends StatelessWidget {
       color: Colors.transparent,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(24),
-        side: BorderSide(color: AppTheme.primarySage.withValues(alpha: 0.3), width: 1.5),
+        side: BorderSide(
+          color: AppTheme.primarySage.withValues(alpha: 0.3),
+          width: 1.5,
+        ),
       ),
       child: InkWell(
         onTap: onTap,
@@ -1453,27 +1668,68 @@ class _NextAppointmentCard extends StatelessWidget {
                     ? Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Text(monthStr, style: tt.labelSmall?.copyWith(color: AppTheme.primarySage, fontWeight: FontWeight.bold, fontSize: 10, letterSpacing: 0.5)),
-                          Text(dayStr, style: tt.titleMedium?.copyWith(color: cs.surface, fontWeight: FontWeight.w900, height: 1.1)),
+                          Text(
+                            monthStr,
+                            style: tt.labelSmall?.copyWith(
+                              color: AppTheme.primarySage,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 10,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                          Text(
+                            dayStr,
+                            style: tt.titleMedium?.copyWith(
+                              color: cs.surface,
+                              fontWeight: FontWeight.w900,
+                              height: 1.1,
+                            ),
+                          ),
                         ],
                       )
-                    : Icon(Icons.add_rounded, color: AppTheme.primarySage, size: 28),
+                    : Icon(
+                        Icons.add_rounded,
+                        color: AppTheme.primarySage,
+                        size: 28,
+                      ),
               ),
               const SizedBox(width: 14),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('NEXT APPOINTMENT', style: tt.labelSmall?.copyWith(color: AppTheme.mutedForeground, fontSize: 10, letterSpacing: 1.1, fontWeight: FontWeight.bold)),
+                    Text(
+                      'NEXT APPOINTMENT',
+                      style: tt.labelSmall?.copyWith(
+                        color: AppTheme.mutedForeground,
+                        fontSize: 10,
+                        letterSpacing: 1.1,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                     const SizedBox(height: 2),
                     if (nextAppointment != null)
-                      Text('$titleStr • $timeStr', style: tt.labelLarge?.copyWith(fontWeight: FontWeight.bold))
+                      Text(
+                        '$titleStr • $timeStr',
+                        style: tt.labelLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      )
                     else
-                      Text(titleStr, style: tt.labelLarge?.copyWith(fontWeight: FontWeight.bold, color: AppTheme.primarySage)),
+                      Text(
+                        titleStr,
+                        style: tt.labelLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: AppTheme.primarySage,
+                        ),
+                      ),
                   ],
                 ),
               ),
-              const Icon(Icons.chevron_right_rounded, color: AppTheme.mutedForeground),
+              const Icon(
+                Icons.chevron_right_rounded,
+                color: AppTheme.mutedForeground,
+              ),
             ],
           ),
         ),
@@ -1488,7 +1744,10 @@ class _AnimatedSquigglyStrikethrough extends StatelessWidget {
   final Widget child;
   final bool isStruck;
 
-  const _AnimatedSquigglyStrikethrough({required this.child, required this.isStruck});
+  const _AnimatedSquigglyStrikethrough({
+    required this.child,
+    required this.isStruck,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -1498,7 +1757,9 @@ class _AnimatedSquigglyStrikethrough extends StatelessWidget {
       curve: Curves.easeOutCubic,
       builder: (context, value, childWidget) {
         return CustomPaint(
-          foregroundPainter: value > 0 ? _SquigglyPainter(progress: value) : null,
+          foregroundPainter: value > 0
+              ? _SquigglyPainter(progress: value)
+              : null,
           child: childWidget,
         );
       },
@@ -1515,7 +1776,7 @@ class _SquigglyPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     if (progress <= 0) return;
-    
+
     final paint = Paint()
       ..color = AppTheme.primarySage
       ..style = PaintingStyle.stroke
@@ -1525,22 +1786,31 @@ class _SquigglyPainter extends CustomPainter {
 
     final path = Path();
     final yCenter = size.height / 2;
-    
+
     // An imperfect, hand-drawn-like curve
     path.moveTo(0, yCenter + 2);
-    path.quadraticBezierTo(size.width * 0.25, yCenter - 4, size.width * 0.5, yCenter + 1);
-    path.quadraticBezierTo(size.width * 0.75, yCenter + 5, size.width, yCenter - 2);
+    path.quadraticBezierTo(
+      size.width * 0.25,
+      yCenter - 4,
+      size.width * 0.5,
+      yCenter + 1,
+    );
+    path.quadraticBezierTo(
+      size.width * 0.75,
+      yCenter + 5,
+      size.width,
+      yCenter - 2,
+    );
 
     final metrics = path.computeMetrics().toList();
     if (metrics.isEmpty) return;
-    
+
     final metric = metrics.first;
     final extractPath = metric.extractPath(0.0, metric.length * progress);
-    
+
     canvas.drawPath(extractPath, paint);
   }
 
   @override
   bool shouldRepaint(_SquigglyPainter old) => old.progress != progress;
 }
-
