@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart';
+
 import '../models/event.dart';
 import '../models/user_profile.dart';
 import '../services/gamification_service.dart';
@@ -119,12 +120,17 @@ class _DailyCheckInScreenState extends State<DailyCheckInScreen> {
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
-    final showBrace = widget.userProfile.braceStatus == 'Yes' || widget.userProfile.braceStatus == 'Sometimes';
+    final showBrace =
+        widget.userProfile.braceStatus == 'Yes' ||
+        widget.userProfile.braceStatus == 'Sometimes';
 
     return Scaffold(
       backgroundColor: cs.surface,
       appBar: AppBar(
-        title: Text('Daily Check-In', style: tt.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+        title: Text(
+          'Daily Check-In',
+          style: tt.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+        ),
         backgroundColor: cs.surface,
         surfaceTintColor: Colors.transparent,
         actions: [
@@ -135,7 +141,9 @@ class _DailyCheckInScreenState extends State<DailyCheckInScreen> {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (_) => const MyJourneyScreen(initialEventFilter: EventType.journalEntry),
+                  builder: (_) => const MyJourneyScreen(
+                    initialEventFilter: EventType.journalEntry,
+                  ),
                 ),
               );
             },
@@ -153,7 +161,10 @@ class _DailyCheckInScreenState extends State<DailyCheckInScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // ── Mood section (5-point scale) ─────────────────────────
-            Text('How are you feeling today?', style: tt.titleSmall?.copyWith(fontWeight: FontWeight.bold)),
+            Text(
+              'How are you feeling today?',
+              style: tt.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+            ),
             const SizedBox(height: 8),
             Wrap(
               spacing: 8,
@@ -186,12 +197,18 @@ class _DailyCheckInScreenState extends State<DailyCheckInScreen> {
             // ── Pain level slider ──────────────────────────────────
             Row(
               children: [
-                Text('Pain Level', style: tt.titleSmall?.copyWith(fontWeight: FontWeight.bold)),
+                Text(
+                  'Pain Level',
+                  style: tt.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+                ),
                 const Spacer(),
-                Text(_painLabel(_painLevel),
-                    style: tt.labelSmall?.copyWith(
-                        color: _painColor(_painLevel),
-                        fontWeight: FontWeight.bold)),
+                Text(
+                  _painLabel(_painLevel),
+                  style: tt.labelSmall?.copyWith(
+                    color: _painColor(_painLevel),
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ],
             ),
             SliderTheme(
@@ -212,33 +229,53 @@ class _DailyCheckInScreenState extends State<DailyCheckInScreen> {
             const SizedBox(height: 16),
 
             // ── Location chips ────────────────────────────────────
-            Text('Pain Location (optional)', style: tt.titleSmall?.copyWith(fontWeight: FontWeight.bold)),
+            Text(
+              'Pain Location (optional)',
+              style: tt.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+            ),
             const SizedBox(height: 6),
             Wrap(
               spacing: 6,
               runSpacing: 6,
-              children: ['Neck', 'Upper Back', 'Lower Back', 'Left Hip', 'Right Hip', 'Other'].map((loc) {
-                final selected = _selectedLocations.contains(loc);
-                return FilterChip(
-                  label: Text(loc, style: TextStyle(fontSize: 12, color: selected ? Colors.white : cs.onSurface)),
-                  selected: selected,
-                  selectedColor: AppTheme.primarySage,
-                  onSelected: (_) {
-                    setState(() {
-                      if (selected) {
-                        _selectedLocations.remove(loc);
-                      } else {
-                        _selectedLocations.add(loc);
-                      }
-                    });
-                  },
-                );
-              }).toList(),
+              children:
+                  [
+                    'Neck',
+                    'Upper Back',
+                    'Lower Back',
+                    'Left Hip',
+                    'Right Hip',
+                    'Other',
+                  ].map((loc) {
+                    final selected = _selectedLocations.contains(loc);
+                    return FilterChip(
+                      label: Text(
+                        loc,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: selected ? Colors.white : cs.onSurface,
+                        ),
+                      ),
+                      selected: selected,
+                      selectedColor: AppTheme.primarySage,
+                      onSelected: (_) {
+                        setState(() {
+                          if (selected) {
+                            _selectedLocations.remove(loc);
+                          } else {
+                            _selectedLocations.add(loc);
+                          }
+                        });
+                      },
+                    );
+                  }).toList(),
             ),
             const SizedBox(height: 16),
 
             // ── Tightness chips ────────────────────────────────────
-            Text('Tightness (optional)', style: tt.titleSmall?.copyWith(fontWeight: FontWeight.bold)),
+            Text(
+              'Tightness (optional)',
+              style: tt.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+            ),
             const SizedBox(height: 6),
             Wrap(
               spacing: 6,
@@ -246,17 +283,27 @@ class _DailyCheckInScreenState extends State<DailyCheckInScreen> {
               children: ['Mild', 'Moderate', 'Severe'].map((option) {
                 final selected = _tightness == option;
                 return ChoiceChip(
-                  label: Text(option, style: TextStyle(fontSize: 12, color: selected ? Colors.white : cs.onSurface)),
+                  label: Text(
+                    option,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: selected ? Colors.white : cs.onSurface,
+                    ),
+                  ),
                   selected: selected,
                   selectedColor: AppTheme.primarySage,
-                  onSelected: (val) => setState(() => _tightness = val ? option : null),
+                  onSelected: (val) =>
+                      setState(() => _tightness = val ? option : null),
                 );
               }).toList(),
             ),
             const SizedBox(height: 16),
 
             // ── Fatigue chips ──────────────────────────────────────
-            Text('Fatigue (optional)', style: tt.titleSmall?.copyWith(fontWeight: FontWeight.bold)),
+            Text(
+              'Fatigue (optional)',
+              style: tt.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+            ),
             const SizedBox(height: 6),
             Wrap(
               spacing: 6,
@@ -264,10 +311,17 @@ class _DailyCheckInScreenState extends State<DailyCheckInScreen> {
               children: ['Mild', 'Moderate', 'Severe'].map((option) {
                 final selected = _fatigue == option;
                 return ChoiceChip(
-                  label: Text(option, style: TextStyle(fontSize: 12, color: selected ? Colors.white : cs.onSurface)),
+                  label: Text(
+                    option,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: selected ? Colors.white : cs.onSurface,
+                    ),
+                  ),
                   selected: selected,
                   selectedColor: AppTheme.primarySage,
-                  onSelected: (val) => setState(() => _fatigue = val ? option : null),
+                  onSelected: (val) =>
+                      setState(() => _fatigue = val ? option : null),
                 );
               }).toList(),
             ),
@@ -277,12 +331,18 @@ class _DailyCheckInScreenState extends State<DailyCheckInScreen> {
             if (showBrace) ...[
               Row(
                 children: [
-                  Text('Brace Wear', style: tt.titleSmall?.copyWith(fontWeight: FontWeight.bold)),
+                  Text(
+                    'Brace Wear',
+                    style: tt.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+                  ),
                   const Spacer(),
-                  Text('${_braceHours.round()} hrs',
-                      style: tt.labelSmall?.copyWith(
-                          color: AppTheme.primarySage,
-                          fontWeight: FontWeight.bold)),
+                  Text(
+                    '${_braceHours.round()} hrs',
+                    style: tt.labelSmall?.copyWith(
+                      color: AppTheme.primarySage,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ],
               ),
               SliderTheme(
@@ -304,7 +364,10 @@ class _DailyCheckInScreenState extends State<DailyCheckInScreen> {
             ],
 
             // ── Notes ─────────────────────────────────────────────
-            Text('Daily Notes (optional)', style: tt.titleSmall?.copyWith(fontWeight: FontWeight.bold)),
+            Text(
+              'Daily Notes (optional)',
+              style: tt.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+            ),
             const SizedBox(height: 8),
             TextField(
               controller: _notesController,
@@ -328,7 +391,14 @@ class _DailyCheckInScreenState extends State<DailyCheckInScreen> {
               child: FilledButton.icon(
                 onPressed: _saving ? null : _submit,
                 icon: _saving
-                    ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
                     : const Icon(Icons.check_circle_outline_rounded),
                 label: Text(_saving ? 'Saving...' : 'Save Check-In'),
               ),
