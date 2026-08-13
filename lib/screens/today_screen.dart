@@ -5,11 +5,14 @@ import 'package:intl/intl.dart';
 import 'package:uuid/uuid.dart';
 import '../models/event.dart';
 import '../models/appointment.dart';
+import '../models/external_content.dart';
+import '../services/external_content_service.dart';
 import '../services/gamification_service.dart';
 import '../services/session_service.dart';
 import '../theme/app_theme.dart';
 import 'appointment_logger_modal.dart';
 import 'daily_check_in_screen.dart';
+import 'external_content_screen.dart';
 
 // ─── Exercise catalogue ───────────────────────────────────────────────────────
 
@@ -276,6 +279,7 @@ class _TodayScreenState extends State<TodayScreen>
   GamificationSnapshot _snap = GamificationSnapshot.empty;
   List<Event> _todayEvents = [];
   List<Appointment> _appointments = [];
+  List<ExternalContentItem> _savedRoutineVideos = [];
   final Set<String> _completedToday = {};
   bool _loadingSnap = true;
 
@@ -303,6 +307,8 @@ class _TodayScreenState extends State<TodayScreen>
     final appointments = await _gs.getAppointments(
       SessionService.currentCareSubjectId,
     );
+    final savedRoutineVideos =
+        await ExternalContentService.savedRoutineVideos();
 
     final completedIds = todayEvents
         .where((e) => e.type == EventType.stretchCompleted)
@@ -315,6 +321,7 @@ class _TodayScreenState extends State<TodayScreen>
         _snap = snap;
         _todayEvents = todayEvents;
         _appointments = appointments;
+        _savedRoutineVideos = savedRoutineVideos;
         _completedToday.addAll(completedIds);
         _loadingSnap = false;
       });
@@ -376,6 +383,7 @@ class _TodayScreenState extends State<TodayScreen>
       ),
       builder: (_) => _RoutineSheet(
         exercises: _exercises,
+        savedVideos: _savedRoutineVideos,
         initiallyCompleted: _completedToday,
         onMarkDone: _markExerciseDone,
       ),
@@ -474,6 +482,7 @@ class _TodayScreenState extends State<TodayScreen>
                     _RoutineEntryCard(
                       completed: _completedToday.length,
                       total: _exercises.length,
+                      savedVideoCount: _savedRoutineVideos.length,
                       onTap: _showRoutineSheet,
                     ),
                     const SizedBox(height: 16),
@@ -1203,11 +1212,13 @@ class _DailyCheckInSummaryCard extends StatelessWidget {
 class _RoutineEntryCard extends StatelessWidget {
   final int completed;
   final int total;
+  final int savedVideoCount;
   final VoidCallback onTap;
 
   const _RoutineEntryCard({
     required this.completed,
     required this.total,
+    required this.savedVideoCount,
     required this.onTap,
   });
 
@@ -1265,7 +1276,9 @@ class _RoutineEntryCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      completed == total
+                      savedVideoCount > 0
+                          ? '$savedVideoCount saved video${savedVideoCount == 1 ? '' : 's'} in My Routine.'
+                          : completed == total
                           ? 'All done for today.'
                           : 'A short set of guided movements for today.',
                       style: tt.bodySmall?.copyWith(
@@ -1294,11 +1307,13 @@ class _RoutineEntryCard extends StatelessWidget {
 
 class _RoutineSheet extends StatefulWidget {
   final List<_Exercise> exercises;
+  final List<ExternalContentItem> savedVideos;
   final Set<String> initiallyCompleted;
   final Future<void> Function(_Exercise exercise) onMarkDone;
 
   const _RoutineSheet({
     required this.exercises,
+    required this.savedVideos,
     required this.initiallyCompleted,
     required this.onMarkDone,
   });
@@ -1367,22 +1382,56 @@ class _RoutineSheetState extends State<_RoutineSheet> {
               ),
             ),
             Expanded(
-              child: ListView.builder(
+              child: ListView(
                 padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
-                itemCount: widget.exercises.length,
-                itemBuilder: (context, index) {
-                  final exercise = widget.exercises[index];
-                  return _ExerciseCard(
-                    exercise: exercise,
-                    done: _completed.contains(exercise.id),
-                    onMarkDone: () {
-                      if (_completed.add(exercise.id)) {
-                        setState(() {});
-                        widget.onMarkDone(exercise);
-                      }
-                    },
-                  );
-                },
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(4, 4, 4, 10),
+                    child: Text(
+                      'Guided exercises',
+                      style: tt.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ),
+                  ...widget.exercises.map(
+                    (exercise) => _ExerciseCard(
+                      exercise: exercise,
+                      done: _completed.contains(exercise.id),
+                      onMarkDone: () {
+                        if (_completed.add(exercise.id)) {
+                          setState(() {});
+                          widget.onMarkDone(exercise);
+                        }
+                      },
+                    ),
+                  ),
+                  if (widget.savedVideos.isNotEmpty) ...[
+                    const SizedBox(height: 8),
+                    const Divider(),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(4, 14, 4, 4),
+                      child: Text(
+                        'Saved exercise videos',
+                        style: tt.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(4, 0, 4, 12),
+                      child: Text(
+                        'Open a saved video when you want visual guidance. It plays from its original source.',
+                        style: tt.bodySmall?.copyWith(
+                          color: AppTheme.mutedForeground,
+                        ),
+                      ),
+                    ),
+                    ...widget.savedVideos.map(
+                      (item) => _SavedRoutineVideoCard(item: item),
+                    ),
+                  ],
+                ],
               ),
             ),
           ],
@@ -1393,6 +1442,70 @@ class _RoutineSheetState extends State<_RoutineSheet> {
 }
 
 // ─── XP Banner ────────────────────────────────────────────────────────────────
+
+class _SavedRoutineVideoCard extends StatelessWidget {
+  final ExternalContentItem item;
+
+  const _SavedRoutineVideoCard({required this.item});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Card(
+      elevation: 0,
+      margin: const EdgeInsets.only(bottom: 10),
+      color: theme.colorScheme.surfaceContainer,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: () => Navigator.of(context).push(
+          MaterialPageRoute<void>(
+            builder: (_) => ExternalContentDetailPage(item: item),
+          ),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Row(
+            children: [
+              Container(
+                width: 52,
+                height: 52,
+                decoration: BoxDecoration(
+                  color: AppTheme.accentLavender.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: const Icon(Icons.play_circle_outline_rounded),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      item.title,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '${item.sourceName}  ·  Watch from source',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: AppTheme.mutedForeground,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(Icons.chevron_right_rounded),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
 
 class _XpBanner extends StatelessWidget {
   final String text;
