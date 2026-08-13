@@ -112,24 +112,53 @@ class _MeScreenState extends State<MeScreen>
                   ),
                   const SizedBox(height: 28),
 
-                  _SectionHeader(title: 'Avatar & Identity'),
-                  const SizedBox(height: 12),
-                  _AvatarSettings(
-                    userId: SessionService.currentCareSubjectId,
-                    snap: _snap,
-                    gamificationService: _gs,
-                    onProfileUpdated: _loadAll,
+                  Card(
+                    elevation: 0,
+                    margin: EdgeInsets.zero,
+                    color: Theme.of(context).colorScheme.surfaceContainer,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Theme(
+                      data: Theme.of(
+                        context,
+                      ).copyWith(dividerColor: Colors.transparent),
+                      child: ExpansionTile(
+                        tilePadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 4,
+                        ),
+                        childrenPadding: const EdgeInsets.fromLTRB(
+                          16,
+                          0,
+                          16,
+                          16,
+                        ),
+                        leading: AvatarDisplay(
+                          profile: _snap.userProfile,
+                          size: 42,
+                        ),
+                        title: const Text(
+                          'Personalize your avatar',
+                          style: TextStyle(fontWeight: FontWeight.w800),
+                        ),
+                        subtitle: const Text('Choose an icon or local photo'),
+                        children: [
+                          _AvatarSettings(
+                            userId: SessionService.currentCareSubjectId,
+                            snap: _snap,
+                            gamificationService: _gs,
+                            onProfileUpdated: _loadAll,
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                   const SizedBox(height: 28),
 
-                  _BadgesSection(snap: _snap),
-                  const SizedBox(height: 24),
-
-                  _AchievementsSection(snap: _snap, allEvents: _allEvents),
+                  _ProgressSection(snap: _snap, allEvents: _allEvents),
                   const SizedBox(height: 28),
 
-                  _SectionHeader(title: 'Settings'),
-                  const SizedBox(height: 12),
                   _SettingsSection(
                     userId: SessionService.currentUserId,
                     gamificationService: _gs,
@@ -232,6 +261,50 @@ class _IdentitySummary extends StatelessWidget {
 }
 
 // ─── Badges Section (Undated Collectibles) ────────────────────────────────────
+
+class _ProgressSection extends StatelessWidget {
+  final GamificationSnapshot snap;
+  final List<Event> allEvents;
+
+  const _ProgressSection({required this.snap, required this.allEvents});
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final unlockedCount = snap.unlockedMilestones.length;
+
+    return Card(
+      elevation: 0,
+      margin: EdgeInsets.zero,
+      color: cs.surfaceContainer,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      child: Theme(
+        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+        child: ExpansionTile(
+          tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+          childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+          leading: CircleAvatar(
+            backgroundColor: AppTheme.accentLavender.withValues(alpha: 0.16),
+            foregroundColor: AppTheme.accentLavender,
+            child: const Icon(Icons.emoji_events_outlined),
+          ),
+          title: const Text(
+            'Progress & milestones',
+            style: TextStyle(fontWeight: FontWeight.w800),
+          ),
+          subtitle: Text(
+            '$unlockedCount badges unlocked · ${snap.totalXp} XP total',
+          ),
+          children: [
+            _BadgesSection(snap: snap),
+            const SizedBox(height: 20),
+            _AchievementsSection(snap: snap, allEvents: allEvents),
+          ],
+        ),
+      ),
+    );
+  }
+}
 
 class _BadgesSection extends StatelessWidget {
   final GamificationSnapshot snap;
@@ -664,7 +737,7 @@ class _ProfileInfoSection extends StatelessWidget {
                   ),
                   const SizedBox(height: 24),
                   ProfileField(
-                    label: 'Diagnosis / Curve Type',
+                    label: 'Recorded curve type',
                     child: ProfileChipGroup<String>(
                       columns: 2,
                       selectedValue: selectedDiagnosis,
@@ -773,17 +846,17 @@ class _ProfileInfoSection extends StatelessWidget {
               icon: Icons.person_outline,
             ),
             _ProfileDetailRow(
-              label: 'Diagnosis',
+              label: 'Recorded curve type',
               value: profile.diagnosis,
               icon: Icons.medical_services_outlined,
             ),
             _ProfileDetailRow(
-              label: 'Brace Status',
+              label: 'Brace information',
               value: profile.braceStatus,
               icon: Icons.shield_outlined,
             ),
             _ProfileDetailRow(
-              label: 'Age Range',
+              label: 'Age band',
               value: profile.ageRange,
               icon: Icons.calendar_today_outlined,
             ),
@@ -1117,68 +1190,102 @@ class _SettingsSectionState extends State<_SettingsSection> {
       ThemeMode.system => 'System Default',
     };
 
-    return Card(
-      elevation: 0,
-      color: Theme.of(context).colorScheme.surfaceContainer,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: const BorderSide(color: AppTheme.borderCream),
-      ),
-      child: Column(
-        children: [
-          ListTile(
-            leading: const Icon(Icons.palette_outlined),
-            title: const Text('Appearance'),
-            subtitle: Text(themeName),
-            trailing: const Icon(Icons.chevron_right_rounded),
-            onTap: _showAppearanceDialog,
-          ),
-          const Divider(height: 1),
-          SwitchListTile(
-            secondary: const Icon(Icons.notifications_none_rounded),
-            title: const Text('Notifications'),
-            subtitle: const Text('Daily stretch & logging reminders'),
-            value: _notificationsEnabled,
-            onChanged: (val) => setState(() => _notificationsEnabled = val),
-          ),
-          const Divider(height: 1),
-          ListTile(
-            leading: const Icon(Icons.file_upload_outlined),
-            title: const Text('Export protected archive'),
-            subtitle: const Text('Move your local profiles to another device'),
-            trailing: const Icon(Icons.chevron_right_rounded),
-            onTap: _archiveBusy ? null : _exportArchive,
-          ),
-          const Divider(height: 1),
-          ListTile(
-            leading: const Icon(Icons.file_download_outlined),
-            title: const Text('Import protected archive'),
-            subtitle: const Text('Review before adding or replacing profiles'),
-            trailing: const Icon(Icons.chevron_right_rounded),
-            onTap: _archiveBusy ? null : _importArchive,
-          ),
-          const Divider(height: 1),
-          ListTile(
-            leading: const Icon(Icons.shield_outlined),
-            title: const Text('Privacy & Data'),
-            trailing: const Icon(Icons.chevron_right_rounded),
-            onTap: _showPrivacyDialog,
-          ),
-          const Divider(height: 1),
-          ListTile(
-            leading: const Icon(
-              Icons.delete_forever_outlined,
-              color: Colors.red,
+    final cardColor = Theme.of(context).colorScheme.surfaceContainer;
+
+    Widget groupedCard({required List<Widget> children}) {
+      return Card(
+        elevation: 0,
+        margin: EdgeInsets.zero,
+        color: cardColor,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(18),
+          side: const BorderSide(color: AppTheme.borderCream),
+        ),
+        child: Column(children: children),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const _SectionHeader(title: 'Preferences'),
+        const SizedBox(height: 10),
+        groupedCard(
+          children: [
+            ListTile(
+              leading: const Icon(Icons.palette_outlined),
+              title: const Text('Appearance'),
+              subtitle: Text(themeName),
+              trailing: const Icon(Icons.chevron_right_rounded),
+              onTap: _showAppearanceDialog,
             ),
-            title: const Text(
-              'Delete Account',
-              style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+            const Divider(height: 1),
+            SwitchListTile(
+              secondary: const Icon(Icons.notifications_none_rounded),
+              title: const Text('Notifications'),
+              subtitle: const Text('Daily stretch & logging reminders'),
+              value: _notificationsEnabled,
+              onChanged: (val) => setState(() => _notificationsEnabled = val),
             ),
-            subtitle: const Text('Wipe all local health & event data'),
-            onTap: _confirmDeleteAccount,
-          ),
-        ],
-      ),
+          ],
+        ),
+        const SizedBox(height: 24),
+        const _SectionHeader(title: 'Privacy & Data'),
+        const SizedBox(height: 10),
+        groupedCard(
+          children: [
+            ListTile(
+              leading: const Icon(Icons.file_upload_outlined),
+              title: const Text('Export protected archive'),
+              subtitle: const Text(
+                'Move your local profiles to another device',
+              ),
+              trailing: const Icon(Icons.chevron_right_rounded),
+              onTap: _archiveBusy ? null : _exportArchive,
+            ),
+            const Divider(height: 1),
+            ListTile(
+              leading: const Icon(Icons.file_download_outlined),
+              title: const Text('Import protected archive'),
+              subtitle: const Text(
+                'Review before adding or replacing profiles',
+              ),
+              trailing: const Icon(Icons.chevron_right_rounded),
+              onTap: _archiveBusy ? null : _importArchive,
+            ),
+            const Divider(height: 1),
+            ListTile(
+              leading: const Icon(Icons.shield_outlined),
+              title: const Text('Privacy & Data'),
+              subtitle: const Text('How SpineUp stores and protects records'),
+              trailing: const Icon(Icons.chevron_right_rounded),
+              onTap: _showPrivacyDialog,
+            ),
+          ],
+        ),
+        const SizedBox(height: 24),
+        const _SectionHeader(title: 'Danger Zone'),
+        const SizedBox(height: 10),
+        groupedCard(
+          children: [
+            ListTile(
+              leading: const Icon(
+                Icons.delete_forever_outlined,
+                color: Colors.red,
+              ),
+              title: const Text(
+                'Delete Account & Data',
+                style: TextStyle(
+                  color: Colors.red,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              subtitle: const Text('Wipe all local health & event data'),
+              onTap: _confirmDeleteAccount,
+            ),
+          ],
+        ),
+      ],
     );
   }
 }

@@ -25,7 +25,7 @@ class _NavigationShellState extends State<NavigationShell> {
     return switch (index) {
       0 => TodayScreen(key: ValueKey('today-$subjectId')),
       1 => MyJourneyScreen(key: ValueKey('journey-$subjectId')),
-      2 => const LearnScreen(key: ValueKey('learn')),
+      2 => LearnScreen(key: ValueKey('learn-$subjectId')),
       3 => MeScreen(key: ValueKey('me-$subjectId')),
       _ => TodayScreen(key: ValueKey('today-$subjectId')),
     };

@@ -8,6 +8,7 @@ import 'learn_screen.dart';
 import '../services/gamification_service.dart';
 import '../services/session_service.dart';
 import '../theme/app_theme.dart';
+import 'activity_history_screen.dart';
 import 'cobb_angle_logger_modal.dart';
 import 'appointment_logger_modal.dart';
 
@@ -32,12 +33,10 @@ class _MyJourneyScreenState extends State<MyJourneyScreen>
   // Chart Filters
   String _chartTimeRange = 'Month'; // 'Week', 'Month', 'Year', 'All'
   String _overlayOption = 'None'; // 'None', 'Pain Level', 'Stretches'
-  EventType? _timelineFilter;
 
   @override
   void initState() {
     super.initState();
-    _timelineFilter = widget.initialEventFilter;
     _loadAll();
   }
 
@@ -80,6 +79,12 @@ class _MyJourneyScreenState extends State<MyJourneyScreen>
     };
     final cutoff = DateTime.now().subtract(Duration(days: days));
     return _cobbHistory.where((e) => e.date.isAfter(cutoff)).toList();
+  }
+
+  List<Event> get _recentEvents {
+    final events = List<Event>.from(_allEvents)
+      ..sort((a, b) => b.timestamp.compareTo(a.timestamp));
+    return events.take(3).toList();
   }
 
   List<({DateTime date, double value})> get _overlayData {
@@ -259,57 +264,47 @@ class _MyJourneyScreenState extends State<MyJourneyScreen>
                         ),
                         const SizedBox(height: 24),
 
-                        // ── Activity timeline ──────────────────────────────
+                        // ── Recent records preview ─────────────────────────
                         Row(
                           children: [
-                            _SectionHeader(title: 'Activity Log'),
-                            const Spacer(),
-                            if (_timelineFilter != null)
-                              FilterChip(
-                                label: const Text(
-                                  'Filtered: Journal Entries',
-                                  style: TextStyle(fontSize: 11),
-                                ),
-                                selected: true,
-                                onSelected: (_) =>
-                                    setState(() => _timelineFilter = null),
-                                deleteIcon: const Icon(Icons.close, size: 14),
-                                onDeleted: () =>
-                                    setState(() => _timelineFilter = null),
-                              ),
+                            const Expanded(
+                              child: _SectionHeader(title: 'Recent records'),
+                            ),
+                            TextButton(
+                              onPressed: () {
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (_) => ActivityHistoryScreen(
+                                      initialFilter: widget.initialEventFilter,
+                                    ),
+                                  ),
+                                );
+                              },
+                              child: const Text('View all history'),
+                            ),
                           ],
                         ),
-                        const SizedBox(height: 12),
-                        if (_allEvents
-                            .where(
-                              (e) =>
-                                  _timelineFilter == null ||
-                                  e.type == _timelineFilter,
-                            )
-                            .isEmpty)
-                          Center(
-                            child: Padding(
-                              padding: const EdgeInsets.all(32),
-                              child: Text(
-                                _timelineFilter == null
-                                    ? 'No activity yet.\nStart logging to see your history!'
-                                    : 'No journal entries logged yet.',
-                                textAlign: TextAlign.center,
-                                style: tt.bodyMedium?.copyWith(
-                                  color: AppTheme.mutedForeground,
-                                ),
+                        const SizedBox(height: 8),
+                        if (_allEvents.isEmpty)
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.all(20),
+                            decoration: BoxDecoration(
+                              color: cs.surfaceContainer,
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: Text(
+                              'Your recorded check-ins, routines, and measurements will appear here.',
+                              textAlign: TextAlign.center,
+                              style: tt.bodySmall?.copyWith(
+                                color: AppTheme.mutedForeground,
                               ),
                             ),
                           )
                         else
-                          ..._allEvents
-                              .where(
-                                (e) =>
-                                    _timelineFilter == null ||
-                                    e.type == _timelineFilter,
-                              )
-                              .take(30)
-                              .map((e) => _EventTile(event: e)),
+                          ..._recentEvents.map(
+                            (event) => _EventTile(event: event, showXp: false),
+                          ),
                       ]),
                     ),
                   ),
@@ -697,7 +692,9 @@ class _CobbChart extends StatelessWidget {
 
 class _EventTile extends StatelessWidget {
   final Event event;
-  const _EventTile({required this.event});
+  final bool showXp;
+
+  const _EventTile({required this.event, this.showXp = true});
 
   @override
   Widget build(BuildContext context) {
@@ -758,20 +755,21 @@ class _EventTile extends StatelessWidget {
               ],
             ),
           ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Text(
-              '+${event.xpValue} XP',
-              style: tt.labelSmall?.copyWith(
-                color: color,
-                fontWeight: FontWeight.bold,
+          if (showXp)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text(
+                '+${event.xpValue} XP',
+                style: tt.labelSmall?.copyWith(
+                  color: color,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
-          ),
         ],
       ),
     );

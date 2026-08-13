@@ -5,11 +5,14 @@ import 'package:intl/intl.dart';
 import 'package:uuid/uuid.dart';
 import '../models/event.dart';
 import '../models/appointment.dart';
+import '../models/external_content.dart';
+import '../services/external_content_service.dart';
 import '../services/gamification_service.dart';
 import '../services/session_service.dart';
 import '../theme/app_theme.dart';
 import 'appointment_logger_modal.dart';
 import 'daily_check_in_screen.dart';
+import 'external_content_screen.dart';
 
 // ─── Exercise catalogue ───────────────────────────────────────────────────────
 
@@ -276,9 +279,9 @@ class _TodayScreenState extends State<TodayScreen>
   GamificationSnapshot _snap = GamificationSnapshot.empty;
   List<Event> _todayEvents = [];
   List<Appointment> _appointments = [];
+  List<ExternalContentItem> _savedRoutineVideos = [];
   final Set<String> _completedToday = {};
   bool _loadingSnap = true;
-  bool _allExpanded = false;
 
   // Celebration banner
   String? _xpBannerText;
@@ -304,6 +307,8 @@ class _TodayScreenState extends State<TodayScreen>
     final appointments = await _gs.getAppointments(
       SessionService.currentCareSubjectId,
     );
+    final savedRoutineVideos =
+        await ExternalContentService.savedRoutineVideos();
 
     final completedIds = todayEvents
         .where((e) => e.type == EventType.stretchCompleted)
@@ -316,6 +321,7 @@ class _TodayScreenState extends State<TodayScreen>
         _snap = snap;
         _todayEvents = todayEvents;
         _appointments = appointments;
+        _savedRoutineVideos = savedRoutineVideos;
         _completedToday.addAll(completedIds);
         _loadingSnap = false;
       });
@@ -367,10 +373,26 @@ class _TodayScreenState extends State<TodayScreen>
     return journals.isNotEmpty ? journals.last : null;
   }
 
+  void _showRoutineSheet() {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      builder: (_) => _RoutineSheet(
+        exercises: _exercises,
+        savedVideos: _savedRoutineVideos,
+        initiallyCompleted: _completedToday,
+        onMarkDone: _markExerciseDone,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 
     final now = DateTime.now();
@@ -433,60 +455,47 @@ class _TodayScreenState extends State<TodayScreen>
                 padding: const EdgeInsets.fromLTRB(16, 0, 16, 120),
                 sliver: SliverList(
                   delegate: SliverChildListDelegate([
-                    // ── Level & XP header ─────────────────────────────────
-                    _LevelXpCard(snap: _snap, loading: _loadingSnap),
+                    // ── Primary daily action ───────────────────────────────
+                    _DailyCheckInSummaryCard(
+                      latestLog: _latestJournalLogToday,
+                      onTap: () async {
+                        final result = await Navigator.push<LogEventResult>(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => DailyCheckInScreen(
+                              userId: SessionService.currentCareSubjectId,
+                              userProfile: _snap.userProfile,
+                              existingLogToday: _latestJournalLogToday,
+                            ),
+                          ),
+                        );
+                        if (result != null) {
+                          await _loadSnapshot();
+                          final bonus = result.dailyBonusAwarded
+                              ? ' +5 daily bonus!'
+                              : '';
+                          _showBanner('+${result.xpAwarded} XP$bonus');
+                        }
+                      },
+                    ),
+                    const SizedBox(height: 12),
+                    _RoutineEntryCard(
+                      completed: _completedToday.length,
+                      total: _exercises.length,
+                      savedVideoCount: _savedRoutineVideos.length,
+                      onTap: _showRoutineSheet,
+                    ),
                     const SizedBox(height: 16),
-                    // ── Streak + Daily Goal ───────────────────────────────
+
+                    // ── Supporting motivation ──────────────────────────────
                     _StatPairSection(
                       streakDays: _snap.streakDays,
                       todayXp: _todayXp,
                       targetXp: kDailyXpTarget,
                       loading: _loadingSnap,
                     ),
-                    const SizedBox(height: 16),
-
-                    // ── Check-In & Routine Progress ───────────────────────
-                    IntrinsicHeight(
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          Expanded(
-                            child: _DailyCheckInSummaryCard(
-                              latestLog: _latestJournalLogToday,
-                              onTap: () async {
-                                final result =
-                                    await Navigator.push<LogEventResult>(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (_) => DailyCheckInScreen(
-                                          userId: SessionService
-                                              .currentCareSubjectId,
-                                          userProfile: _snap.userProfile,
-                                          existingLogToday:
-                                              _latestJournalLogToday,
-                                        ),
-                                      ),
-                                    );
-                                if (result != null) {
-                                  await _loadSnapshot();
-                                  final bonus = result.dailyBonusAwarded
-                                      ? ' +5 daily bonus!'
-                                      : '';
-                                  _showBanner('+${result.xpAwarded} XP$bonus');
-                                }
-                              },
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: _RoutineProgressCard(
-                              completed: _completedToday.length,
-                              total: _exercises.length,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+                    const SizedBox(height: 12),
+                    _LevelXpCard(snap: _snap, loading: _loadingSnap),
                     const SizedBox(height: 16),
 
                     // ── Next Appointment ──────────────────────────────────
@@ -503,66 +512,6 @@ class _TodayScreenState extends State<TodayScreen>
                               : '';
                           _showBanner('+${result.xpAwarded} XP$bonus');
                         },
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-
-                    // ── Today's Routine ───────────────────────────────────
-                    Row(
-                      children: [
-                        Text('Today\'s Routine', style: tt.titleMedium),
-                        const Spacer(),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: cs.surfaceContainerHigh,
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          child: Text(
-                            '${_exercises.length} EXERCISES',
-                            style: tt.labelSmall?.copyWith(
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
-                              color: AppTheme.mutedForeground,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: TextButton(
-                        onPressed: () =>
-                            setState(() => _allExpanded = !_allExpanded),
-                        style: TextButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
-                          ),
-                          minimumSize: Size.zero,
-                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        ),
-                        child: Text(
-                          _allExpanded ? 'COLLAPSE ALL' : 'EXPAND ALL',
-                          style: tt.labelSmall?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: AppTheme.primarySage,
-                            letterSpacing: 1.2,
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    ..._exercises.map(
-                      (ex) => _ExerciseCard(
-                        exercise: ex,
-                        done: _completedToday.contains(ex.id),
-                        forceExpanded: _allExpanded,
-                        onMarkDone: () => _markExerciseDone(ex),
                       ),
                     ),
                     const SizedBox(height: 24),
@@ -586,181 +535,70 @@ class _TodayScreenState extends State<TodayScreen>
   }
 }
 
-// ─── Level & XP Card ────────────────────────────────────────────────────────
+// ─── Compact Progress Strip ───────────────────────────────────────────────────
 
 class _LevelXpCard extends StatelessWidget {
   final GamificationSnapshot snap;
   final bool loading;
+
   const _LevelXpCard({required this.snap, required this.loading});
 
   @override
   Widget build(BuildContext context) {
+    if (loading) return const SizedBox.shrink();
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
-    if (loading) return const SizedBox.shrink();
-
-    // Determine next title (if any)
-    final nextXpReq =
-        100 + (snap.currentLevel - 1) * 25; // using existing logic
-    final xpNeeded = nextXpReq - snap.xpInLevel;
-
-    // We can infer next title or just use a generic one if we don't have the full list accessible here.
-    // The existing titles are Newcomer → Mover → Wonder → Voyager → Guardian → Wizard.
-    String nextTitle = 'Next Level';
-    if (snap.currentLevel == 1) {
-      nextTitle = 'Mover';
-    } else if (snap.currentLevel == 2) {
-      nextTitle = 'Wonder';
-    } else if (snap.currentLevel == 3) {
-      nextTitle = 'Voyager';
-    } else if (snap.currentLevel == 4) {
-      nextTitle = 'Guardian';
-    } else if (snap.currentLevel == 5) {
-      nextTitle = 'Wizard';
-    } else if (snap.currentLevel >= 6) {
-      nextTitle = 'Max Level';
-    }
 
     return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
-        color: cs.surfaceContainerHigh,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-          color: AppTheme.primarySage.withValues(alpha: 0.3),
-          width: 1.5,
-        ),
+        color: cs.surfaceContainer,
+        borderRadius: BorderRadius.circular(18),
       ),
-      child: Stack(
-        clipBehavior: Clip.none,
+      child: Row(
         children: [
-          Positioned(
-            right: -10,
-            top: -30,
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            decoration: BoxDecoration(
+              color: AppTheme.primarySage.withValues(alpha: 0.14),
+              borderRadius: BorderRadius.circular(12),
+            ),
             child: Text(
-              snap.currentLevel < 10
-                  ? '0${snap.currentLevel}'
-                  : '${snap.currentLevel}',
-              style: TextStyle(
-                fontSize: 160,
-                fontWeight: FontWeight.w900,
-                height: 1.0,
-                color: cs.onSurface.withValues(alpha: 0.04),
+              'Level ${snap.currentLevel}',
+              style: tt.labelLarge?.copyWith(
+                color: AppTheme.primarySage,
+                fontWeight: FontWeight.w800,
               ),
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.all(20),
+          const SizedBox(width: 12),
+          Expanded(
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: AppTheme.primarySage.withValues(
-                                alpha: 0.15,
-                              ),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Text(
-                              'LEVEL ${snap.currentLevel}',
-                              style: tt.labelSmall?.copyWith(
-                                color: AppTheme.primarySage,
-                                fontWeight: FontWeight.bold,
-                                letterSpacing: 1.2,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            snap.currentTitle,
-                            style: tt.headlineSmall?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: cs.onSurface,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Text(
-                          '${snap.totalXp}',
-                          style: tt.headlineMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: cs.onSurface,
-                          ),
-                        ),
-                        Text(
-                          'TOTAL XP',
-                          style: tt.labelSmall?.copyWith(
-                            color: AppTheme.mutedForeground,
-                            letterSpacing: 1.2,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
+                Text(
+                  snap.currentTitle,
+                  style: tt.titleSmall?.copyWith(fontWeight: FontWeight.w800),
                 ),
-                const SizedBox(height: 32),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'NEXT: ${nextTitle.toUpperCase()}',
-                      style: tt.labelSmall?.copyWith(
-                        color: AppTheme.mutedForeground,
-                        letterSpacing: 1.1,
-                        fontWeight: FontWeight.bold,
-                      ),
+                const SizedBox(height: 6),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(4),
+                  child: LinearProgressIndicator(
+                    value: snap.levelProgress,
+                    minHeight: 6,
+                    backgroundColor: cs.surfaceContainerHighest,
+                    valueColor: const AlwaysStoppedAnimation(
+                      AppTheme.primarySage,
                     ),
-                    Text(
-                      '$xpNeeded XP NEEDED',
-                      style: tt.labelSmall?.copyWith(
-                        color: AppTheme.primarySage,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 1.1,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Stack(
-                  children: [
-                    Container(
-                      height: 10,
-                      decoration: BoxDecoration(
-                        color: cs.onSurface.withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(5),
-                      ),
-                    ),
-                    AnimatedFractionallySizedBox(
-                      duration: const Duration(milliseconds: 600),
-                      curve: Curves.easeOut,
-                      alignment: Alignment.centerLeft,
-                      widthFactor: snap.levelProgress,
-                      child: Container(
-                        height: 10,
-                        decoration: BoxDecoration(
-                          color: AppTheme.primarySage,
-                          borderRadius: BorderRadius.circular(5),
-                        ),
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
               ],
             ),
+          ),
+          const SizedBox(width: 12),
+          Text(
+            '${snap.totalXp} XP',
+            style: tt.labelLarge?.copyWith(fontWeight: FontWeight.w800),
           ),
         ],
       ),
@@ -773,13 +611,11 @@ class _LevelXpCard extends StatelessWidget {
 class _ExerciseCard extends StatefulWidget {
   final _Exercise exercise;
   final bool done;
-  final bool forceExpanded;
   final VoidCallback onMarkDone;
 
   const _ExerciseCard({
     required this.exercise,
     required this.done,
-    this.forceExpanded = false,
     required this.onMarkDone,
   });
 
@@ -788,21 +624,7 @@ class _ExerciseCard extends StatefulWidget {
 }
 
 class _ExerciseCardState extends State<_ExerciseCard> {
-  late bool _expanded;
-
-  @override
-  void initState() {
-    super.initState();
-    _expanded = widget.forceExpanded;
-  }
-
-  @override
-  void didUpdateWidget(_ExerciseCard oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.forceExpanded != widget.forceExpanded) {
-      _expanded = widget.forceExpanded;
-    }
-  }
+  bool _expanded = false;
 
   @override
   Widget build(BuildContext context) {
@@ -1386,70 +1208,304 @@ class _DailyCheckInSummaryCard extends StatelessWidget {
   }
 }
 
-// ─── Routine Progress Card ────────────────────────────────────────────────
-class _RoutineProgressCard extends StatelessWidget {
+// ─── Routine Entry + Focused Routine Sheet ─────────────────────────────────────
+class _RoutineEntryCard extends StatelessWidget {
   final int completed;
   final int total;
+  final int savedVideoCount;
+  final VoidCallback onTap;
 
-  const _RoutineProgressCard({required this.completed, required this.total});
+  const _RoutineEntryCard({
+    required this.completed,
+    required this.total,
+    required this.savedVideoCount,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final progress = total == 0 ? 0.0 : completed / total;
+
+    return Card(
+      elevation: 0,
+      margin: EdgeInsets.zero,
+      color: cs.surfaceContainer,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(24),
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Row(
+            children: [
+              SizedBox(
+                width: 62,
+                height: 62,
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    CircularProgressIndicator(
+                      value: progress,
+                      strokeWidth: 7,
+                      backgroundColor: cs.surfaceContainerHighest,
+                      valueColor: const AlwaysStoppedAnimation(
+                        AppTheme.primarySage,
+                      ),
+                    ),
+                    Text(
+                      '$completed/$total',
+                      style: tt.labelLarge?.copyWith(
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Today\'s routine',
+                      style: tt.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      savedVideoCount > 0
+                          ? '$savedVideoCount saved video${savedVideoCount == 1 ? '' : 's'} in My Routine.'
+                          : completed == total
+                          ? 'All done for today.'
+                          : 'A short set of guided movements for today.',
+                      style: tt.bodySmall?.copyWith(
+                        color: AppTheme.mutedForeground,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      completed == total ? 'Review routine' : 'Open routine',
+                      style: tt.labelLarge?.copyWith(
+                        color: AppTheme.primarySage,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(Icons.chevron_right_rounded, color: cs.onSurfaceVariant),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _RoutineSheet extends StatefulWidget {
+  final List<_Exercise> exercises;
+  final List<ExternalContentItem> savedVideos;
+  final Set<String> initiallyCompleted;
+  final Future<void> Function(_Exercise exercise) onMarkDone;
+
+  const _RoutineSheet({
+    required this.exercises,
+    required this.savedVideos,
+    required this.initiallyCompleted,
+    required this.onMarkDone,
+  });
+
+  @override
+  State<_RoutineSheet> createState() => _RoutineSheetState();
+}
+
+class _RoutineSheetState extends State<_RoutineSheet> {
+  late final Set<String> _completed;
+
+  @override
+  void initState() {
+    super.initState();
+    _completed = {...widget.initiallyCompleted};
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
 
     return Container(
-      width: double.infinity,
-      constraints: const BoxConstraints(minHeight: 140),
-      padding: const EdgeInsets.all(20),
+      height: MediaQuery.sizeOf(context).height * 0.88,
       decoration: BoxDecoration(
-        color: cs.surfaceContainer,
-        borderRadius: BorderRadius.circular(24),
+        color: cs.surface,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Wrap(
-            spacing: 4,
-            runSpacing: 4,
-            children: List.generate(total, (index) {
-              final isActive = index < completed;
-              return Container(
-                width: 12,
-                height: 12,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: isActive
-                      ? AppTheme.primarySage
-                      : cs.surfaceContainerHighest,
-                ),
-              );
-            }),
-          ),
-          const Spacer(),
-          Text(
-            '$completed / $total',
-            style: tt.titleLarge?.copyWith(
-              fontWeight: FontWeight.bold,
-              color: cs.onSurface,
+      child: SafeArea(
+        child: Column(
+          children: [
+            const SizedBox(height: 12),
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: cs.onSurface.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(2),
+              ),
             ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            'ROUTINE',
-            style: tt.labelSmall?.copyWith(
-              color: AppTheme.mutedForeground,
-              letterSpacing: 1.1,
-              fontWeight: FontWeight.bold,
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 18, 12, 12),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Today\'s routine', style: tt.titleLarge),
+                        const SizedBox(height: 4),
+                        Text(
+                          '${_completed.length} of ${widget.exercises.length} complete',
+                          style: tt.bodySmall?.copyWith(
+                            color: AppTheme.mutedForeground,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  IconButton(
+                    tooltip: 'Close routine',
+                    onPressed: () => Navigator.of(context).pop(),
+                    icon: const Icon(Icons.close_rounded),
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(4, 4, 4, 10),
+                    child: Text(
+                      'Guided exercises',
+                      style: tt.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ),
+                  ...widget.exercises.map(
+                    (exercise) => _ExerciseCard(
+                      exercise: exercise,
+                      done: _completed.contains(exercise.id),
+                      onMarkDone: () {
+                        if (_completed.add(exercise.id)) {
+                          setState(() {});
+                          widget.onMarkDone(exercise);
+                        }
+                      },
+                    ),
+                  ),
+                  if (widget.savedVideos.isNotEmpty) ...[
+                    const SizedBox(height: 8),
+                    const Divider(),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(4, 14, 4, 4),
+                      child: Text(
+                        'Saved exercise videos',
+                        style: tt.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(4, 0, 4, 12),
+                      child: Text(
+                        'Open a saved video when you want visual guidance. It plays from its original source.',
+                        style: tt.bodySmall?.copyWith(
+                          color: AppTheme.mutedForeground,
+                        ),
+                      ),
+                    ),
+                    ...widget.savedVideos.map(
+                      (item) => _SavedRoutineVideoCard(item: item),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 }
 
 // ─── XP Banner ────────────────────────────────────────────────────────────────
+
+class _SavedRoutineVideoCard extends StatelessWidget {
+  final ExternalContentItem item;
+
+  const _SavedRoutineVideoCard({required this.item});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Card(
+      elevation: 0,
+      margin: const EdgeInsets.only(bottom: 10),
+      color: theme.colorScheme.surfaceContainer,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: () => Navigator.of(context).push(
+          MaterialPageRoute<void>(
+            builder: (_) => ExternalContentDetailPage(item: item),
+          ),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Row(
+            children: [
+              Container(
+                width: 52,
+                height: 52,
+                decoration: BoxDecoration(
+                  color: AppTheme.accentLavender.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: const Icon(Icons.play_circle_outline_rounded),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      item.title,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '${item.sourceName}  ·  Watch from source',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: AppTheme.mutedForeground,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(Icons.chevron_right_rounded),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
 
 class _XpBanner extends StatelessWidget {
   final String text;

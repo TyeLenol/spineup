@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../models/learn_topic.dart';
+import '../models/external_content.dart';
+import 'external_content_screen.dart';
 
 class LearnScreen extends StatefulWidget {
   const LearnScreen({super.key});
@@ -14,6 +16,7 @@ class _LearnScreenState extends State<LearnScreen> {
   final _searchController = TextEditingController();
   String _query = '';
   String _category = 'All';
+  String _section = 'Topics';
 
   @override
   void initState() {
@@ -86,7 +89,9 @@ class _LearnScreenState extends State<LearnScreen> {
                               onPressed: _searchController.clear,
                               icon: const Icon(Icons.close_rounded),
                             ),
-                      hintText: 'Search topics',
+                      hintText: _section == 'Topics'
+                          ? 'Search topics'
+                          : 'Search external content',
                       filled: true,
                       fillColor: theme.colorScheme.surfaceContainerHighest,
                       border: OutlineInputBorder(
@@ -100,37 +105,82 @@ class _LearnScreenState extends State<LearnScreen> {
                     height: 40,
                     child: ListView.separated(
                       scrollDirection: Axis.horizontal,
-                      itemCount: _categories.length,
+                      itemCount: 4,
                       separatorBuilder: (_, _) => const SizedBox(width: 8),
                       itemBuilder: (context, index) {
-                        final category = _categories[index];
+                        final section = switch (index) {
+                          0 => 'Topics',
+                          1 => 'Articles',
+                          2 => 'Videos',
+                          _ => 'Saved',
+                        };
                         return ChoiceChip(
-                          label: Text(category),
-                          selected: _category == category,
-                          onSelected: (_) =>
-                              setState(() => _category = category),
+                          label: Text(section),
+                          selected: _section == section,
+                          onSelected: (_) => setState(() {
+                            _section = section;
+                            _category = 'All';
+                          }),
                         );
                       },
                     ),
                   ),
+                  if (_section == 'Topics') ...[
+                    const SizedBox(height: 10),
+                    SizedBox(
+                      height: 40,
+                      child: ListView.separated(
+                        scrollDirection: Axis.horizontal,
+                        itemCount: _categories.length,
+                        separatorBuilder: (_, _) => const SizedBox(width: 8),
+                        itemBuilder: (context, index) {
+                          final category = _categories[index];
+                          return ChoiceChip(
+                            label: Text(category),
+                            selected: _category == category,
+                            onSelected: (_) =>
+                                setState(() => _category = category),
+                          );
+                        },
+                      ),
+                    ),
+                  ],
                   const SizedBox(height: 8),
                 ],
               ),
             ),
           ),
-          if (topics.isEmpty)
-            const SliverFillRemaining(
-              hasScrollBody: false,
-              child: Center(child: Text('No Learn topics match that search.')),
-            )
+          if (_section == 'Topics')
+            if (topics.isEmpty)
+              const SliverFillRemaining(
+                hasScrollBody: false,
+                child: Center(
+                  child: Text('No Learn topics match that search.'),
+                ),
+              )
+            else
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(20, 8, 20, 120),
+                sliver: SliverList.separated(
+                  itemCount: topics.length,
+                  separatorBuilder: (_, _) => const SizedBox(height: 12),
+                  itemBuilder: (context, index) =>
+                      _LearnTopicCard(topic: topics[index]),
+                ),
+              )
           else
             SliverPadding(
               padding: const EdgeInsets.fromLTRB(20, 8, 20, 120),
-              sliver: SliverList.separated(
-                itemCount: topics.length,
-                separatorBuilder: (_, _) => const SizedBox(height: 12),
-                itemBuilder: (context, index) =>
-                    _LearnTopicCard(topic: topics[index]),
+              sliver: SliverToBoxAdapter(
+                child: ExternalContentSection(
+                  key: ValueKey(_section),
+                  kindFilter: switch (_section) {
+                    'Articles' => ExternalContentKind.article,
+                    'Videos' => ExternalContentKind.video,
+                    _ => null,
+                  },
+                  query: _query,
+                ),
               ),
             ),
         ],
