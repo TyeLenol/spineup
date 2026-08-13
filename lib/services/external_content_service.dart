@@ -110,7 +110,7 @@ class ExternalContentService {
     ),
   ];
 
-  static const _seedDate = DateTime(2026, 8, 13);
+  static final _seedDate = DateTime(2026, 8, 13);
 
   static Future<List<ExternalContentItem>> loadContent({
     bool refresh = false,
@@ -222,7 +222,7 @@ class ExternalContentService {
               category: source.category,
               safetyLabel:
                   'External health information. Review the source and speak with a qualified professional about personal concerns.',
-              publishedAt: item.pubDate,
+              publishedAt: DateTime.tryParse(item.pubDate ?? ''),
               fetchedAt: DateTime.now(),
             ),
           );
