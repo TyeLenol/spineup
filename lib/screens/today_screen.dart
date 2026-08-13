@@ -385,7 +385,6 @@ class _TodayScreenState extends State<TodayScreen>
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 
     final now = DateTime.now();
@@ -486,6 +485,8 @@ class _TodayScreenState extends State<TodayScreen>
                       targetXp: kDailyXpTarget,
                       loading: _loadingSnap,
                     ),
+                    const SizedBox(height: 12),
+                    _LevelXpCard(snap: _snap, loading: _loadingSnap),
                     const SizedBox(height: 16),
 
                     // ── Next Appointment ──────────────────────────────────
@@ -601,13 +602,11 @@ class _LevelXpCard extends StatelessWidget {
 class _ExerciseCard extends StatefulWidget {
   final _Exercise exercise;
   final bool done;
-  final bool forceExpanded;
   final VoidCallback onMarkDone;
 
   const _ExerciseCard({
     required this.exercise,
     required this.done,
-    this.forceExpanded = false,
     required this.onMarkDone,
   });
 
@@ -616,21 +615,7 @@ class _ExerciseCard extends StatefulWidget {
 }
 
 class _ExerciseCardState extends State<_ExerciseCard> {
-  late bool _expanded;
-
-  @override
-  void initState() {
-    super.initState();
-    _expanded = widget.forceExpanded;
-  }
-
-  @override
-  void didUpdateWidget(_ExerciseCard oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.forceExpanded != widget.forceExpanded) {
-      _expanded = widget.forceExpanded;
-    }
-  }
+  bool _expanded = false;
 
   @override
   Widget build(BuildContext context) {
