@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'package:spineup/models/care_subject.dart';
+import 'package:spineup/models/profile_data.dart';
 import 'package:spineup/screens/navigation_shell.dart';
 import 'package:spineup/screens/today_screen.dart';
 import 'package:spineup/screens/my_journey_screen.dart';
 import 'package:spineup/screens/community_screen.dart';
 import 'package:spineup/screens/learn_screen.dart';
 import 'package:spineup/screens/me_screen.dart';
+import 'package:spineup/services/session_service.dart';
 
 void main() {
   setUpAll(() {
@@ -55,4 +58,36 @@ void main() {
     expect(find.byType(LearnScreen), findsNothing);
     expect(find.byType(CommunityScreen), findsNothing);
   });
+
+  testWidgets(
+    'NavigationShell refreshes subject-scoped screens after a subject switch',
+    (WidgetTester tester) async {
+      SessionService.startMockSession();
+      addTearDown(SessionService.startMockSession);
+
+      await tester.pumpWidget(const MaterialApp(home: NavigationShell()));
+      await tester.pump(const Duration(seconds: 1));
+      await tester.pump(const Duration(seconds: 1));
+      final initialKey = tester
+          .widget<TodayScreen>(find.byType(TodayScreen))
+          .key;
+
+      final ward = CareSubject(
+        id: 'school-demo-ward',
+        ownerUserId: SessionService.currentUserId,
+        type: CareSubjectType.ward,
+        displayName: 'Ama',
+        relationship: 'Daughter',
+        createdAt: DateTime(2026, 8, 12),
+        updatedAt: DateTime(2026, 8, 12),
+      );
+      SessionService.setActiveCareSubject(ward);
+      await tester.pump();
+      await tester.pump(const Duration(seconds: 1));
+
+      expect(find.byType(TodayScreen), findsOneWidget);
+      final wardKey = tester.widget<TodayScreen>(find.byType(TodayScreen)).key;
+      expect(wardKey, isNot(initialKey));
+    },
+  );
 }
