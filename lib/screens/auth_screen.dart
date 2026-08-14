@@ -8,7 +8,6 @@ import '../services/auth_service.dart';
 import 'auth_components.dart';
 import 'forgot_password_flow.dart';
 
-
 /// Login and Sign-up screen — toggled via [AuthMode].
 ///
 /// Matching the reference UI exactly:
@@ -66,7 +65,9 @@ class _AuthScreenState extends State<AuthScreen> {
 
   bool _isValidPassword(String password) {
     if (password.length < 8) return false;
-    return RegExp(r'[0-9!@#\$%^&*(),.?":{}|<>_\-+=\[\]\\\/]').hasMatch(password);
+    return RegExp(
+      r'[0-9!@#\$%^&*(),.?":{}|<>_\-+=\[\]\\\/]',
+    ).hasMatch(password);
   }
 
   Future<void> _submit() async {
@@ -74,11 +75,15 @@ class _AuthScreenState extends State<AuthScreen> {
     final password = _passwordCtrl.text;
 
     if (!_isValidEmail(email)) {
-      _showSnackBar("That email doesn't look quite right. Give it another check! 💌");
+      _showSnackBar(
+        "That email doesn't look quite right. Give it another check! 💌",
+      );
       return;
     }
     if (!_isLogin && !_isValidPassword(password)) {
-      _showSnackBar('Password needs at least 8 characters and one number or symbol. Almost there! 💪');
+      _showSnackBar(
+        'Password needs at least 8 characters and one number or symbol. Almost there! 💪',
+      );
       return;
     }
     if (password.isEmpty) {
@@ -150,7 +155,9 @@ class _AuthScreenState extends State<AuthScreen> {
       builder: (context) {
         return AlertDialog(
           backgroundColor: AppTheme.backgroundCream,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+          ),
           title: Text(
             'Continue as guest?',
             style: GoogleFonts.fraunces(
@@ -162,7 +169,7 @@ class _AuthScreenState extends State<AuthScreen> {
             ),
           ),
           content: Text(
-            'Guest data is kept only on this device and will be lost if you change devices. You can create an account to enable syncing at any time in Settings.',
+            'Guest data stays on this device and will be lost if you change devices. Use protected export/import when you want to move records to another device.',
             style: GoogleFonts.outfit(
               fontSize: 15,
               height: 1.4,
@@ -189,8 +196,13 @@ class _AuthScreenState extends State<AuthScreen> {
               style: FilledButton.styleFrom(
                 backgroundColor: AppTheme.primarySage,
                 foregroundColor: AppTheme.onPrimaryDark,
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                ),
               ),
               child: Text(
                 'Continue',
@@ -211,8 +223,12 @@ class _AuthScreenState extends State<AuthScreen> {
   @override
   Widget build(BuildContext context) {
     EdgeToEdgeHelper.configureSystemUi(context);
-    final accentColor = _isLogin ? AppTheme.primarySage : AppTheme.secondaryCoral;
-    final bgColor = _isLogin ? const Color(0xFFF0F5F4) : const Color(0xFFFDF5F2);
+    final accentColor = _isLogin
+        ? AppTheme.primarySage
+        : AppTheme.secondaryCoral;
+    final bgColor = _isLogin
+        ? const Color(0xFFF0F5F4)
+        : const Color(0xFFFDF5F2);
 
     return Scaffold(
       backgroundColor: bgColor,
@@ -225,148 +241,157 @@ class _AuthScreenState extends State<AuthScreen> {
           // ── Main content ───────────────────────────────────────────────────
           SafeArea(
             child: Form(
-                key: _formKey,
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.symmetric(horizontal: 28),
-                  keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Top Row: Back button & Guest action
-                      const SizedBox(height: 8),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          AuthBackButton(onBack: widget.onBack),
-                          TextButton(
-                            onPressed: _showGuestWarningModal,
-                            style: TextButton.styleFrom(
-                              foregroundColor: AppTheme.foregroundDark,
-                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              key: _formKey,
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 28),
+                keyboardDismissBehavior:
+                    ScrollViewKeyboardDismissBehavior.onDrag,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Top Row: Back button & Guest action
+                    const SizedBox(height: 8),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        AuthBackButton(onBack: widget.onBack),
+                        TextButton(
+                          onPressed: _showGuestWarningModal,
+                          style: TextButton.styleFrom(
+                            foregroundColor: AppTheme.foregroundDark,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 8,
                             ),
-                            child: Text(
-                              'Continue as guest',
-                              style: GoogleFonts.outfit(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                              ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20),
                             ),
                           ),
-                        ],
-                      ),
-                      const SizedBox(height: 24),
-
-                      // Heading
-                      RepaintBoundary(child: _Heading(isLogin: _isLogin)),
-                      const SizedBox(height: 8),
-
-                      // Subtitle
-                      Text(
-                        _isLogin
-                            ? 'Log in to keep tracking your curve and streak.'
-                            : "We'll set up your diagnosis and avatar next.",
-                        style: GoogleFonts.outfit(
-                          fontSize: 15,
-                          height: 1.5,
-                          color: AppTheme.mutedForeground,
-                        ),
-                      ),
-                      const SizedBox(height: 32),
-
-                      // Email field
-                      AuthFieldLabel('Email address'),
-                      const SizedBox(height: 6),
-                      AuthTextField(
-                        controller: _emailCtrl,
-                        focusNode: _emailFocus,
-                        hintText: 'name@example.com',
-                        keyboardType: TextInputType.emailAddress,
-                        accentColor: accentColor,
-                        autofillHints: const [AutofillHints.email],
-                      ),
-                      const SizedBox(height: 20),
-
-                      // Password label row
-                      Row(
-                        children: [
-                          AuthFieldLabel('Password'),
-                          if (_isLogin) ...[
-                            const Spacer(),
-                            _ForgotPasswordLink(accentColor: accentColor),
-                          ],
-                        ],
-                      ),
-                      const SizedBox(height: 6),
-                      AuthTextField(
-                        controller: _passwordCtrl,
-                        focusNode: _passwordFocus,
-                        hintText: '••••••••',
-                        obscureText: !_showPassword,
-                        accentColor: accentColor,
-                        autofillHints: _isLogin
-                            ? const [AutofillHints.password]
-                            : const [AutofillHints.newPassword],
-                        trailing: AuthEyeToggle(
-                          showPassword: _showPassword,
-                          onToggle: () => setState(() => _showPassword = !_showPassword),
-                        ),
-                      ),
-
-                      // Signup hint
-                      if (!_isLogin) ...[
-                        const SizedBox(height: 8),
-                        Text(
-                          'At least 8 characters, including a number or symbol.',
-                          style: GoogleFonts.outfit(
-                            fontSize: 13,
-                            height: 1.4,
-                            color: AppTheme.mutedForeground,
+                          child: Text(
+                            'Continue as guest',
+                            style: GoogleFonts.outfit(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                         ),
                       ],
+                    ),
+                    const SizedBox(height: 24),
 
-                      const SizedBox(height: 28),
+                    // Heading
+                    RepaintBoundary(child: _Heading(isLogin: _isLogin)),
+                    const SizedBox(height: 8),
 
-                      // Primary CTA
-                      AuthPrimaryButton(
-                        label: _isLogin ? 'Log in' : 'Create account',
-                        color: accentColor,
-                        textColor: _isLogin ? AppTheme.onPrimaryDark : Colors.white,
-                        loading: _loading,
-                        onTap: _submit,
+                    // Subtitle
+                    Text(
+                      _isLogin
+                          ? 'Log in to continue your private SpineUp records.'
+                          : "We'll set up your profile and preferences next.",
+                      style: GoogleFonts.outfit(
+                        fontSize: 15,
+                        height: 1.5,
+                        color: AppTheme.mutedForeground,
                       ),
+                    ),
+                    const SizedBox(height: 32),
 
-                      const SizedBox(height: 28),
+                    // Email field
+                    AuthFieldLabel('Email address'),
+                    const SizedBox(height: 6),
+                    AuthTextField(
+                      controller: _emailCtrl,
+                      focusNode: _emailFocus,
+                      hintText: 'name@example.com',
+                      keyboardType: TextInputType.emailAddress,
+                      accentColor: accentColor,
+                      autofillHints: const [AutofillHints.email],
+                    ),
+                    const SizedBox(height: 20),
 
-                      // OR divider
-                      const _OrDivider(),
-                      const SizedBox(height: 16),
+                    // Password label row
+                    Row(
+                      children: [
+                        AuthFieldLabel('Password'),
+                        if (_isLogin) ...[
+                          const Spacer(),
+                          _ForgotPasswordLink(accentColor: accentColor),
+                        ],
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    AuthTextField(
+                      controller: _passwordCtrl,
+                      focusNode: _passwordFocus,
+                      hintText: '••••••••',
+                      obscureText: !_showPassword,
+                      accentColor: accentColor,
+                      autofillHints: _isLogin
+                          ? const [AutofillHints.password]
+                          : const [AutofillHints.newPassword],
+                      trailing: AuthEyeToggle(
+                        showPassword: _showPassword,
+                        onToggle: () =>
+                            setState(() => _showPassword = !_showPassword),
+                      ),
+                    ),
 
-                      // Google button
-                      _GoogleButton(onTap: _signInWithGoogle, loading: _loading),
-                      const SizedBox(height: 12),
-
-                      // Apple button
-                      _AppleButton(onTap: _signInWithApple, loading: _loading),
-                      const SizedBox(height: 24),
-
-                      // Switch mode link
-                      Center(
-                        child: _SwitchModeLink(
-                          isLogin: _isLogin,
-                          onSwitch: () => widget.onSwitchMode(
-                            _isLogin ? AuthMode.signup : AuthMode.login,
-                          ),
+                    // Signup hint
+                    if (!_isLogin) ...[
+                      const SizedBox(height: 8),
+                      Text(
+                        'At least 8 characters, including a number or symbol.',
+                        style: GoogleFonts.outfit(
+                          fontSize: 13,
+                          height: 1.4,
+                          color: AppTheme.mutedForeground,
                         ),
                       ),
-                      
-                      // Bottom breathing room for imePadding
-                      const SizedBox(height: 32),
                     ],
-                  ),
+
+                    const SizedBox(height: 28),
+
+                    // Primary CTA
+                    AuthPrimaryButton(
+                      label: _isLogin ? 'Log in' : 'Create account',
+                      color: accentColor,
+                      textColor: _isLogin
+                          ? AppTheme.onPrimaryDark
+                          : Colors.white,
+                      loading: _loading,
+                      onTap: _submit,
+                    ),
+
+                    const SizedBox(height: 28),
+
+                    // OR divider
+                    const _OrDivider(),
+                    const SizedBox(height: 16),
+
+                    // Google button
+                    _GoogleButton(onTap: _signInWithGoogle, loading: _loading),
+                    const SizedBox(height: 12),
+
+                    // Apple button
+                    _AppleButton(onTap: _signInWithApple, loading: _loading),
+                    const SizedBox(height: 24),
+
+                    // Switch mode link
+                    Center(
+                      child: _SwitchModeLink(
+                        isLogin: _isLogin,
+                        onSwitch: () => widget.onSwitchMode(
+                          _isLogin ? AuthMode.signup : AuthMode.login,
+                        ),
+                      ),
+                    ),
+
+                    // Bottom breathing room for imePadding
+                    const SizedBox(height: 32),
+                  ],
                 ),
               ),
+            ),
           ),
         ],
       ),
@@ -456,7 +481,9 @@ class _Heading extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final accentColor = isLogin ? AppTheme.primarySage : AppTheme.secondaryCoral;
+    final accentColor = isLogin
+        ? AppTheme.primarySage
+        : AppTheme.secondaryCoral;
     final plain = isLogin ? 'Welcome ' : "Let's get ";
     final italic = isLogin ? 'back.' : 'started.';
 
@@ -525,9 +552,7 @@ class _OrDivider extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Expanded(
-          child: Container(height: 1, color: AppTheme.borderCream),
-        ),
+        Expanded(child: Container(height: 1, color: AppTheme.borderCream)),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12),
           child: Text(
@@ -540,9 +565,7 @@ class _OrDivider extends StatelessWidget {
             ),
           ),
         ),
-        Expanded(
-          child: Container(height: 1, color: AppTheme.borderCream),
-        ),
+        Expanded(child: Container(height: 1, color: AppTheme.borderCream)),
       ],
     );
   }
@@ -683,7 +706,9 @@ class _SwitchModeLink extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final prompt = isLogin ? "Don't have an account? " : 'Already have an account? ';
+    final prompt = isLogin
+        ? "Don't have an account? "
+        : 'Already have an account? ';
     final action = isLogin ? 'Sign up' : 'Log in';
     return GestureDetector(
       onTap: onSwitch,
@@ -712,4 +737,3 @@ class _SwitchModeLink extends StatelessWidget {
     );
   }
 }
-

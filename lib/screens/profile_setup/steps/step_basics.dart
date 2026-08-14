@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import '../../../models/profile_data.dart';
 import '../profile_fields.dart';
 
@@ -24,6 +25,7 @@ class _StepBasicsState extends State<StepBasics> {
   late TextEditingController _nameController;
   late TextEditingController _dobController;
   late Sex _sex;
+  String _dobIso = '';
   TreatmentStage? _stage;
 
   @override
@@ -32,7 +34,8 @@ class _StepBasicsState extends State<StepBasics> {
     _nameController = TextEditingController(
       text: widget.initialData.basics.displayName,
     );
-    _dobController = TextEditingController(text: widget.initialData.basics.dob);
+    _dobIso = widget.initialData.basics.dob;
+    _dobController = TextEditingController(text: _formatDisplayDate(_dobIso));
     _sex = widget.initialData.basics.sex;
     _stage = widget.initialData.story.treatmentStage;
 
@@ -52,9 +55,15 @@ class _StepBasicsState extends State<StepBasics> {
     super.dispose();
   }
 
+  String _formatDisplayDate(String value) {
+    if (value.trim().isEmpty) return '';
+    final parsed = DateTime.tryParse(value);
+    return parsed == null ? value : DateFormat.yMMMd().format(parsed);
+  }
+
   void _validate() {
     final nameValid = _nameController.text.trim().isNotEmpty;
-    final dobValid = _dobController.text.trim().isNotEmpty;
+    final dobValid = _dobIso.trim().isNotEmpty;
     final stageValid = _stage != null;
     widget.onValidityChanged(nameValid && dobValid && stageValid);
   }
@@ -64,7 +73,7 @@ class _StepBasicsState extends State<StepBasics> {
       widget.initialData.copyWith(
         basics: ProfileBasics(
           displayName: _nameController.text.trim(),
-          dob: _dobController.text.trim(),
+          dob: _dobIso,
           sex: _sex,
         ),
         story: widget.initialData.story.copyWith(treatmentStage: _stage),
@@ -86,7 +95,10 @@ class _StepBasicsState extends State<StepBasics> {
       lastDate: DateTime.now(),
     );
     if (date != null) {
-      _dobController.text = date.toIso8601String().substring(0, 10);
+      _dobIso = date.toIso8601String().substring(0, 10);
+      _dobController.text = DateFormat.yMMMd().format(date);
+      _save();
+      _validate();
     }
   }
 
@@ -98,7 +110,7 @@ class _StepBasicsState extends State<StepBasics> {
         ProfileField(
           label: widget.isCaregiverMode
               ? 'What should we call them?'
-              : 'What should Spry call you?',
+              : 'What should we call you?',
           child: ProfileTextInput(
             controller: _nameController,
             labelText: 'Name',
@@ -120,7 +132,7 @@ class _StepBasicsState extends State<StepBasics> {
               child: ProfileTextInput(
                 controller: _dobController,
                 labelText: 'Birth Date',
-                hintText: 'YYYY-MM-DD',
+                hintText: 'Select your birth date',
               ),
             ),
           ),

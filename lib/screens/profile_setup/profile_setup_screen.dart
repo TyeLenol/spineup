@@ -252,7 +252,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
             : 'Choose what would be helpful to track. These shape reminders and app activities, not a treatment plan.';
         primaryLabel = _finishing
             ? 'Saving profile…'
-            : 'Complete profile · +250 XP';
+            : 'Finish setting up your profile';
         child = StepGoals(
           initialData: _data,
           onSave: (data) => _data = data,

@@ -30,9 +30,9 @@ class _DailyCheckInScreenState extends State<DailyCheckInScreen> {
   String get _effectiveUserId => widget.userId ?? SessionService.currentUserId;
   final _notesController = TextEditingController();
 
-  double _painLevel = 2;
-  double _braceHours = 8;
-  String _mood = 'Good';
+  double? _painLevel;
+  double? _braceHours;
+  String? _mood;
   final Set<String> _selectedLocations = {};
   String? _tightness;
   String? _fatigue;
@@ -51,9 +51,9 @@ class _DailyCheckInScreenState extends State<DailyCheckInScreen> {
     super.initState();
     if (widget.existingLogToday != null) {
       final p = widget.existingLogToday!.payload;
-      _painLevel = ((p['pain_level'] as num?) ?? 2).toDouble();
-      _braceHours = ((p['brace_hours'] as num?) ?? 8).toDouble();
-      _mood = (p['mood'] as String?) ?? 'Good';
+      _painLevel = (p['pain_level'] as num?)?.toDouble();
+      _braceHours = (p['brace_hours'] as num?)?.toDouble();
+      _mood = p['mood'] as String?;
       if (p['locations'] is List) {
         _selectedLocations.addAll((p['locations'] as List).cast<String>());
       }
@@ -69,25 +69,27 @@ class _DailyCheckInScreenState extends State<DailyCheckInScreen> {
     super.dispose();
   }
 
-  Color _painColor(double v) {
+  Color _painColor(double? v) {
+    if (v == null) return AppTheme.mutedForeground;
     if (v <= 3) return Colors.green;
     if (v <= 6) return Colors.orange;
     return Colors.red;
   }
 
-  String _painLabel(double v) {
+  String _painLabel(double? v) {
+    if (v == null) return 'Not recorded';
     final roundV = v.round();
-    if (v <= 3) return 'Mild ($roundV/10) 🟢';
-    if (v <= 6) return 'Moderate ($roundV/10) 🟡';
-    return 'Severe ($roundV/10) 🔴';
+    if (v <= 3) return 'Mild ($roundV/10)';
+    if (v <= 6) return 'Moderate ($roundV/10)';
+    return 'Severe ($roundV/10)';
   }
 
   Future<void> _submit() async {
     setState(() => _saving = true);
-    final payload = {
-      'pain_level': _painLevel.round(),
-      'brace_hours': _braceHours.round(),
-      'mood': _mood,
+    final payload = <String, dynamic>{
+      if (_painLevel != null) 'pain_level': _painLevel!.round(),
+      if (_braceHours != null) 'brace_hours': _braceHours!.round(),
+      if (_mood != null) 'mood': _mood,
       'locations': _selectedLocations.toList(),
       'tightness': _tightness,
       'fatigue': _fatigue,
@@ -169,28 +171,42 @@ class _DailyCheckInScreenState extends State<DailyCheckInScreen> {
             Wrap(
               spacing: 8,
               runSpacing: 8,
-              children: _moodOptions.map((opt) {
-                final selected = opt.label == _mood;
-                return ChoiceChip(
-                  avatar: Icon(
-                    opt.icon,
+              children: [
+                ChoiceChip(
+                  avatar: const Icon(
+                    Icons.remove_circle_outline_rounded,
                     size: 20,
-                    color: selected ? Colors.white : cs.onSurfaceVariant,
                   ),
-                  label: Text(opt.label),
-                  labelStyle: TextStyle(
-                    fontSize: 13,
-                    fontWeight: selected ? FontWeight.bold : FontWeight.normal,
-                    color: selected ? Colors.white : cs.onSurface,
-                  ),
-                  selected: selected,
+                  label: const Text('Not recorded'),
+                  selected: _mood == null,
                   selectedColor: AppTheme.primarySage,
-                  backgroundColor: cs.surfaceContainerHigh,
-                  onSelected: (val) {
-                    if (val) setState(() => _mood = opt.label);
-                  },
-                );
-              }).toList(),
+                  onSelected: (_) => setState(() => _mood = null),
+                ),
+                ..._moodOptions.map((opt) {
+                  final selected = opt.label == _mood;
+                  return ChoiceChip(
+                    avatar: Icon(
+                      opt.icon,
+                      size: 20,
+                      color: selected ? Colors.white : cs.onSurfaceVariant,
+                    ),
+                    label: Text(opt.label),
+                    labelStyle: TextStyle(
+                      fontSize: 13,
+                      fontWeight: selected
+                          ? FontWeight.bold
+                          : FontWeight.normal,
+                      color: selected ? Colors.white : cs.onSurface,
+                    ),
+                    selected: selected,
+                    selectedColor: AppTheme.primarySage,
+                    backgroundColor: cs.surfaceContainerHigh,
+                    onSelected: (val) {
+                      if (val) setState(() => _mood = opt.label);
+                    },
+                  );
+                }),
+              ],
             ),
             const SizedBox(height: 20),
 
@@ -198,7 +214,7 @@ class _DailyCheckInScreenState extends State<DailyCheckInScreen> {
             Row(
               children: [
                 Text(
-                  'Pain Level',
+                  'Pain level (optional)',
                   style: tt.titleSmall?.copyWith(fontWeight: FontWeight.bold),
                 ),
                 const Spacer(),
@@ -211,21 +227,39 @@ class _DailyCheckInScreenState extends State<DailyCheckInScreen> {
                 ),
               ],
             ),
-            SliderTheme(
-              data: SliderTheme.of(context).copyWith(
-                activeTrackColor: _painColor(_painLevel),
-                inactiveTrackColor: AppTheme.borderCream,
-                thumbColor: _painColor(_painLevel),
+            if (_painLevel == null)
+              OutlinedButton.icon(
+                onPressed: () => setState(() => _painLevel = 0),
+                icon: const Icon(Icons.add_rounded),
+                label: const Text('Record pain level'),
+              )
+            else
+              Column(
+                children: [
+                  SliderTheme(
+                    data: SliderTheme.of(context).copyWith(
+                      activeTrackColor: _painColor(_painLevel),
+                      inactiveTrackColor: AppTheme.borderCream,
+                      thumbColor: _painColor(_painLevel),
+                    ),
+                    child: Slider(
+                      value: _painLevel!,
+                      min: 0,
+                      max: 10,
+                      divisions: 10,
+                      label: _painLevel!.round().toString(),
+                      onChanged: (v) => setState(() => _painLevel = v),
+                    ),
+                  ),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton(
+                      onPressed: () => setState(() => _painLevel = null),
+                      child: const Text('Clear pain level'),
+                    ),
+                  ),
+                ],
               ),
-              child: Slider(
-                value: _painLevel,
-                min: 0,
-                max: 10,
-                divisions: 10,
-                label: _painLevel.round().toString(),
-                onChanged: (v) => setState(() => _painLevel = v),
-              ),
-            ),
             const SizedBox(height: 16),
 
             // ── Location chips ────────────────────────────────────
@@ -337,29 +371,51 @@ class _DailyCheckInScreenState extends State<DailyCheckInScreen> {
                   ),
                   const Spacer(),
                   Text(
-                    '${_braceHours.round()} hrs',
+                    _braceHours == null
+                        ? 'Not recorded'
+                        : '${_braceHours!.round()} hrs',
                     style: tt.labelSmall?.copyWith(
-                      color: AppTheme.primarySage,
+                      color: _braceHours == null
+                          ? AppTheme.mutedForeground
+                          : AppTheme.primarySage,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                 ],
               ),
-              SliderTheme(
-                data: SliderTheme.of(context).copyWith(
-                  activeTrackColor: AppTheme.primarySage,
-                  inactiveTrackColor: AppTheme.borderCream,
-                  thumbColor: AppTheme.primarySage,
+              if (_braceHours == null)
+                OutlinedButton.icon(
+                  onPressed: () => setState(() => _braceHours = 0),
+                  icon: const Icon(Icons.add_rounded),
+                  label: const Text('Record brace hours'),
+                )
+              else
+                Column(
+                  children: [
+                    SliderTheme(
+                      data: SliderTheme.of(context).copyWith(
+                        activeTrackColor: AppTheme.primarySage,
+                        inactiveTrackColor: AppTheme.borderCream,
+                        thumbColor: AppTheme.primarySage,
+                      ),
+                      child: Slider(
+                        value: _braceHours!,
+                        min: 0,
+                        max: 24,
+                        divisions: 24,
+                        label: '${_braceHours!.round()}h',
+                        onChanged: (v) => setState(() => _braceHours = v),
+                      ),
+                    ),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: TextButton(
+                        onPressed: () => setState(() => _braceHours = null),
+                        child: const Text('Clear brace hours'),
+                      ),
+                    ),
+                  ],
                 ),
-                child: Slider(
-                  value: _braceHours,
-                  min: 0,
-                  max: 24,
-                  divisions: 24,
-                  label: '${_braceHours.round()}h',
-                  onChanged: (v) => setState(() => _braceHours = v),
-                ),
-              ),
               const SizedBox(height: 16),
             ],
 
@@ -373,7 +429,8 @@ class _DailyCheckInScreenState extends State<DailyCheckInScreen> {
               controller: _notesController,
               maxLines: 3,
               decoration: InputDecoration(
-                hintText: 'Any symptoms, posture notes, or how your back feels today...',
+                hintText:
+                    'Any symptoms, posture notes, or how your back feels today...',
                 filled: true,
                 fillColor: cs.surfaceContainer,
                 border: OutlineInputBorder(
@@ -400,7 +457,7 @@ class _DailyCheckInScreenState extends State<DailyCheckInScreen> {
                         ),
                       )
                     : const Icon(Icons.check_circle_outline_rounded),
-                label: Text(_saving ? 'Saving...' : 'Save Check-In'),
+                label: Text(_saving ? 'Saving...' : 'Record check-in'),
               ),
             ),
           ],

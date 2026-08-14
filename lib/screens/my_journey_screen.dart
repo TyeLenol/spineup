@@ -701,6 +701,12 @@ class _EventTile extends StatelessWidget {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
 
+    final painValue = event.payload['pain_level'];
+    final painLabel = painValue is num
+        ? 'pain ${painValue.round()}/10'
+        : 'pain not recorded';
+    final moodLabel = event.payload['mood'] ?? 'mood not recorded';
+
     final (icon, label, color) = switch (event.type) {
       EventType.stretchCompleted => (
         Icons.self_improvement_rounded,
@@ -709,7 +715,7 @@ class _EventTile extends StatelessWidget {
       ),
       EventType.journalEntry => (
         Icons.edit_note_rounded,
-        'Journal: pain ${event.payload['pain_level']}/10 · ${event.payload['mood']}',
+        'Journal: $painLabel · $moodLabel',
         AppTheme.secondaryCoral,
       ),
       EventType.angleLogged => (
