@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-/// M3-Expressive Keycap CTA: opaque keycap over a darker offset shape beneath.
-/// Features a depth press animation on interaction (`translateY(6)` and radius morphing).
+/// Expressive onboarding CTA with a small tactile depth cue and a calm
+/// rounded-rectangle silhouette.
 class KeycapCta extends StatefulWidget {
   final String label;
   final VoidCallback onClick;
@@ -48,10 +48,10 @@ class _KeycapCtaState extends State<KeycapCta> {
                 curve: Curves.easeOut,
                 height: 56.0,
                 width: double.infinity,
-                margin: const EdgeInsets.only(top: 6.0),
+                margin: const EdgeInsets.only(top: 4.0),
                 decoration: BoxDecoration(
                   color: widget.ink,
-                  borderRadius: BorderRadius.circular(_isPressed ? 22.0 : 999.0),
+                  borderRadius: BorderRadius.circular(_isPressed ? 16.0 : 18.0),
                 ),
               ),
 
@@ -63,12 +63,12 @@ class _KeycapCtaState extends State<KeycapCta> {
                 width: double.infinity,
                 transform: Matrix4.translationValues(
                   0.0,
-                  _isPressed && !disableAnimations ? 6.0 : 0.0,
+                  _isPressed && !disableAnimations ? 4.0 : 0.0,
                   0.0,
                 ),
                 decoration: BoxDecoration(
                   color: widget.fill,
-                  borderRadius: BorderRadius.circular(_isPressed ? 22.0 : 999.0),
+                  borderRadius: BorderRadius.circular(_isPressed ? 16.0 : 18.0),
                 ),
                 alignment: Alignment.center,
                 padding: const EdgeInsets.symmetric(horizontal: 32.0),

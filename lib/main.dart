@@ -9,6 +9,7 @@ import 'screens/onboarding_screen.dart';
 import 'screens/navigation_shell.dart';
 import 'screens/auth_screen.dart';
 import 'screens/profile_setup/profile_setup_screen.dart';
+import 'screens/local_first_welcome_screen.dart';
 import 'services/session_service.dart';
 
 final ValueNotifier<ThemeMode> themeModeNotifier = ValueNotifier<ThemeMode>(
@@ -60,11 +61,20 @@ Route<void> onboardingRoute([int step = 1]) {
   );
 }
 
-/// Auth route — handles both entrance slide and peer cross-fade mode switching.
-Future<void> _navigateAfterAuth(
-  BuildContext context, {
-  bool forceProfileSetup = false,
-}) async {
+Route<void> localFirstWelcomeRoute() {
+  return AppTransitions.buildEmphasizedDecelerateRoute<void>(
+    duration: const Duration(milliseconds: 420),
+    pageBuilder: (context) => LocalFirstWelcomeScreen(
+      onStart: () {
+        SessionService.startMockSession();
+        Navigator.of(context).pushReplacement(profileSetupRoute());
+      },
+    ),
+  );
+}
+
+/// Auth route — kept for a future real account path, not shown by default.
+Future<void> _navigateAfterAuth(BuildContext context) async {
   var hasProfile = false;
   try {
     hasProfile = (await DatabaseHelper().getCareSubjects(
@@ -75,9 +85,7 @@ Future<void> _navigateAfterAuth(
   }
   if (!context.mounted) return;
 
-  final route = forceProfileSetup || !hasProfile
-      ? profileSetupRoute()
-      : mainAppRoute();
+  final route = !hasProfile ? profileSetupRoute() : mainAppRoute();
   Navigator.of(context).pushAndRemoveUntil(route, (route) => false);
 }
 
@@ -92,10 +100,6 @@ Route<void> authRoute(AuthMode mode, {bool isCrossFade = false}) {
         ).pushReplacement(authRoute(newMode, isCrossFade: true));
       },
       onSuccess: () => unawaited(_navigateAfterAuth(context)),
-      onGuestSuccess: () {
-        SessionService.startMockSession();
-        unawaited(_navigateAfterAuth(context, forceProfileSetup: true));
-      },
     );
   }
 

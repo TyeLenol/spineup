@@ -16,7 +16,6 @@ import '../theme/app_theme.dart';
 import '../widgets/avatar_display.dart';
 import '../widgets/badge_icon.dart';
 import '../widgets/portable_archive_dialogs.dart';
-import 'auth_screen.dart';
 import 'care_subject_manager.dart';
 import 'profile_setup/profile_fields.dart';
 import 'profile_setup/profile_setup_screen.dart';
@@ -1169,7 +1168,7 @@ class _SettingsSectionState extends State<_SettingsSection> {
                 SessionService.signOut();
                 if (!mounted) return;
                 Navigator.of(context).pushAndRemoveUntil(
-                  authRoute(AuthMode.login),
+                  localFirstWelcomeRoute(),
                   (route) => false,
                 );
               },
