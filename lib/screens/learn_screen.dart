@@ -3,7 +3,9 @@ import 'package:flutter/services.dart';
 
 import '../models/learn_topic.dart';
 import '../models/external_content.dart';
+import '../services/routine_service.dart';
 import 'external_content_screen.dart';
+import 'routine_library_screen.dart';
 
 class LearnScreen extends StatefulWidget {
   const LearnScreen({super.key});
@@ -41,6 +43,16 @@ class _LearnScreenState extends State<LearnScreen> {
     return ['All', ...categories];
   }
 
+  Future<void> _openRoutineLibrary() async {
+    final routine = await RoutineService.loadActiveRoutine();
+    if (!mounted) return;
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute<void>(
+        builder: (_) => RoutineLibraryScreen(currentRoutine: routine),
+      ),
+    );
+  }
+
   List<LearnTopic> get _filteredTopics {
     final query = _query.toLowerCase();
     return spineUpLearnTopics.where((topic) {
@@ -75,6 +87,50 @@ class _LearnScreenState extends State<LearnScreen> {
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant,
                       height: 1.4,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Card(
+                    elevation: 0,
+                    color: theme.colorScheme.surfaceContainer,
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(18),
+                      onTap: _openRoutineLibrary,
+                      child: Padding(
+                        padding: const EdgeInsets.all(14),
+                        child: Row(
+                          children: [
+                            CircleAvatar(
+                              backgroundColor: theme.colorScheme.primary
+                                  .withValues(alpha: 0.12),
+                              foregroundColor: theme.colorScheme.primary,
+                              child: const Icon(Icons.playlist_play_rounded),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Movement library and My Routine',
+                                    style: theme.textTheme.titleSmall?.copyWith(
+                                      fontWeight: FontWeight.w800,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 3),
+                                  Text(
+                                    'Browse movements, preview guidance, and choose what belongs in your routine.',
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      color: theme.colorScheme.onSurfaceVariant,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const Icon(Icons.chevron_right_rounded),
+                          ],
+                        ),
+                      ),
                     ),
                   ),
                   const SizedBox(height: 18),

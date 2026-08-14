@@ -4,263 +4,18 @@ import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:uuid/uuid.dart';
 import '../models/event.dart';
+import '../models/routine.dart';
 import '../models/appointment.dart';
 import '../models/external_content.dart';
 import '../services/external_content_service.dart';
 import '../services/gamification_service.dart';
 import '../services/session_service.dart';
+import '../services/routine_service.dart';
 import '../theme/app_theme.dart';
 import 'appointment_logger_modal.dart';
 import 'daily_check_in_screen.dart';
+import 'routine_library_screen.dart';
 import 'external_content_screen.dart';
-
-// ─── Exercise catalogue ───────────────────────────────────────────────────────
-
-class ExerciseStep {
-  final String stepText;
-  final int? durationSeconds;
-  final List<String> cueTags;
-
-  const ExerciseStep({
-    required this.stepText,
-    this.durationSeconds,
-    this.cueTags = const [],
-  });
-}
-
-class _Exercise {
-  final String id;
-  final String name;
-  final String description;
-  final String duration;
-  final IconData icon;
-  final List<ExerciseStep> steps;
-
-  const _Exercise({
-    required this.id,
-    required this.name,
-    required this.description,
-    required this.duration,
-    required this.icon,
-    required this.steps,
-  });
-}
-
-const List<_Exercise> _exercises = [
-  _Exercise(
-    id: 'cat_cow',
-    name: 'Cat-Cow Mobilization',
-    description: 'Alternating spinal flexion and extension on all fours.',
-    duration: '45 s',
-    icon: Icons.self_improvement_rounded,
-    steps: [
-      ExerciseStep(
-        stepText:
-            'Start on all fours with hands under shoulders and knees directly beneath hips.',
-        durationSeconds: 10,
-        cueTags: ['Positioning', 'Neutral spine'],
-      ),
-      ExerciseStep(
-        stepText:
-            'Inhale as you arch your back gently, dropping stomach toward floor and looking up (Cow).',
-        durationSeconds: 15,
-        cueTags: ['Deep inhale', 'Gentle arch'],
-      ),
-      ExerciseStep(
-        stepText:
-            'Exhale as you draw belly button in, rounding your spine toward ceiling (Cat).',
-        durationSeconds: 15,
-        cueTags: ['Slow exhale', 'Core activation'],
-      ),
-      ExerciseStep(
-        stepText: 'Move slowly between both positions for final stabilization.',
-        durationSeconds: 15,
-        cueTags: ['Fluid motion', 'Repeat x3'],
-      ),
-    ],
-  ),
-  _Exercise(
-    id: 'side_plank',
-    name: 'Side-Plank Core Hold',
-    description: 'Lateral core stabilization — keep hips level.',
-    duration: '60 s',
-    icon: Icons.fitness_center_rounded,
-    steps: [
-      ExerciseStep(
-        stepText:
-            'Lie on your side with elbow directly beneath shoulder and legs straight.',
-        durationSeconds: 10,
-        cueTags: ['Alignment'],
-      ),
-      ExerciseStep(
-        stepText:
-            'Engage your core and lift hips off the floor until your body forms a straight line.',
-        durationSeconds: 25,
-        cueTags: ['Core hold', 'Hips level'],
-      ),
-      ExerciseStep(
-        stepText: 'Switch sides and hold steady while breathing deeply.',
-        durationSeconds: 25,
-        cueTags: ['Switch side', 'Deep breathing'],
-      ),
-    ],
-  ),
-  _Exercise(
-    id: 'hamstring_wall',
-    name: 'Hamstring Wall Stretch',
-    description: 'Lie on back, extend leg vertically against wall.',
-    duration: '45 s',
-    icon: Icons.airline_seat_flat_angled_rounded,
-    steps: [
-      ExerciseStep(
-        stepText: 'Lie flat on your back near a doorway or wall corner.',
-        durationSeconds: 10,
-        cueTags: ['Flat back'],
-      ),
-      ExerciseStep(
-        stepText:
-            'Rest one leg vertically against the wall while keeping the other flat on floor.',
-        durationSeconds: 20,
-        cueTags: ['Leg vertical', 'Hold 20s'],
-      ),
-      ExerciseStep(
-        stepText:
-            'Flex your foot gently until a deep stretch is felt in the hamstring.',
-        durationSeconds: 20,
-        cueTags: ['Flex foot', 'Switch leg'],
-      ),
-    ],
-  ),
-  _Exercise(
-    id: 'thoracic_extension',
-    name: 'Thoracic Extension',
-    description: 'Foam roller or chair-back thoracic extension over T6–T9.',
-    duration: '60 s',
-    icon: Icons.accessibility_new_rounded,
-    steps: [
-      ExerciseStep(
-        stepText:
-            'Sit upright in a firm chair or place a foam roller under mid-back.',
-        durationSeconds: 10,
-        cueTags: ['Seated upright'],
-      ),
-      ExerciseStep(
-        stepText: 'Support head gently with hands clasped behind neck.',
-        durationSeconds: 15,
-        cueTags: ['Neck support'],
-      ),
-      ExerciseStep(
-        stepText: 'Lean backward over chair back or roller to open chest.',
-        durationSeconds: 35,
-        cueTags: ['Open chest', 'Breathe deep'],
-      ),
-    ],
-  ),
-  _Exercise(
-    id: 'bird_dog',
-    name: 'Bird-Dog Core Balance',
-    description: 'Opposite arm and leg extension for spine stability.',
-    duration: '45 s',
-    icon: Icons.sports_gymnastics_rounded,
-    steps: [
-      ExerciseStep(
-        stepText: 'Begin on hands and knees with a neutral spine posture.',
-        durationSeconds: 10,
-        cueTags: ['Quadruped'],
-      ),
-      ExerciseStep(
-        stepText:
-            'Reach right arm forward and extend left leg straight back simultaneously.',
-        durationSeconds: 20,
-        cueTags: ['Opposite reach', 'Hold 3s'],
-      ),
-      ExerciseStep(
-        stepText: 'Return to start and alternate sides for 45 seconds.',
-        durationSeconds: 20,
-        cueTags: ['Alternate sides', 'Keep hips level'],
-      ),
-    ],
-  ),
-  _Exercise(
-    id: 'pelvic_tilt',
-    name: 'Pelvic Tilt & Bridge',
-    description: 'Lower back flattening and glute activation.',
-    duration: '60 s',
-    icon: Icons.unfold_more_rounded,
-    steps: [
-      ExerciseStep(
-        stepText: 'Lie on back with knees bent and feet flat on floor.',
-        durationSeconds: 10,
-        cueTags: ['Supine position'],
-      ),
-      ExerciseStep(
-        stepText:
-            'Flatten lower back against floor by tightening core muscles.',
-        durationSeconds: 20,
-        cueTags: ['Tuck pelvis', 'Core firm'],
-      ),
-      ExerciseStep(
-        stepText: 'Press through heels to lift hips into a bridge position.',
-        durationSeconds: 30,
-        cueTags: ['Glute bridge', 'Hold 5s'],
-      ),
-    ],
-  ),
-  _Exercise(
-    id: 'childs_pose',
-    name: 'Child’s Pose & Side Reach',
-    description: 'Spinal decompression with lateral ribcage stretch.',
-    duration: '45 s',
-    icon: Icons.nightlight_round,
-    steps: [
-      ExerciseStep(
-        stepText: 'Kneel on floor, touch toes together, and sit back on heels.',
-        durationSeconds: 10,
-        cueTags: ['Decompress'],
-      ),
-      ExerciseStep(
-        stepText: 'Fold torso forward, extending arms straight ahead on floor.',
-        durationSeconds: 20,
-        cueTags: ['Reach forward'],
-      ),
-      ExerciseStep(
-        stepText:
-            'Walk both hands 45 degrees to one side to target lateral spine curve.',
-        durationSeconds: 20,
-        cueTags: ['Lateral reach', 'Deep rib stretch'],
-      ),
-    ],
-  ),
-  _Exercise(
-    id: 'wall_angels',
-    name: 'Wall Angels',
-    description: 'Postural alignment and scapular mobility against wall.',
-    duration: '60 s',
-    icon: Icons.auto_awesome_rounded,
-    steps: [
-      ExerciseStep(
-        stepText:
-            'Stand with back, head, and buttocks flat against a smooth wall.',
-        durationSeconds: 10,
-        cueTags: ['Posture reset'],
-      ),
-      ExerciseStep(
-        stepText:
-            'Raise arms to 90 degrees (cactus arms), keeping elbows and wrists touching wall.',
-        durationSeconds: 25,
-        cueTags: ['Cactus arms', 'Wrists on wall'],
-      ),
-      ExerciseStep(
-        stepText:
-            'Slowly slide arms overhead along wall without arching lower back.',
-        durationSeconds: 25,
-        cueTags: ['Overhead slide', 'Repeat 5x'],
-      ),
-    ],
-  ),
-];
-
-// ─────────────────────────────────────────────────────────────────────────────
 
 class TodayScreen extends StatefulWidget {
   const TodayScreen({super.key});
@@ -280,6 +35,8 @@ class _TodayScreenState extends State<TodayScreen>
   List<Event> _todayEvents = [];
   List<Appointment> _appointments = [];
   List<ExternalContentItem> _savedRoutineVideos = [];
+  CareSubjectRoutine? _activeRoutine;
+  List<RoutineExercise> _routineExercises = [];
   final Set<String> _completedToday = {};
   bool _loadingSnap = true;
 
@@ -309,11 +66,17 @@ class _TodayScreenState extends State<TodayScreen>
     );
     final savedRoutineVideos =
         await ExternalContentService.savedRoutineVideos();
+    final activeRoutine = await RoutineService.loadActiveRoutine();
+    final routineExercises = RoutineService.exercisesForIds(
+      activeRoutine.exerciseIds,
+    );
+    final routineIds = routineExercises.map((exercise) => exercise.id).toSet();
 
     final completedIds = todayEvents
         .where((e) => e.type == EventType.stretchCompleted)
         .map((e) => e.payload['exercise_id'] as String?)
         .whereType<String>()
+        .where(routineIds.contains)
         .toSet();
 
     if (mounted) {
@@ -322,7 +85,11 @@ class _TodayScreenState extends State<TodayScreen>
         _todayEvents = todayEvents;
         _appointments = appointments;
         _savedRoutineVideos = savedRoutineVideos;
-        _completedToday.addAll(completedIds);
+        _activeRoutine = activeRoutine;
+        _routineExercises = routineExercises;
+        _completedToday
+          ..clear()
+          ..addAll(completedIds);
         _loadingSnap = false;
       });
     }
@@ -347,7 +114,7 @@ class _TodayScreenState extends State<TodayScreen>
     });
   }
 
-  Future<void> _markExerciseDone(_Exercise ex) async {
+  Future<void> _markExerciseDone(RoutineExercise ex) async {
     if (_completedToday.contains(ex.id)) return;
     setState(() => _completedToday.add(ex.id));
     final result = await _gs.logEvent(
@@ -357,7 +124,7 @@ class _TodayScreenState extends State<TodayScreen>
       payload: {
         'exercise_id': ex.id,
         'exercise_name': ex.name,
-        'duration': ex.duration,
+        'duration': ex.durationLabel,
         'logged_at': DateTime.now().toIso8601String(),
       },
     );
@@ -373,6 +140,18 @@ class _TodayScreenState extends State<TodayScreen>
     return journals.isNotEmpty ? journals.last : null;
   }
 
+  Future<void> _openRoutineLibrary() async {
+    final routine =
+        _activeRoutine ??
+        const CareSubjectRoutine(name: 'My Routine', exerciseIds: []);
+    final changed = await Navigator.of(context).push<bool>(
+      MaterialPageRoute<bool>(
+        builder: (_) => RoutineLibraryScreen(currentRoutine: routine),
+      ),
+    );
+    if (changed == true) await _loadSnapshot();
+  }
+
   void _showRoutineSheet() {
     showModalBottomSheet<void>(
       context: context,
@@ -382,10 +161,14 @@ class _TodayScreenState extends State<TodayScreen>
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
       builder: (_) => _RoutineSheet(
-        exercises: _exercises,
+        exercises: _routineExercises,
         savedVideos: _savedRoutineVideos,
         initiallyCompleted: _completedToday,
         onMarkDone: _markExerciseDone,
+        onEdit: () {
+          Navigator.of(context).pop();
+          _openRoutineLibrary();
+        },
       ),
     );
   }
@@ -480,8 +263,9 @@ class _TodayScreenState extends State<TodayScreen>
                     ),
                     const SizedBox(height: 12),
                     _RoutineEntryCard(
+                      routineName: _activeRoutine?.name ?? 'My Routine',
                       completed: _completedToday.length,
-                      total: _exercises.length,
+                      total: _routineExercises.length,
                       savedVideoCount: _savedRoutineVideos.length,
                       onTap: _showRoutineSheet,
                     ),
@@ -608,22 +392,22 @@ class _LevelXpCard extends StatelessWidget {
 
 // ─── Exercise Card ────────────────────────────────────────────────────────────
 
-class _ExerciseCard extends StatefulWidget {
-  final _Exercise exercise;
+class RoutineExerciseCard extends StatefulWidget {
+  final RoutineExercise exercise;
   final bool done;
   final VoidCallback onMarkDone;
 
-  const _ExerciseCard({
+  const RoutineExerciseCard({
     required this.exercise,
     required this.done,
     required this.onMarkDone,
   });
 
   @override
-  State<_ExerciseCard> createState() => _ExerciseCardState();
+  State<RoutineExerciseCard> createState() => RoutineExerciseCardState();
 }
 
-class _ExerciseCardState extends State<_ExerciseCard> {
+class RoutineExerciseCardState extends State<RoutineExerciseCard> {
   bool _expanded = false;
 
   @override
@@ -692,7 +476,7 @@ class _ExerciseCardState extends State<_ExerciseCard> {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              '${widget.exercise.duration}  ·  +$kXpStretch XP',
+                              '${widget.exercise.durationLabel}  ·  +$kXpStretch XP',
                               style: tt.bodySmall?.copyWith(
                                 color: AppTheme.mutedForeground,
                                 fontSize: 11,
@@ -746,7 +530,7 @@ class _ExerciseCardState extends State<_ExerciseCard> {
 
 void _showExerciseInstructions(
   BuildContext context,
-  _Exercise exercise, {
+  RoutineExercise exercise, {
   required VoidCallback onMarkDone,
 }) {
   showModalBottomSheet(
@@ -755,7 +539,7 @@ void _showExerciseInstructions(
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
     ),
-    builder: (_) => _ExerciseGuidedFlowSheet(
+    builder: (_) => RoutineExerciseGuidedFlowSheet(
       exercise: exercise,
       onComplete: () {
         Navigator.of(context).pop();
@@ -769,23 +553,24 @@ void _showExerciseInstructions(
   );
 }
 
-class _ExerciseGuidedFlowSheet extends StatefulWidget {
-  final _Exercise exercise;
+class RoutineExerciseGuidedFlowSheet extends StatefulWidget {
+  final RoutineExercise exercise;
   final VoidCallback onComplete;
   final VoidCallback onFinishEarly;
 
-  const _ExerciseGuidedFlowSheet({
+  const RoutineExerciseGuidedFlowSheet({
     required this.exercise,
     required this.onComplete,
     required this.onFinishEarly,
   });
 
   @override
-  State<_ExerciseGuidedFlowSheet> createState() =>
-      _ExerciseGuidedFlowSheetState();
+  State<RoutineExerciseGuidedFlowSheet> createState() =>
+      RoutineExerciseGuidedFlowSheetState();
 }
 
-class _ExerciseGuidedFlowSheetState extends State<_ExerciseGuidedFlowSheet> {
+class RoutineExerciseGuidedFlowSheetState
+    extends State<RoutineExerciseGuidedFlowSheet> {
   int _currentStepIndex = 0;
   Timer? _timer;
   int _secondsRemaining = 0;
@@ -1210,12 +995,14 @@ class _DailyCheckInSummaryCard extends StatelessWidget {
 
 // ─── Routine Entry + Focused Routine Sheet ─────────────────────────────────────
 class _RoutineEntryCard extends StatelessWidget {
+  final String routineName;
   final int completed;
   final int total;
   final int savedVideoCount;
   final VoidCallback onTap;
 
   const _RoutineEntryCard({
+    required this.routineName,
     required this.completed,
     required this.total,
     required this.savedVideoCount,
@@ -1269,7 +1056,7 @@ class _RoutineEntryCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Today\'s routine',
+                      routineName,
                       style: tt.titleMedium?.copyWith(
                         fontWeight: FontWeight.w800,
                       ),
@@ -1306,16 +1093,18 @@ class _RoutineEntryCard extends StatelessWidget {
 }
 
 class _RoutineSheet extends StatefulWidget {
-  final List<_Exercise> exercises;
+  final List<RoutineExercise> exercises;
   final List<ExternalContentItem> savedVideos;
   final Set<String> initiallyCompleted;
-  final Future<void> Function(_Exercise exercise) onMarkDone;
+  final Future<void> Function(RoutineExercise exercise) onMarkDone;
+  final VoidCallback onEdit;
 
   const _RoutineSheet({
     required this.exercises,
     required this.savedVideos,
     required this.initiallyCompleted,
     required this.onMarkDone,
+    required this.onEdit,
   });
 
   @override
@@ -1374,6 +1163,11 @@ class _RoutineSheetState extends State<_RoutineSheet> {
                     ),
                   ),
                   IconButton(
+                    tooltip: 'Edit routine',
+                    onPressed: widget.onEdit,
+                    icon: const Icon(Icons.edit_outlined),
+                  ),
+                  IconButton(
                     tooltip: 'Close routine',
                     onPressed: () => Navigator.of(context).pop(),
                     icon: const Icon(Icons.close_rounded),
@@ -1395,7 +1189,7 @@ class _RoutineSheetState extends State<_RoutineSheet> {
                     ),
                   ),
                   ...widget.exercises.map(
-                    (exercise) => _ExerciseCard(
+                    (exercise) => RoutineExerciseCard(
                       exercise: exercise,
                       done: _completed.contains(exercise.id),
                       onMarkDone: () {

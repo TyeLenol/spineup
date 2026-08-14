@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:youtube_player_iframe/youtube_player_iframe.dart';
@@ -351,14 +352,16 @@ class _ExternalContentDetailPageState extends State<ExternalContentDetailPage> {
     if (widget.item.videoProvider == ExternalVideoProvider.youtube &&
         videoId != null &&
         videoId.isNotEmpty) {
-      _youtubeController = YoutubePlayerController(
+      _youtubeController = YoutubePlayerController.fromVideoId(
+        videoId: videoId,
+        autoPlay: false,
         params: const YoutubePlayerParams(
           showControls: true,
           showFullscreenButton: true,
           enableCaption: true,
           privacyEnhancedMode: true,
         ),
-      )..cueVideoById(videoId: videoId);
+      );
     }
   }
 
@@ -444,11 +447,17 @@ class _ExternalContentDetailPageState extends State<ExternalContentDetailPage> {
                 item.thumbnailUrl!,
                 height: 190,
                 fit: BoxFit.cover,
-                errorBuilder: (_, _, _) => const _ExternalMediaPlaceholder(),
+                errorBuilder: (_, _, _) => _ExternalMediaPlaceholder(
+                  label: 'Open original source',
+                  onOpenSource: _openExternal,
+                ),
               ),
             )
           else
-            const _ExternalMediaPlaceholder(),
+            _ExternalMediaPlaceholder(
+              label: item.isVideo ? 'Watch on source' : 'Open original source',
+              onOpenSource: _openExternal,
+            ),
           const SizedBox(height: 20),
           Wrap(
             spacing: 8,
@@ -466,6 +475,10 @@ class _ExternalContentDetailPageState extends State<ExternalContentDetailPage> {
             item.summary,
             style: theme.textTheme.bodyLarge?.copyWith(height: 1.45),
           ),
+          if (!item.isVideo) ...[
+            const SizedBox(height: 18),
+            _ExternalArticleReader(item: item),
+          ],
           const SizedBox(height: 14),
           Text(
             item.sourceName,
@@ -499,13 +512,13 @@ class _ExternalContentDetailPageState extends State<ExternalContentDetailPage> {
               ),
             ),
           if (item.isExerciseVideo) const SizedBox(height: 10),
-          if (item.videoProvider != ExternalVideoProvider.youtube ||
-              _youtubeController == null)
-            OutlinedButton.icon(
-              onPressed: _openExternal,
-              icon: const Icon(Icons.open_in_new_rounded),
-              label: const Text('Open source'),
+          OutlinedButton.icon(
+            onPressed: _openExternal,
+            icon: const Icon(Icons.open_in_new_rounded),
+            label: Text(
+              item.isVideo ? 'Open video source' : 'Open article source',
             ),
+          ),
           const SizedBox(height: 18),
           Text(
             'Source link',
@@ -616,20 +629,162 @@ class _ExternalSafetyCard extends StatelessWidget {
   }
 }
 
+class _ExternalArticleReader extends StatefulWidget {
+  final ExternalContentItem item;
+
+  const _ExternalArticleReader({required this.item});
+
+  @override
+  State<_ExternalArticleReader> createState() => _ExternalArticleReaderState();
+}
+
+class _ExternalArticleReaderState extends State<_ExternalArticleReader> {
+  String? _body;
+  String? _error;
+  bool _loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadArticle();
+  }
+
+  Future<void> _loadArticle() async {
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    try {
+      final response = await http
+          .get(Uri.parse(widget.item.contentUrl))
+          .timeout(const Duration(seconds: 12));
+      if (response.statusCode < 200 || response.statusCode >= 300) {
+        throw Exception('Source returned ${response.statusCode}.');
+      }
+      final body = _extractReadableText(response.body);
+      if (body.length < 120) {
+        throw Exception('This source does not expose readable text here.');
+      }
+      if (!mounted) return;
+      setState(() {
+        _body = body;
+        _loading = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _error = 'This source could not be read inside SpineUp right now.';
+        _loading = false;
+      });
+    }
+  }
+
+  String _extractReadableText(String html) {
+    var source = html;
+    final article = RegExp(
+      r'<article[\s\S]*?</article>',
+      caseSensitive: false,
+    ).firstMatch(source);
+    if (article != null) source = article.group(0)!;
+    source = source.replaceAll(
+      RegExp(
+        r'<(script|style|nav|header|footer|aside)[^>]*>[\s\S]*?</\1>',
+        caseSensitive: false,
+      ),
+      ' ',
+    );
+    source = source.replaceAll(
+      RegExp(r'<br\s*/?>', caseSensitive: false),
+      '\n',
+    );
+    source = source.replaceAll(
+      RegExp(r'</(p|h1|h2|h3|h4|li|section|div)>', caseSensitive: false),
+      '\n',
+    );
+    source = source.replaceAll(RegExp(r'<[^>]+>'), ' ');
+    source = source
+        .replaceAll(RegExp(r'&nbsp;'), ' ')
+        .replaceAll(RegExp(r'&amp;'), '&')
+        .replaceAll(RegExp(r'&quot;'), '"')
+        .replaceAll(RegExp(r'&#39;'), "'");
+    return source
+        .replaceAll(RegExp(r'[ \t]+'), ' ')
+        .replaceAll(RegExp(r'\n\s*\n+'), '\n\n')
+        .trim();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainer,
+        borderRadius: BorderRadius.circular(18),
+      ),
+      child: _loading
+          ? const Row(
+              children: [
+                SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+                SizedBox(width: 12),
+                Expanded(child: Text('Loading the source article…')),
+              ],
+            )
+          : _error != null
+          ? Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(_error!, style: theme.textTheme.bodyMedium),
+                const SizedBox(height: 10),
+                OutlinedButton.icon(
+                  onPressed: _loadArticle,
+                  icon: const Icon(Icons.refresh_rounded, size: 18),
+                  label: const Text('Try again'),
+                ),
+              ],
+            )
+          : Text(
+              _body!,
+              style: theme.textTheme.bodyLarge?.copyWith(height: 1.55),
+            ),
+    );
+  }
+}
+
 class _ExternalMediaPlaceholder extends StatelessWidget {
-  const _ExternalMediaPlaceholder();
+  final String label;
+  final VoidCallback onOpenSource;
+
+  const _ExternalMediaPlaceholder({
+    required this.label,
+    required this.onOpenSource,
+  });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Container(
       height: 190,
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: theme.colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(18),
       ),
-      child: const Center(
-        child: Icon(Icons.play_circle_outline_rounded, size: 52),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.play_circle_outline_rounded, size: 52),
+          const SizedBox(height: 10),
+          OutlinedButton.icon(
+            onPressed: onOpenSource,
+            icon: const Icon(Icons.open_in_new_rounded, size: 17),
+            label: Text(label),
+          ),
+        ],
       ),
     );
   }
