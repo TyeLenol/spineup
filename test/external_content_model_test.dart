@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:spineup/models/external_content.dart';
+import 'package:spineup/services/external_content_service.dart';
 
 void main() {
   test('external content metadata round-trips without media bytes', () {
@@ -62,5 +63,31 @@ void main() {
     expect(decoded.keyTakeaways, ['Takeaway one']);
     expect(decoded.sections.single.heading, 'A heading');
     expect(decoded.limitations, 'A limitation.');
+  });
+
+  test('curated catalog includes relevant self-management briefs', () {
+    final curatedIds = ExternalContentService.curatedItems
+        .where((item) => item.hasCuratedBrief)
+        .map((item) => item.id)
+        .toSet();
+
+    expect(
+      curatedIds,
+      containsAll([
+        'curated-nhs-mindfulness-everyday',
+        'curated-nhs-breathing-stress',
+        'curated-nhs-five-steps-wellbeing',
+        'curated-nhs-sleep-routine',
+        'curated-nhs-active-mental-health',
+        'curated-nhs-adult-scoliosis-active',
+        'curated-nhs-back-pain-active',
+      ]),
+    );
+    expect(
+      ExternalContentService.curatedItems
+          .where((item) => item.category == 'Mindfulness and stress')
+          .length,
+      greaterThanOrEqualTo(4),
+    );
   });
 }

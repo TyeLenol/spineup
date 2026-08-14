@@ -206,6 +206,299 @@ class ExternalContentService {
       limitations:
           'This is a SpineUp reading brief based on the linked NHS Foundation Trust source, not medical or mental-health treatment.',
     ),
+    ExternalContentItem(
+      id: 'curated-nhs-mindfulness-everyday',
+      kind: ExternalContentKind.article,
+      title: 'Mindfulness for everyday moments',
+      summary:
+          'A gentle introduction to noticing thoughts, feelings, body sensations, and the world around you.',
+      sourceName: 'NHS',
+      sourceUrl: 'https://www.nhs.uk/',
+      contentUrl:
+          'https://www.nhs.uk/mental-health/self-help/tips-and-support/mindfulness/',
+      category: 'Mindfulness and stress',
+      safetyLabel:
+          'Wellbeing information only. Mindfulness is not right for everyone; stop if it makes you feel worse and seek appropriate support.',
+      fetchedAt: _seedDate,
+      deliveryMode: ExternalContentDeliveryMode.curatedBrief,
+      reviewedAt: _reviewedDate,
+      readingMinutes: 4,
+      keyTakeaways: const [
+        'Mindfulness means noticing present-moment thoughts, feelings, body sensations, and surroundings.',
+        'The goal is not to force thoughts away; it is to notice when attention wanders and gently return it.',
+        'A short, regular practice can be more approachable than trying to be mindful perfectly all day.',
+      ],
+      sections: const [
+        ContentSection(
+          heading: 'What mindfulness means',
+          body:
+              'Mindfulness is paying attention to what is happening inside and around you, moment by moment. It can include noticing sounds, sights, breathing, body sensations, thoughts, and feelings with curiosity rather than immediately judging them.',
+        ),
+        ContentSection(
+          heading: 'Try a low-pressure practice',
+          body:
+              'Choose an ordinary moment, such as walking, eating, or washing your hands. Notice one or two sensations, name a thought or feeling if it appears, and gently bring your attention back whenever your mind wanders.',
+        ),
+        ContentSection(
+          heading: 'Keep the boundary clear',
+          body:
+              'Many people find mindfulness useful, but it is not helpful for everyone. It is not a replacement for mental-health care, and you can stop a practice that feels distressing or unsafe.',
+        ),
+      ],
+      limitations:
+          'This is a concise SpineUp summary of the linked NHS mindfulness guidance, not a mental-health treatment plan.',
+    ),
+    ExternalContentItem(
+      id: 'curated-nhs-breathing-stress',
+      kind: ExternalContentKind.article,
+      title: 'A calm breathing reset',
+      summary:
+          'A short, practical breathing exercise from the NHS that can be practised in a comfortable position.',
+      sourceName: 'NHS',
+      sourceUrl: 'https://www.nhs.uk/',
+      contentUrl:
+          'https://www.nhs.uk/mental-health/self-help/guides-tools-and-activities/breathing-exercises-for-stress/',
+      category: 'Mindfulness and stress',
+      safetyLabel:
+          'A general relaxation exercise, not emergency care or a treatment for panic or another condition. Do not force your breathing.',
+      fetchedAt: _seedDate,
+      deliveryMode: ExternalContentDeliveryMode.curatedBrief,
+      reviewedAt: _reviewedDate,
+      readingMinutes: 3,
+      keyTakeaways: const [
+        'The exercise can be done sitting, standing, or lying down in a comfortable position.',
+        'Let the breath move as deeply as feels comfortable rather than forcing a larger breath.',
+        'Some people find a gentle count from 1 to 5 while breathing in and out helpful.',
+      ],
+      sections: const [
+        ContentSection(
+          heading: 'A simple reset',
+          body:
+              'Settle into a supported position and place both feet on the floor if you are sitting or standing. Breathe in gently through your nose and out through your mouth, allowing the breath to move comfortably.',
+        ),
+        ContentSection(
+          heading: 'Practise without pressure',
+          body:
+              'If counting helps, try counting slowly from 1 to 5 on the inhale and again on the exhale. Continue for a few minutes if it feels comfortable, then return to your normal breathing.',
+        ),
+        ContentSection(
+          heading: 'Use it as one option',
+          body:
+              'A breathing practice may be a useful pause during a stressful day, but it will not solve every source of stress. If distress is persistent, severe, or affecting daily life, seek appropriate support.',
+        ),
+      ],
+      limitations:
+          'This is a concise SpineUp summary of the linked NHS breathing guidance. It is not a diagnosis, crisis intervention, or personalised breathing prescription.',
+    ),
+    ExternalContentItem(
+      id: 'curated-nhs-five-steps-wellbeing',
+      kind: ExternalContentKind.article,
+      title: 'Five small steps for mental wellbeing',
+      summary:
+          'A source-linked overview of connection, movement, learning, kindness, and present-moment awareness.',
+      sourceName: 'NHS',
+      sourceUrl: 'https://www.nhs.uk/',
+      contentUrl:
+          'https://www.nhs.uk/mental-health/self-help/guides-tools-and-activities/five-steps-to-mental-wellbeing/',
+      category: 'Mindfulness and stress',
+      safetyLabel:
+          'General wellbeing information. Choose actions that fit your situation and seek professional help when you need more support.',
+      fetchedAt: _seedDate,
+      deliveryMode: ExternalContentDeliveryMode.curatedBrief,
+      reviewedAt: _reviewedDate,
+      readingMinutes: 4,
+      keyTakeaways: const [
+        'Connection, physical activity, learning, giving, and present-moment awareness are five practical wellbeing themes.',
+        'Small actions that fit everyday life are more useful than a rigid checklist you cannot sustain.',
+        'Wellbeing habits complement support from trusted people and qualified professionals; they do not replace it.',
+      ],
+      sections: const [
+        ContentSection(
+          heading: 'The five themes',
+          body:
+              'The NHS describes five broad ways to support wellbeing: connect with people, be physically active, learn something new, give or help others, and pay attention to the present moment.',
+        ),
+        ContentSection(
+          heading: 'Make it realistic',
+          body:
+              'You do not need to change everything at once. You might message someone you trust, take a short walk, learn a small skill, do one kind thing, or pause to notice what is around you.',
+        ),
+        ContentSection(
+          heading: 'Keep it personal',
+          body:
+              'Different activities suit different people, bodies, cultures, schedules, and support networks. Use the ideas as prompts, not as a scorecard for whether you are coping well enough.',
+        ),
+      ],
+      limitations:
+          'This is a concise SpineUp summary of the linked NHS wellbeing guidance, not a mental-health assessment or treatment plan.',
+    ),
+    ExternalContentItem(
+      id: 'curated-nhs-sleep-routine',
+      kind: ExternalContentKind.article,
+      title: 'Sleep as part of self-management',
+      summary:
+          'Practical NHS guidance on regular routines, winding down, managing worries, and creating a sleep-friendly space.',
+      sourceName: 'NHS Every Mind Matters',
+      sourceUrl: 'https://www.nhs.uk/every-mind-matters/',
+      contentUrl:
+          'https://www.nhs.uk/every-mind-matters/mental-wellbeing-tips/how-to-fall-asleep-faster-and-sleep-better/',
+      category: 'Rest and recovery',
+      safetyLabel:
+          'General sleep-habit information. Ongoing or severe sleep problems deserve support from a qualified professional.',
+      fetchedAt: _seedDate,
+      deliveryMode: ExternalContentDeliveryMode.curatedBrief,
+      reviewedAt: _reviewedDate,
+      readingMinutes: 4,
+      keyTakeaways: const [
+        'Similar bedtimes and wake times can help the body recognise when it is time to sleep.',
+        'A calmer wind-down routine can include reading, meditation, breathing exercises, or quiet music.',
+        'Managing worries, making the bedroom comfortable, and moving regularly can support better sleep.',
+      ],
+      sections: const [
+        ContentSection(
+          heading: 'Build a repeatable rhythm',
+          body:
+              'Try to keep your bedtime and wake time reasonably consistent, including on days when your schedule changes. A routine can help your body anticipate sleep without requiring perfection.',
+        ),
+        ContentSection(
+          heading: 'Wind down and unload worries',
+          body:
+              'Give yourself time to relax before bed. If thoughts keep circling, writing down worries or tomorrow\'s tasks may help create a little distance from them.',
+        ),
+        ContentSection(
+          heading: 'Know when to seek help',
+          body:
+              'Small habit changes may help, but they cannot address every cause of poor sleep. If sleep problems continue or make daily life difficult, speak with a qualified professional.',
+        ),
+      ],
+      limitations:
+          'This is a concise SpineUp summary of the linked NHS Every Mind Matters guidance, not an insomnia diagnosis or treatment plan.',
+    ),
+    ExternalContentItem(
+      id: 'curated-nhs-active-mental-health',
+      kind: ExternalContentKind.article,
+      title: 'Move at your own pace for mental wellbeing',
+      summary:
+          'A gentle source-linked guide to using enjoyable movement, realistic goals, and rest to support wellbeing.',
+      sourceName: 'NHS Every Mind Matters',
+      sourceUrl: 'https://www.nhs.uk/every-mind-matters/',
+      contentUrl:
+          'https://www.nhs.uk/every-mind-matters/mental-wellbeing-tips/be-active-for-your-mental-health/',
+      category: 'Movement and wellbeing',
+      safetyLabel:
+          'General wellbeing information. Start gently, listen to your body, and check with a qualified professional before a new programme if you have concerns.',
+      fetchedAt: _seedDate,
+      deliveryMode: ExternalContentDeliveryMode.curatedBrief,
+      reviewedAt: _reviewedDate,
+      readingMinutes: 5,
+      keyTakeaways: const [
+        'Any amount of enjoyable movement can be a useful starting point; you do not have to be an athlete.',
+        'Small, realistic goals are easier to repeat than demanding targets that make you want to stop.',
+        'Rest, hydration, sleep, pacing, and listening to your body are part of a sustainable routine.',
+      ],
+      sections: const [
+        ContentSection(
+          heading: 'Start with what feels possible',
+          body:
+              'Movement can include walking, stretching, gardening, dancing, yoga, tai chi, Pilates, or another activity you enjoy. A few minutes can be a meaningful beginning when the alternative is doing nothing.',
+        ),
+        ContentSection(
+          heading: 'Make the habit sustainable',
+          body:
+              'Choose a small goal that fits your routine and increase it only when it feels manageable. A pause or missed day does not erase your progress; it is an opportunity to adjust what works.',
+        ),
+        ContentSection(
+          heading: 'Balance movement with care',
+          body:
+              'Take breaks, allow time to recover, and stop if something feels wrong. If you have a health condition, take medicines, or are unsure about a new activity, get appropriate advice first.',
+        ),
+      ],
+      limitations:
+          'This is a concise SpineUp summary of the linked NHS Every Mind Matters guidance, not an exercise prescription or mental-health treatment.',
+    ),
+    ExternalContentItem(
+      id: 'curated-nhs-adult-scoliosis-active',
+      kind: ExternalContentKind.article,
+      title: 'Staying active with adult scoliosis',
+      summary:
+          'A source-linked overview of movement and professional guidance for adults living with scoliosis.',
+      sourceName: 'NHS',
+      sourceUrl: 'https://www.nhs.uk/',
+      contentUrl:
+          'https://www.nhs.uk/conditions/scoliosis/treatment-in-adults/',
+      category: 'Scoliosis self-management',
+      safetyLabel:
+          'Educational information only. SpineUp cannot decide which exercise or treatment is suitable for an individual person.',
+      fetchedAt: _seedDate,
+      deliveryMode: ExternalContentDeliveryMode.curatedBrief,
+      reviewedAt: _reviewedDate,
+      readingMinutes: 4,
+      keyTakeaways: const [
+        'Adults with scoliosis may experience back pain, but not everyone needs treatment if symptoms are not causing problems.',
+        'Enjoyable strengthening, stretching, and general movement may help some people manage discomfort and keep moving.',
+        'Exercise guidance should be individualised when needed, so discuss a new programme with a qualified professional.',
+      ],
+      sections: const [
+        ContentSection(
+          heading: 'The aim is supported movement',
+          body:
+              'For adults with scoliosis, care may focus on symptoms and day-to-day function. The NHS notes that activities which strengthen and stretch the back may help some people with pain, while general movement can support overall health.',
+        ),
+        ContentSection(
+          heading: 'Do not treat a brief as a prescription',
+          body:
+              'A general article cannot tell you which movements, intensity, or equipment are right for your body. A physiotherapist, scoliosis specialist, or another qualified professional can help tailor advice when needed.',
+        ),
+        ContentSection(
+          heading: 'Use SpineUp as a conversation aid',
+          body:
+              'Recording symptoms, activities, and questions can help you describe patterns during a care conversation. It cannot confirm a cause, measure progression, or replace assessment.',
+        ),
+      ],
+      limitations:
+          'This is a concise SpineUp summary of the linked NHS adult-scoliosis guidance, not a treatment recommendation or prediction about an individual curve.',
+    ),
+    ExternalContentItem(
+      id: 'curated-nhs-back-pain-active',
+      kind: ExternalContentKind.article,
+      title: 'Back discomfort: staying gently active',
+      summary:
+          'A practical NHS brief on continuing everyday activity, avoiding prolonged bed rest, and knowing when to seek help.',
+      sourceName: 'NHS',
+      sourceUrl: 'https://www.nhs.uk/',
+      contentUrl: 'https://www.nhs.uk/conditions/back-pain/',
+      category: 'Pain and movement',
+      safetyLabel:
+          'General educational information. Stop an activity that makes pain worse and seek appropriate medical help for severe or worrying symptoms.',
+      fetchedAt: _seedDate,
+      deliveryMode: ExternalContentDeliveryMode.curatedBrief,
+      reviewedAt: _reviewedDate,
+      readingMinutes: 4,
+      keyTakeaways: const [
+        'Back pain is common and often improves over a few weeks, although it can return or last longer.',
+        'The NHS generally advises staying active and continuing daily activities rather than remaining in bed for long periods.',
+        'Worsening pain, new weakness or numbness, or bladder and bowel changes need prompt professional attention.',
+      ],
+      sections: const [
+        ContentSection(
+          heading: 'Keep everyday movement in view',
+          body:
+              'When back discomfort allows, gentle continuation of ordinary activities may support recovery. Walking, swimming, yoga, Pilates, or other suitable movement can be options, but no single activity is right for everyone.',
+        ),
+        ContentSection(
+          heading: 'Use comfort and response as guides',
+          body:
+              'Avoid staying in bed for long periods, but do not push through worsening pain. A pharmacist, clinician, or physiotherapist can help you understand suitable options when self-care is not enough.',
+        ),
+        ContentSection(
+          heading: 'Know the safety boundary',
+          body:
+              'Seek urgent help for severe rapidly worsening pain, or new symptoms such as weakness or numbness in both legs, loss of feeling around the genitals or anus, or changes in bladder or bowel control.',
+        ),
+      ],
+      limitations:
+          'This is a concise SpineUp summary of the linked NHS back-pain guidance, not a diagnosis, medication instruction, or personalised exercise plan.',
+    ),
   ];
 
   static final _seedDate = DateTime(2026, 8, 13);
