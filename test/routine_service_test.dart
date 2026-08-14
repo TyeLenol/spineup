@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:spineup/models/care_subject.dart';
+import 'package:spineup/models/profile_data.dart';
 import 'package:spineup/models/routine.dart';
 import 'package:spineup/services/routine_service.dart';
 import 'package:spineup/services/session_service.dart';
