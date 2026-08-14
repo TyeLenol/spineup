@@ -477,11 +477,10 @@ class RoutineExerciseCardState extends State<RoutineExerciseCard> {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              '${widget.exercise.durationLabel}  ·  +$kXpStretch XP',
+                              '${widget.exercise.durationLabel}  ·  ${_expanded ? 'Hide steps' : 'View steps'}',
                               style: tt.bodySmall?.copyWith(
                                 color: AppTheme.mutedForeground,
                                 fontSize: 11,
-                                fontWeight: FontWeight.bold,
                               ),
                             ),
                           ],
@@ -887,9 +886,7 @@ class RoutineExerciseGuidedFlowSheetState
                   ),
                   label: FittedBox(
                     fit: BoxFit.scaleDown,
-                    child: Text(
-                      isLastStep ? 'Mark Complete (+30 XP)' : 'Next Step',
-                    ),
+                    child: Text(isLastStep ? 'Mark complete' : 'Next step'),
                   ),
                   style: FilledButton.styleFrom(
                     backgroundColor: _stepCompleted || isLastStep

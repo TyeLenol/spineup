@@ -237,22 +237,36 @@ class _IdentitySummary extends StatelessWidget {
     final tt = Theme.of(context).textTheme;
     final title = snap.currentTitle;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.center,
+    return Row(
       children: [
-        AvatarDisplay(profile: snap.userProfile, size: 96),
-        const SizedBox(height: 16),
-        Text(
-          'Level ${snap.currentLevel} — $title',
-          style: tt.titleMedium?.copyWith(
-            fontWeight: FontWeight.bold,
-            color: AppTheme.primarySage,
+        AvatarDisplay(profile: snap.userProfile, size: 78),
+        const SizedBox(width: 16),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Level ${snap.currentLevel} · $title',
+                style: tt.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w800,
+                  color: AppTheme.primarySage,
+                ),
+              ),
+              const SizedBox(height: 5),
+              Text(
+                '${snap.totalXp} XP total',
+                style: tt.bodyMedium?.copyWith(color: AppTheme.mutedForeground),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Progress stays in the background while your profile leads.',
+                style: tt.bodySmall?.copyWith(
+                  color: AppTheme.mutedForeground,
+                  height: 1.3,
+                ),
+              ),
+            ],
           ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          '${snap.totalXp} XP Total',
-          style: tt.bodyMedium?.copyWith(color: AppTheme.mutedForeground),
         ),
       ],
     );
@@ -604,6 +618,7 @@ class _AvatarSettingsState extends State<_AvatarSettings> {
           height: 90,
           child: ListView(
             scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.only(left: 2, right: 16),
             children: presetAvatars.map((preset) {
               final isSelected = currentPresetId == preset.id;
               return GestureDetector(

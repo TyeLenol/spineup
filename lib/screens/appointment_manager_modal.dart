@@ -408,12 +408,16 @@ class _ScheduleFormSheetState extends State<_ScheduleFormSheet> {
     );
 
     final initial =
-        widget.existing?.scheduledDateTime ??
-        DateTime.now().add(const Duration(hours: 2));
+        widget.existing?.scheduledDateTime ?? _defaultAppointmentTime();
     // Ensure initial selected datetime is not in the past
     _selectedDateTime = initial.isBefore(DateTime.now())
         ? DateTime.now().add(const Duration(hours: 1))
         : initial;
+  }
+
+  DateTime _defaultAppointmentTime() {
+    final tomorrow = DateTime.now().add(const Duration(days: 1));
+    return DateTime(tomorrow.year, tomorrow.month, tomorrow.day, 9);
   }
 
   @override

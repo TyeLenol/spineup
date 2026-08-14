@@ -86,6 +86,7 @@ class _ActivityHistoryScreenState extends State<ActivityHistoryScreen> {
                   const SizedBox(height: 16),
                   SingleChildScrollView(
                     scrollDirection: Axis.horizontal,
+                    padding: const EdgeInsets.symmetric(horizontal: 2),
                     child: Row(
                       children: [
                         _HistoryFilter(
@@ -265,8 +266,8 @@ class _HistoryEventTile extends StatelessWidget {
           Text(
             '+${event.xpValue} XP',
             style: tt.labelSmall?.copyWith(
-              color: color,
-              fontWeight: FontWeight.w800,
+              color: color.withValues(alpha: 0.72),
+              fontWeight: FontWeight.w600,
             ),
           ),
         ],
