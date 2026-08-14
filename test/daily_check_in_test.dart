@@ -4,7 +4,9 @@ import 'package:spineup/models/user_profile.dart';
 import 'package:spineup/screens/daily_check_in_screen.dart';
 
 void main() {
-  testWidgets('DailyCheckInScreen renders 5-point mood chips and controls', (WidgetTester tester) async {
+  testWidgets('DailyCheckInScreen renders 5-point mood chips and controls', (
+    WidgetTester tester,
+  ) async {
     const profile = UserProfile(
       presetId: 'preset_sun',
       name: 'Alex',
@@ -14,14 +16,15 @@ void main() {
     );
 
     await tester.pumpWidget(
-      const MaterialApp(
-        home: DailyCheckInScreen(userProfile: profile),
-      ),
+      const MaterialApp(home: DailyCheckInScreen(userProfile: profile)),
     );
 
     // Verify Title and View past entries button
     expect(find.text('Daily Check-In'), findsOneWidget);
     expect(find.byTooltip('View past entries'), findsOneWidget);
+
+    // Unanswered health fields are explicit rather than silently prefilled.
+    expect(find.text('Not recorded'), findsOneWidget);
 
     // Verify 5-point mood scale options
     expect(find.text('Awful'), findsOneWidget);
@@ -34,7 +37,7 @@ void main() {
     await tester.tap(find.text('Great'));
     await tester.pumpAndSettle();
 
-    // Verify save button exists
-    expect(find.text('Save Check-In'), findsOneWidget);
+    // Verify the recording CTA exists
+    expect(find.text('Record check-in'), findsOneWidget);
   });
 }
