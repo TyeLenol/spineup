@@ -160,6 +160,7 @@ class _LearnScreenState extends State<LearnScreen> {
                   SizedBox(
                     height: 40,
                     child: ListView.separated(
+                      padding: const EdgeInsets.symmetric(horizontal: 2),
                       scrollDirection: Axis.horizontal,
                       itemCount: 4,
                       separatorBuilder: (_, _) => const SizedBox(width: 8),
@@ -186,6 +187,7 @@ class _LearnScreenState extends State<LearnScreen> {
                     SizedBox(
                       height: 40,
                       child: ListView.separated(
+                        padding: const EdgeInsets.symmetric(horizontal: 2),
                         scrollDirection: Axis.horizontal,
                         itemCount: _categories.length,
                         separatorBuilder: (_, _) => const SizedBox(width: 8),

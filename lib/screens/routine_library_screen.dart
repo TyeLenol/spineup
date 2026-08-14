@@ -222,21 +222,9 @@ class _RoutineLibraryScreenState extends State<RoutineLibraryScreen> {
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
       child: SegmentedButton<int>(
         segments: const [
-          ButtonSegment(
-            value: 0,
-            label: Text('My Routine'),
-            icon: Icon(Icons.playlist_play_rounded),
-          ),
-          ButtonSegment(
-            value: 1,
-            label: Text('Templates'),
-            icon: Icon(Icons.auto_awesome_rounded),
-          ),
-          ButtonSegment(
-            value: 2,
-            label: Text('Movements'),
-            icon: Icon(Icons.search_rounded),
-          ),
+          ButtonSegment(value: 0, label: Text('My Routine')),
+          ButtonSegment(value: 1, label: Text('Templates')),
+          ButtonSegment(value: 2, label: Text('Movements')),
         ],
         selected: {_section},
         onSelectionChanged: (values) => setState(() => _section = values.first),
@@ -475,6 +463,7 @@ class _RoutineLibraryScreenState extends State<RoutineLibraryScreen> {
         SizedBox(
           height: 42,
           child: ListView.separated(
+            padding: const EdgeInsets.symmetric(horizontal: 2),
             scrollDirection: Axis.horizontal,
             itemCount: _categories.length,
             separatorBuilder: (_, _) => const SizedBox(width: 8),

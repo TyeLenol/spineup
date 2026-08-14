@@ -14,8 +14,10 @@ class GlassNavigationBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final bottomInset = MediaQuery.paddingOf(context).bottom;
+
     return Container(
-      margin: const EdgeInsets.only(left: 24, right: 24, bottom: 24),
+      margin: EdgeInsets.only(left: 20, right: 20, bottom: bottomInset + 12),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(32),
         boxShadow: [

@@ -494,13 +494,17 @@ class _ExternalContentDetailPageState extends State<ExternalContentDetailPage>
                 height: 190,
                 fit: BoxFit.cover,
                 errorBuilder: (_, _, _) => _ExternalMediaPlaceholder(
-                  label: 'Open original source',
+                  isVideo: item.isVideo,
+                  label: item.isVideo
+                      ? 'Watch on source'
+                      : 'Open original source',
                   onOpenSource: _openExternal,
                 ),
               ),
             )
           else
             _ExternalMediaPlaceholder(
+              isVideo: item.isVideo,
               label: item.isVideo ? 'Watch on source' : 'Open original source',
               onOpenSource: _openExternal,
             ),
@@ -569,18 +573,28 @@ class _ExternalContentDetailPageState extends State<ExternalContentDetailPage>
             ),
           ),
           const SizedBox(height: 18),
-          Text(
-            'Source link',
-            style: theme.textTheme.titleSmall?.copyWith(
-              fontWeight: FontWeight.w800,
+          ExpansionTile(
+            tilePadding: EdgeInsets.zero,
+            childrenPadding: const EdgeInsets.only(bottom: 4),
+            leading: Icon(Icons.link_rounded, color: theme.colorScheme.primary),
+            title: Text(
+              'Source details',
+              style: theme.textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.w800,
+              ),
             ),
-          ),
-          const SizedBox(height: 6),
-          SelectableText(
-            item.contentUrl,
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: AppTheme.mutedForeground,
-            ),
+            subtitle: const Text('View or copy the original link'),
+            children: [
+              Align(
+                alignment: Alignment.centerLeft,
+                child: SelectableText(
+                  item.contentUrl,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: AppTheme.mutedForeground,
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -839,10 +853,12 @@ class _SourceArticleCard extends StatelessWidget {
 }
 
 class _ExternalMediaPlaceholder extends StatelessWidget {
+  final bool isVideo;
   final String label;
   final VoidCallback onOpenSource;
 
   const _ExternalMediaPlaceholder({
+    required this.isVideo,
     required this.label,
     required this.onOpenSource,
   });
@@ -860,8 +876,24 @@ class _ExternalMediaPlaceholder extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.play_circle_outline_rounded, size: 52),
+          Icon(
+            isVideo
+                ? Icons.play_circle_outline_rounded
+                : Icons.menu_book_rounded,
+            size: 52,
+            color: theme.colorScheme.primary,
+          ),
           const SizedBox(height: 10),
+          Text(
+            isVideo
+                ? 'Video hosted by the original source'
+                : 'Article hosted by the original source',
+            textAlign: TextAlign.center,
+            style: theme.textTheme.labelLarge?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: 8),
           OutlinedButton.icon(
             onPressed: onOpenSource,
             icon: const Icon(Icons.open_in_new_rounded, size: 17),

@@ -61,7 +61,9 @@ class _MyJourneyScreenState extends State<MyJourneyScreen>
     final bonus = result.dailyBonusAwarded ? ' +5 daily bonus!' : '';
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('+${result.xpAwarded} XP$bonus'),
+        content: Text(
+          'Record saved${result.xpAwarded > 0 ? ' · +${result.xpAwarded} XP$bonus' : ''}',
+        ),
         backgroundColor: AppTheme.primarySage,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -261,6 +263,14 @@ class _MyJourneyScreenState extends State<MyJourneyScreen>
                           overlayData: _overlayData,
                           overlayOption: _overlayOption,
                           timeRange: _chartTimeRange,
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Recorded from your entries; not a diagnosis or prediction.',
+                          style: tt.bodySmall?.copyWith(
+                            color: AppTheme.mutedForeground,
+                            height: 1.35,
+                          ),
                         ),
                         const SizedBox(height: 24),
 
@@ -546,7 +556,7 @@ class _CobbChart extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Latest: ${history.last.degrees.toStringAsFixed(1)}° Cobb',
+                'Latest recorded: ${history.last.degrees.toStringAsFixed(1)}°',
                 style: tt.labelSmall?.copyWith(
                   color: AppTheme.accentLavender,
                   fontWeight: FontWeight.bold,
@@ -589,11 +599,17 @@ class _CobbChart extends StatelessWidget {
                   leftTitles: AxisTitles(
                     sideTitles: SideTitles(
                       showTitles: true,
-                      reservedSize: 34,
+                      reservedSize: 40,
                       interval: 10,
                       getTitlesWidget: (value, meta) {
                         return SideTitleWidget(
                           meta: meta,
+                          fitInside: SideTitleFitInsideData(
+                            enabled: true,
+                            distanceFromEdge: 4,
+                            parentAxisSize: meta.parentAxisSize,
+                            axisPosition: meta.axisPosition,
+                          ),
                           child: Text(
                             '${value.toInt()}°',
                             style: const TextStyle(
@@ -608,7 +624,7 @@ class _CobbChart extends StatelessWidget {
                   bottomTitles: AxisTitles(
                     sideTitles: SideTitles(
                       showTitles: true,
-                      reservedSize: 28,
+                      reservedSize: 34,
                       interval: xInterval,
                       getTitlesWidget: (value, meta) {
                         final dt = DateTime.fromMillisecondsSinceEpoch(
@@ -616,6 +632,12 @@ class _CobbChart extends StatelessWidget {
                         );
                         return SideTitleWidget(
                           meta: meta,
+                          fitInside: SideTitleFitInsideData(
+                            enabled: true,
+                            distanceFromEdge: 4,
+                            parentAxisSize: meta.parentAxisSize,
+                            axisPosition: meta.axisPosition,
+                          ),
                           child: Text(
                             formatX(dt),
                             style: const TextStyle(
