@@ -5,7 +5,7 @@ import 'package:spineup/screens/onboarding_screen.dart';
 
 void main() {
   testWidgets(
-    'OnboardingScreen renders Screen 1 headline, subtext, and Next button',
+    'OnboardingScreen renders the private-space headline and Next button',
     (WidgetTester tester) async {
       await tester.pumpWidget(
         MaterialApp(
@@ -20,12 +20,12 @@ void main() {
       await tester.pumpAndSettle();
 
       // Verify Screen 1 headline text
-      expect(find.text('Your spine has a story.'), findsOneWidget);
-      expect(find.text("Let's track it."), findsOneWidget);
+      expect(find.text('A private space'), findsOneWidget);
+      expect(find.text('for your spine journey.'), findsOneWidget);
 
       // Verify subtext
       expect(
-        find.textContaining('Log brace time and exercises daily'),
+        find.textContaining('Notice, learn, and keep going'),
         findsOneWidget,
       );
 
@@ -37,13 +37,13 @@ void main() {
       await tester.pumpAndSettle();
 
       // Verify Screen 2 content
-      expect(find.text('Every stretch counts'), findsOneWidget);
-      expect(find.text('toward something.'), findsOneWidget);
+      expect(find.text('Made for real life,'), findsOneWidget);
+      expect(find.text('and real support.'), findsOneWidget);
       expect(find.text('Skip'), findsOneWidget);
     },
   );
 
-  testWidgets('OnboardingScreen navigates through all 5 screens', (
+  testWidgets('OnboardingScreen navigates through all 3 screens', (
     WidgetTester tester,
   ) async {
     await tester.pumpWidget(
@@ -61,22 +61,13 @@ void main() {
     // Step 1 -> Step 2
     await tester.tap(find.text('Next'));
     await tester.pumpAndSettle();
-    expect(find.text('Every stretch counts'), findsOneWidget);
+    expect(find.text('Made for real life,'), findsOneWidget);
 
     // Step 2 -> Step 3
     await tester.tap(find.text('Next'));
     await tester.pumpAndSettle();
-    expect(find.text('Show up,'), findsOneWidget);
-
-    // Step 3 -> Step 4
-    await tester.tap(find.text('Next'));
-    await tester.pumpAndSettle();
-    expect(find.text('Clear answers,'), findsOneWidget);
-
-    // Step 4 -> Step 5
-    await tester.tap(find.text('Next'));
-    await tester.pumpAndSettle();
     expect(find.text('Your data'), findsOneWidget);
+    expect(find.text('stays with you.'), findsOneWidget);
     expect(find.text('Get started'), findsOneWidget);
   });
 }
