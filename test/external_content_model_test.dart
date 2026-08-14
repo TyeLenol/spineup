@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:spineup/models/external_content.dart';
 import 'package:spineup/services/external_content_service.dart';
@@ -63,6 +64,19 @@ void main() {
     expect(decoded.keyTakeaways, ['Takeaway one']);
     expect(decoded.sections.single.heading, 'A heading');
     expect(decoded.limitations, 'A limitation.');
+  });
+
+  test('pending source return restores the article once', () async {
+    SharedPreferences.setMockInitialValues({});
+    final item = ExternalContentService.curatedItems.firstWhere(
+      (item) => item.id == 'curated-nhs-scoliosis-overview',
+    );
+
+    await ExternalContentService.markPendingReturn(item);
+    final restored = await ExternalContentService.consumePendingReturn();
+
+    expect(restored?.id, item.id);
+    expect(await ExternalContentService.consumePendingReturn(), isNull);
   });
 
   test('curated catalog includes relevant self-management briefs', () {

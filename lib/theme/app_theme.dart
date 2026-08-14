@@ -17,6 +17,16 @@ class AppTheme {
   static const Color mutedForeground = Color(0xFF6B6158);
   static const Color borderCream = Color(0xFFDDCDB0);
 
+  // Profile setup palette: quieter and more editorial than the gamified app
+  // palette, so sensitive health questions feel calm, private, and deliberate.
+  static const Color profileCanvas = Color(0xFFF6F8F5);
+  static const Color profileSurface = Color(0xFFFFFFFF);
+  static const Color profileSoftSage = Color(0xFFE7F2EC);
+  static const Color profileSage = Color(0xFF2F8668);
+  static const Color profileMuted = Color(0xFF68736D);
+  static const Color profileBorder = Color(0xFFD5E1DA);
+  static const Color profileWarm = Color(0xFFF3E8DD);
+
   // Brand Colors (Dark Theme)
   static const Color darkBackground = Color(0xFF241E19);
   static const Color darkForeground = Color(0xFFF0E9DF);

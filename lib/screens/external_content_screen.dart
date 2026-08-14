@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
@@ -339,7 +341,8 @@ class ExternalContentDetailPage extends StatefulWidget {
       _ExternalContentDetailPageState();
 }
 
-class _ExternalContentDetailPageState extends State<ExternalContentDetailPage> {
+class _ExternalContentDetailPageState extends State<ExternalContentDetailPage>
+    with WidgetsBindingObserver {
   YoutubePlayerController? _youtubeController;
   bool _saved = false;
   bool _inRoutine = false;
@@ -347,6 +350,7 @@ class _ExternalContentDetailPageState extends State<ExternalContentDetailPage> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _loadState();
     final videoId = widget.item.videoId;
     if (widget.item.videoProvider == ExternalVideoProvider.youtube &&
@@ -367,8 +371,16 @@ class _ExternalContentDetailPageState extends State<ExternalContentDetailPage> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _youtubeController?.close();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      unawaited(ExternalContentService.clearPendingReturn());
+    }
   }
 
   Future<void> _loadState() async {
@@ -408,6 +420,7 @@ class _ExternalContentDetailPageState extends State<ExternalContentDetailPage> {
       return;
     }
 
+    await ExternalContentService.markPendingReturn(widget.item);
     final openedInApp = await _tryLaunch(uri, LaunchMode.inAppBrowserView);
     if (openedInApp || !mounted) return;
 
@@ -415,7 +428,10 @@ class _ExternalContentDetailPageState extends State<ExternalContentDetailPage> {
       uri,
       LaunchMode.externalApplication,
     );
-    if (!openedExternally) _showSourceError();
+    if (!openedExternally) {
+      await ExternalContentService.clearPendingReturn();
+      _showSourceError();
+    }
   }
 
   Future<bool> _tryLaunch(Uri uri, LaunchMode mode) async {

@@ -84,7 +84,10 @@ class _StepGoalsState extends State<StepGoals> {
                 value: Goal.ptConsistency,
                 label: 'Stay consistent with physio',
               ),
-              ChipOption(value: Goal.prepSurgery, label: 'Prepare for surgery'),
+              ChipOption(
+                value: Goal.prepSurgery,
+                label: 'Prepare questions about surgery',
+              ),
               ChipOption(
                 value: Goal.trackProgression,
                 label: 'Track how my curve is changing',

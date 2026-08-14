@@ -11,6 +11,7 @@ class ExternalContentService {
   static const _cacheKey = 'spineup_external_content_cache';
   static const _savedKeyPrefix = 'spineup_saved_content_';
   static const _routineKeyPrefix = 'spineup_routine_content_';
+  static const _pendingReturnKeyPrefix = 'spineup_pending_external_content_';
 
   static const _feedSources = [
     (
@@ -551,6 +552,34 @@ class ExternalContentService {
     final ids = await _loadIds(_routineKeyPrefix);
     return ids.contains(itemId);
   }
+
+  /// Remembers the source article currently open so Android activity
+  /// recreation can return the user to the same SpineUp detail page.
+  static Future<void> markPendingReturn(ExternalContentItem item) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_pendingReturnKey(), item.id);
+  }
+
+  static Future<void> clearPendingReturn() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_pendingReturnKey());
+  }
+
+  static Future<ExternalContentItem?> consumePendingReturn() async {
+    final prefs = await SharedPreferences.getInstance();
+    final pendingId = prefs.getString(_pendingReturnKey());
+    if (pendingId == null || pendingId.isEmpty) return null;
+    await prefs.remove(_pendingReturnKey());
+
+    final items = await loadContent();
+    for (final item in items) {
+      if (item.id == pendingId) return item;
+    }
+    return null;
+  }
+
+  static String _pendingReturnKey() =>
+      '$_pendingReturnKeyPrefix${SessionService.currentCareSubjectId}';
 
   static Future<void> setSaved(ExternalContentItem item, bool saved) async {
     final ids = await _loadIds(_savedKeyPrefix);

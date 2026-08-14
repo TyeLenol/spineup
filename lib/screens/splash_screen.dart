@@ -1,9 +1,11 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../data/database_helper.dart';
+import '../main.dart' show mainAppRoute, onboardingRoute;
+import '../services/session_service.dart';
 import '../theme/app_theme.dart';
 import '../theme/edge_to_edge_helper.dart';
-import '../main.dart' show onboardingRoute;
 
 class SplashScreen extends StatefulWidget {
   final Duration duration;
@@ -50,13 +52,17 @@ class _SplashScreenState extends State<SplashScreen>
     );
     _scaleAnimation = TweenSequence<double>([
       TweenSequenceItem(
-        tween: Tween<double>(begin: 0.8, end: 1.1)
-            .chain(CurveTween(curve: Curves.easeOut)),
+        tween: Tween<double>(
+          begin: 0.8,
+          end: 1.1,
+        ).chain(CurveTween(curve: Curves.easeOut)),
         weight: 50,
       ),
       TweenSequenceItem(
-        tween: Tween<double>(begin: 1.1, end: 1.0)
-            .chain(CurveTween(curve: Curves.elasticOut)),
+        tween: Tween<double>(
+          begin: 1.1,
+          end: 1.0,
+        ).chain(CurveTween(curve: Curves.elasticOut)),
         weight: 50,
       ),
     ]).animate(_mainController);
@@ -72,16 +78,25 @@ class _SplashScreenState extends State<SplashScreen>
     });
 
     // Schedule exit
-    _navigationTimer = Timer(widget.duration, _finish);
+    _navigationTimer = Timer(widget.duration, () => unawaited(_finish()));
   }
 
-  void _finish() {
+  Future<void> _finish() async {
     if (_isExiting) return;
     _isExiting = true;
     _delayTimer?.cancel();
     _navigationTimer?.cancel();
 
-    if (mounted) {
+    final subjects = await DatabaseHelper().getCareSubjects(
+      SessionService.currentUserId,
+    );
+    if (!mounted) return;
+
+    if (subjects.isNotEmpty) {
+      await SessionService.restoreActiveCareSubject(subjects: subjects);
+      if (!mounted) return;
+      Navigator.of(context).pushReplacement(mainAppRoute());
+    } else {
       Navigator.of(context).pushReplacement(onboardingRoute(1));
     }
   }
@@ -105,7 +120,7 @@ class _SplashScreenState extends State<SplashScreen>
     Widget mainContent = Scaffold(
       backgroundColor: AppTheme.primarySage,
       body: GestureDetector(
-        onTap: _finish,
+        onTap: () => unawaited(_finish()),
         behavior: HitTestBehavior.opaque,
         child: SafeArea(
           child: Center(
@@ -165,10 +180,7 @@ class _SplashScreenState extends State<SplashScreen>
           final scale = 1.0 + (0.05 * curve.value);
           return Opacity(
             opacity: opacity.clamp(0.0, 1.0),
-            child: Transform.scale(
-              scale: scale,
-              child: child,
-            ),
+            child: Transform.scale(scale: scale, child: child),
           );
         },
         child: mainContent,
@@ -203,14 +215,20 @@ class _SpineLogoPainter extends CustomPainter {
     final path = Path();
     path.moveTo(30 * scaleX, 70 * scaleY);
     path.cubicTo(
-      30 * scaleX, 50 * scaleY,
-      70 * scaleX, 50 * scaleY,
-      70 * scaleX, 30 * scaleY,
+      30 * scaleX,
+      50 * scaleY,
+      70 * scaleX,
+      50 * scaleY,
+      70 * scaleX,
+      30 * scaleY,
     );
     path.cubicTo(
-      70 * scaleX, 15 * scaleY,
-      50 * scaleX, 15 * scaleY,
-      30 * scaleX, 30 * scaleY,
+      70 * scaleX,
+      15 * scaleY,
+      50 * scaleX,
+      15 * scaleY,
+      30 * scaleX,
+      30 * scaleY,
     );
 
     for (final metric in path.computeMetrics()) {

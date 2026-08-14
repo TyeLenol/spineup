@@ -10,7 +10,8 @@ class LivingBackground extends StatefulWidget {
   State<LivingBackground> createState() => _LivingBackgroundState();
 }
 
-class _LivingBackgroundState extends State<LivingBackground> with SingleTickerProviderStateMixin {
+class _LivingBackgroundState extends State<LivingBackground>
+    with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
 
   @override
@@ -38,36 +39,16 @@ class _LivingBackgroundState extends State<LivingBackground> with SingleTickerPr
         final t = disableAnimations ? 0.0 : _controller.value;
         final size = MediaQuery.of(context).size;
 
-        // Based on step, we adjust colors and base gradient
-        Color color1, color2;
-        Alignment begin, end;
-        
-        switch (widget.step) {
-          case 1:
-            color1 = AppTheme.secondaryCoral;
-            color2 = AppTheme.primarySage;
-            begin = Alignment.topCenter;
-            end = Alignment.bottomCenter;
-            break;
-          case 2:
-            color1 = AppTheme.primarySage;
-            color2 = const Color(0xFF7F77DD); // Lavender
-            begin = Alignment.topLeft;
-            end = Alignment.bottomRight;
-            break;
-          case 3:
-            color1 = const Color(0xFF7F77DD); // Lavender
-            color2 = AppTheme.secondaryCoral;
-            begin = Alignment.bottomRight;
-            end = Alignment.topLeft;
-            break;
-          default:
-            color1 = AppTheme.secondaryCoral;
-            color2 = const Color(0xFF7F77DD);
-            begin = Alignment.topRight;
-            end = Alignment.bottomLeft;
-            break;
-        }
+        // Keep the setup background calm and consistent across steps. The
+        // step changes the blob position subtly, not the whole color language.
+        final color1 = AppTheme.profileSage;
+        final color2 = AppTheme.profileWarm;
+        final begin = widget.step.isEven
+            ? Alignment.topLeft
+            : Alignment.topCenter;
+        final end = widget.step.isEven
+            ? Alignment.bottomRight
+            : Alignment.bottomCenter;
 
         final x1 = sin(t * 2 * pi) * 40;
         final y1 = cos(t * 2 * pi) * 30;
@@ -79,7 +60,7 @@ class _LivingBackgroundState extends State<LivingBackground> with SingleTickerPr
             Container(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [AppTheme.backgroundCream, Colors.white],
+                  colors: [AppTheme.profileCanvas, Colors.white],
                   begin: begin,
                   end: end,
                 ),
@@ -89,13 +70,19 @@ class _LivingBackgroundState extends State<LivingBackground> with SingleTickerPr
             Positioned(
               left: -size.width * 0.2 + x1,
               top: size.height * 0.1 + y1,
-              child: _Blob(color: color1.withValues(alpha: 0.35), size: size.width * 1.2),
+              child: _Blob(
+                color: color1.withValues(alpha: 0.10),
+                size: size.width * 1.2,
+              ),
             ),
             // Blob 2
             Positioned(
               right: -size.width * 0.3 + x2,
               bottom: -size.height * 0.1 + y2,
-              child: _Blob(color: color2.withValues(alpha: 0.25), size: size.width * 1.4),
+              child: _Blob(
+                color: color2.withValues(alpha: 0.08),
+                size: size.width * 1.4,
+              ),
             ),
           ],
         );
@@ -118,11 +105,7 @@ class _Blob extends StatelessWidget {
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         boxShadow: [
-          BoxShadow(
-            color: color,
-            blurRadius: size / 3,
-            spreadRadius: size / 4,
-          ),
+          BoxShadow(color: color, blurRadius: size / 3, spreadRadius: size / 4),
         ],
       ),
     );

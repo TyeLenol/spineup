@@ -26,11 +26,11 @@ class ProfileField extends StatelessWidget {
           children: [
             Expanded(
               child: Text(
-                label.toUpperCase(),
+                label,
                 style: GoogleFonts.outfit(
-                  fontSize: 12,
+                  fontSize: 13,
                   fontWeight: FontWeight.w700,
-                  letterSpacing: 1.0,
+                  letterSpacing: 0.1,
                   color: AppTheme.foregroundDark,
                 ),
               ),
@@ -42,7 +42,7 @@ class ProfileField extends StatelessWidget {
               ),
           ],
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 10),
         child,
         if (hint != null) ...[
           const SizedBox(height: 6),
@@ -50,8 +50,8 @@ class ProfileField extends StatelessWidget {
             hint!,
             style: GoogleFonts.outfit(
               fontSize: 12,
-              fontWeight: FontWeight.w500,
-              color: AppTheme.mutedForeground,
+              fontWeight: FontWeight.w400,
+              color: AppTheme.profileMuted,
             ),
           ),
         ],
@@ -84,47 +84,57 @@ class ProfileTextInput extends StatelessWidget {
       onChanged: onChanged,
       style: GoogleFonts.outfit(
         fontSize: 16,
-        fontWeight: FontWeight.w600,
+        fontWeight: FontWeight.w500,
         color: AppTheme.foregroundDark,
       ),
       decoration: InputDecoration(
-        labelText: labelText ?? hintText,
+        labelText: labelText,
         floatingLabelBehavior: FloatingLabelBehavior.auto,
         labelStyle: GoogleFonts.outfit(
-          fontSize: 16,
+          fontSize: 14,
           fontWeight: FontWeight.w500,
-          color: Theme.of(context).colorScheme.onSurfaceVariant,
+          color: AppTheme.profileMuted,
         ),
         floatingLabelStyle: GoogleFonts.outfit(
-          fontSize: 14,
-          fontWeight: FontWeight.w600,
-          color: Theme.of(context).colorScheme.primary,
+          fontSize: 13,
+          fontWeight: FontWeight.w700,
+          color: AppTheme.profileSage,
         ),
         hintText: hintText,
         hintStyle: GoogleFonts.outfit(
-          fontSize: 16,
-          fontWeight: FontWeight.w500,
-          color: Theme.of(
-            context,
-          ).colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+          fontSize: 15,
+          fontWeight: FontWeight.w400,
+          color: AppTheme.profileMuted.withValues(alpha: 0.65),
         ),
-        filled: false,
+        filled: true,
+        fillColor: AppTheme.profileSurface.withValues(alpha: 0.92),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 16,
-          vertical: 16,
+          vertical: 15,
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(20),
-          borderSide: BorderSide(
-            color: Theme.of(context).colorScheme.outlineVariant,
-            width: 1.5,
+          borderRadius: BorderRadius.circular(16),
+          borderSide: const BorderSide(
+            color: AppTheme.profileBorder,
+            width: 1.2,
           ),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(16),
+          borderSide: const BorderSide(color: AppTheme.profileSage, width: 2),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
           borderSide: BorderSide(
-            color: Theme.of(context).colorScheme.primary,
-            width: 2.5,
+            color: Theme.of(context).colorScheme.error,
+            width: 1.5,
+          ),
+        ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide(
+            color: Theme.of(context).colorScheme.error,
+            width: 2,
           ),
         ),
       ),
@@ -167,7 +177,7 @@ class ProfileChipGroup<T> extends StatelessWidget {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final spacing = 8.0;
+        const spacing = 10.0;
         final width =
             (constraints.maxWidth - (spacing * (columns - 1))) / columns;
 
@@ -181,21 +191,19 @@ class ProfileChipGroup<T> extends StatelessWidget {
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 200),
                 width: width,
-                constraints: const BoxConstraints(minHeight: 52),
+                constraints: const BoxConstraints(minHeight: 58),
                 padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
+                  horizontal: 14,
                   vertical: 12,
                 ),
                 decoration: BoxDecoration(
                   color: on
-                      ? Theme.of(context).colorScheme.primary
-                      : Colors.transparent,
-                  borderRadius: BorderRadius.circular(32),
+                      ? AppTheme.profileSoftSage
+                      : AppTheme.profileSurface,
+                  borderRadius: BorderRadius.circular(16),
                   border: Border.all(
-                    color: on
-                        ? Theme.of(context).colorScheme.primary
-                        : Theme.of(context).colorScheme.outlineVariant,
-                    width: on ? 2.5 : 1.5,
+                    color: on ? AppTheme.profileSage : AppTheme.profileBorder,
+                    width: on ? 1.8 : 1.2,
                   ),
                 ),
                 child: Column(
@@ -206,10 +214,10 @@ class ProfileChipGroup<T> extends StatelessWidget {
                       opt.label,
                       style: GoogleFonts.outfit(
                         fontSize: 14,
-                        fontWeight: FontWeight.w600,
+                        fontWeight: FontWeight.w700,
                         color: on
-                            ? Theme.of(context).colorScheme.onPrimary
-                            : Theme.of(context).colorScheme.onSurface,
+                            ? AppTheme.profileSage
+                            : AppTheme.foregroundDark,
                       ),
                     ),
                     if (opt.hint != null) ...[
@@ -218,12 +226,10 @@ class ProfileChipGroup<T> extends StatelessWidget {
                         opt.hint!,
                         style: GoogleFonts.outfit(
                           fontSize: 11,
-                          fontWeight: FontWeight.w500,
+                          fontWeight: FontWeight.w400,
                           color: on
-                              ? Theme.of(
-                                  context,
-                                ).colorScheme.onPrimary.withValues(alpha: 0.8)
-                              : Theme.of(context).colorScheme.onSurfaceVariant,
+                              ? AppTheme.profileSage.withValues(alpha: 0.78)
+                              : AppTheme.profileMuted,
                         ),
                       ),
                     ],
