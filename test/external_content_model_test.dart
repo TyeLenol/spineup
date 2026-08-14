@@ -50,7 +50,7 @@ void main() {
       readingMinutes: 4,
       keyTakeaways: const ['Takeaway one'],
       sections: const [
-        ExternalContentSection(heading: 'A heading', body: 'A readable body.'),
+        ContentSection(heading: 'A heading', body: 'A readable body.'),
       ],
       limitations: 'A limitation.',
     );

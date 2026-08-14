@@ -119,12 +119,12 @@ class ExternalContentService {
         'Persistent or worrying symptoms should be discussed with a qualified professional.',
       ],
       sections: const [
-        ExternalContentSection(
+        ContentSection(
           heading: 'A practical starting point',
           body:
               'Posture is not one rigid position that you must hold all day. A more useful goal is to notice how you sit, stand, and move, then make small adjustments that feel comfortable and sustainable.',
         ),
-        ExternalContentSection(
+        ContentSection(
           heading: 'Use this as a conversation starter',
           body:
               'General posture information can help you prepare questions for a clinician, physiotherapist, or other qualified professional. It cannot explain the cause of an individual person\'s symptoms.',
@@ -155,12 +155,12 @@ class ExternalContentService {
         'A health app can help you record experiences and prepare for conversations; it cannot replace assessment.',
       ],
       sections: const [
-        ExternalContentSection(
+        ContentSection(
           heading: 'What this brief covers',
           body:
               'This brief introduces the term scoliosis and explains why personal assessment belongs with a qualified healthcare professional. SpineUp records what a person chooses to track; it does not diagnose or predict progression.',
         ),
-        ExternalContentSection(
+        ContentSection(
           heading: 'When to seek help',
           body:
               'If pain, weakness, numbness, breathing difficulty, or other worrying symptoms are new, severe, or worsening, seek appropriate medical advice rather than relying on an app.',
@@ -192,12 +192,12 @@ class ExternalContentService {
         'Stop and seek support if an exercise increases distress or feels unsafe.',
       ],
       sections: const [
-        ExternalContentSection(
+        ContentSection(
           heading: 'A gentle way to begin',
           body:
               'Mindfulness is the practice of noticing present-moment experience with curiosity. A short breathing or body-awareness exercise can be a low-pressure way to explore whether this kind of practice feels useful for you.',
         ),
-        ExternalContentSection(
+        ContentSection(
           heading: 'Keep the boundary clear',
           body:
               'Mindfulness can support wellbeing, but it is not a replacement for professional help with severe, persistent, or worsening distress. Choose a comfortable pace and stop if the exercise feels unhelpful.',

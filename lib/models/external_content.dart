@@ -11,16 +11,16 @@ enum ExternalContentDeliveryMode {
   youtubeEmbed,
 }
 
-class ExternalContentSection {
+class ContentSection {
   final String heading;
   final String body;
 
-  const ExternalContentSection({required this.heading, required this.body});
+  const ContentSection({required this.heading, required this.body});
 
   Map<String, dynamic> toJson() => {'heading': heading, 'body': body};
 
-  factory ExternalContentSection.fromJson(Map<String, dynamic> json) {
-    return ExternalContentSection(
+  factory ContentSection.fromJson(Map<String, dynamic> json) {
+    return ContentSection(
       heading: json['heading'] as String? ?? '',
       body: json['body'] as String? ?? '',
     );
@@ -48,7 +48,7 @@ class ExternalContentItem {
   final DateTime? reviewedAt;
   final int? readingMinutes;
   final List<String> keyTakeaways;
-  final List<ExternalContentSection> sections;
+  final List<ContentSection> sections;
   final String? limitations;
 
   const ExternalContentItem({
@@ -162,7 +162,7 @@ class ExternalContentItem {
           ? rawSections
                 .whereType<Map>()
                 .map(
-                  (section) => ExternalContentSection.fromJson(
+                  (section) => ContentSection.fromJson(
                     Map<String, dynamic>.from(section),
                   ),
                 )
