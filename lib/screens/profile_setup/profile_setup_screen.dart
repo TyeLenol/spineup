@@ -11,7 +11,6 @@ import '../../services/gamification_service.dart';
 import '../../services/profile_mapper.dart';
 import '../../services/profile_store.dart';
 import '../../services/session_service.dart';
-import '../auth_screen.dart';
 import 'profile_shell.dart';
 import 'steps/step_basics.dart';
 import 'steps/step_care.dart';
@@ -286,7 +285,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
         } else {
           Navigator.of(
             context,
-          ).pushAndRemoveUntil(authRoute(AuthMode.signup), (route) => false);
+          ).pushAndRemoveUntil(localFirstWelcomeRoute(), (route) => false);
         }
       },
       child: child,
