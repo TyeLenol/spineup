@@ -29,34 +29,35 @@ class OnboardingScreenData {
 
 const List<OnboardingScreenData> kOnboardingScreens = [
   OnboardingScreenData(
-    bg: Color(0xFFF6F8F5),
+    bg: Color(0xFFF7FAF8),
     tint: Color(0xFF2F8668),
     tintSoft: Color(0xFF68736D),
     deep: Color(0xFF1F5F4B),
     headline: ['A private space', 'for your spine journey.'],
     subtext:
-        'Notice, learn, and keep going in a space that stays on this phone.',
+        'Track check-ins, routines, and questions in one place—without turning care into a performance.',
     cta: 'Next',
     imageAsset: 'assets/onboarding/onboarding_private_space.png',
   ),
   OnboardingScreenData(
-    bg: Color(0xFFF6F8F5),
+    bg: Color(0xFFF7FAF8),
     tint: Color(0xFF2F8668),
     tintSoft: Color(0xFF68736D),
     deep: Color(0xFF1F5F4B),
     headline: ['Made for real life,', 'and real support.'],
-    subtext: 'Use it for you, or for someone you care for.',
+    subtext:
+        'Set it up for yourself or someone you care for, with the right records kept separate.',
     cta: 'Next',
     imageAsset: 'assets/onboarding/onboarding_shared_care.png',
   ),
   OnboardingScreenData(
-    bg: Color(0xFFF6F8F5),
+    bg: Color(0xFFF7FAF8),
     tint: Color(0xFF2F8668),
     tintSoft: Color(0xFF68736D),
     deep: Color(0xFF1F5F4B),
     headline: ['Your data', 'stays with you.'],
     subtext:
-        'No account is required to begin. Export a protected copy whenever you choose.',
+        'No account is required to begin. Records stay on this phone by default, and protected export helps you move them when you choose.',
     cta: 'Get started',
     imageAsset: 'assets/onboarding/onboarding_data_stays_yours.png',
   ),
@@ -137,6 +138,18 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       SizedBox(
+                        width: 72,
+                        child: Text(
+                          'SPINEUP',
+                          style: GoogleFonts.outfit(
+                            color: s.tint,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 1.8,
+                          ),
+                        ),
+                      ),
+                      SizedBox(
                         width: 48,
                         height: 48,
                         child: _currentStep > 1
@@ -154,6 +167,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         tint: s.tint,
                       ),
                       SizedBox(
+                        width: 72,
                         height: 48,
                         child: _currentStep > 1
                             ? OnboardingSmallLink(
@@ -197,10 +211,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           s.headline[0],
                           style: GoogleFonts.fraunces(
                             color: s.tint,
-                            fontSize: 36,
-                            fontWeight: FontWeight.w800,
-                            height: 1.0,
-                            letterSpacing: -1.0,
+                            fontSize: 39,
+                            fontWeight: FontWeight.w900,
+                            height: 0.98,
+                            letterSpacing: -1.2,
                           ),
                         ),
                         const SizedBox(height: 2),
@@ -208,11 +222,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           s.headline[1],
                           style: GoogleFonts.fraunces(
                             color: s.tintSoft,
-                            fontSize: 30,
-                            fontWeight: FontWeight.w600,
+                            fontSize: 32,
+                            fontWeight: FontWeight.w700,
                             fontStyle: FontStyle.italic,
-                            height: 1.05,
-                            letterSpacing: -0.7,
+                            height: 1.02,
+                            letterSpacing: -0.9,
                           ),
                         ),
                         const SizedBox(height: 12),
@@ -220,8 +234,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           s.subtext,
                           style: GoogleFonts.outfit(
                             color: s.tintSoft,
-                            fontSize: 14,
-                            height: 1.45,
+                            fontSize: 14.5,
+                            height: 1.5,
                           ),
                         ),
                         const SizedBox(height: 24),

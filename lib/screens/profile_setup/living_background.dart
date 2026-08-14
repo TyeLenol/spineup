@@ -84,11 +84,58 @@ class _LivingBackgroundState extends State<LivingBackground>
                 size: size.width * 1.4,
               ),
             ),
+            // A quiet signature that carries the onboarding thread into setup.
+            Positioned(
+              top: 76 + y2 * 0.25,
+              right: -12 + x1 * 0.15,
+              child: IgnorePointer(
+                child: CustomPaint(
+                  size: const Size(160, 120),
+                  painter: _ThreadSignaturePainter(progress: t),
+                ),
+              ),
+            ),
           ],
         );
       },
     );
   }
+}
+
+class _ThreadSignaturePainter extends CustomPainter {
+  final double progress;
+
+  const _ThreadSignaturePainter({required this.progress});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final coral = Paint()
+      ..color = AppTheme.profileWarm.withValues(alpha: 0.24)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.2
+      ..strokeCap = StrokeCap.round;
+    final sage = Paint()
+      ..color = AppTheme.profileSage.withValues(alpha: 0.22)
+      ..style = PaintingStyle.fill;
+
+    final wave = sin(progress * 2 * pi) * 4;
+    final thread = Path()
+      ..moveTo(16, 84)
+      ..cubicTo(34, 18 + wave, 84, 104 - wave, 144, 30 + wave);
+    canvas.drawPath(thread, coral);
+
+    for (final point in [
+      Offset(20, 82),
+      Offset(78, 68 + wave / 2),
+      Offset(140, 32 + wave),
+    ]) {
+      canvas.drawCircle(point, 3.2, sage);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _ThreadSignaturePainter oldDelegate) =>
+      oldDelegate.progress != progress;
 }
 
 class _Blob extends StatelessWidget {
