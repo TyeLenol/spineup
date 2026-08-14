@@ -89,10 +89,6 @@ class _NavigationShellState extends State<NavigationShell> {
               },
             ),
           ),
-          ValueListenableBuilder<CareSubject?>(
-            valueListenable: SessionService.activeCareSubjectNotifier,
-            builder: (_, _, _) => const _ActiveCareSubjectIndicator(),
-          ),
           Positioned(
             left: 0,
             right: 0,
@@ -103,47 +99,6 @@ class _NavigationShellState extends State<NavigationShell> {
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _ActiveCareSubjectIndicator extends StatelessWidget {
-  const _ActiveCareSubjectIndicator();
-
-  @override
-  Widget build(BuildContext context) {
-    final subject = SessionService.activeCareSubject;
-    final name = subject?.displayName ?? SessionService.displayName;
-    final label = subject?.isWard == true
-        ? 'Care profile: $name'
-        : 'Profile: $name';
-
-    return Positioned(
-      top: MediaQuery.paddingOf(context).top + 8,
-      right: 16,
-      child: IgnorePointer(
-        child: Semantics(
-          label: 'Active care subject, $label',
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-            decoration: BoxDecoration(
-              color: Theme.of(
-                context,
-              ).colorScheme.surface.withValues(alpha: 0.9),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: Theme.of(context).colorScheme.outlineVariant,
-              ),
-            ),
-            child: Text(
-              label,
-              style: Theme.of(
-                context,
-              ).textTheme.labelSmall?.copyWith(fontWeight: FontWeight.w700),
-            ),
-          ),
-        ),
       ),
     );
   }

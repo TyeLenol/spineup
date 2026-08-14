@@ -12,6 +12,7 @@ import '../services/gamification_service.dart';
 import '../services/session_service.dart';
 import '../services/routine_service.dart';
 import '../theme/app_theme.dart';
+import '../widgets/action_reward_feedback.dart';
 import 'appointment_logger_modal.dart';
 import 'daily_check_in_screen.dart';
 import 'routine_library_screen.dart';
@@ -40,20 +41,10 @@ class _TodayScreenState extends State<TodayScreen>
   final Set<String> _completedToday = {};
   bool _loadingSnap = true;
 
-  // Celebration banner
-  String? _xpBannerText;
-  Timer? _bannerTimer;
-
   @override
   void initState() {
     super.initState();
     _loadSnapshot();
-  }
-
-  @override
-  void dispose() {
-    _bannerTimer?.cancel();
-    super.dispose();
   }
 
   Future<void> _loadSnapshot() async {
@@ -106,14 +97,6 @@ class _TodayScreenState extends State<TodayScreen>
     return scheduled.first;
   }
 
-  void _showBanner(String text) {
-    _bannerTimer?.cancel();
-    setState(() => _xpBannerText = text);
-    _bannerTimer = Timer(const Duration(seconds: 3), () {
-      if (mounted) setState(() => _xpBannerText = null);
-    });
-  }
-
   Future<void> _markExerciseDone(RoutineExercise ex) async {
     if (_completedToday.contains(ex.id)) return;
     setState(() => _completedToday.add(ex.id));
@@ -129,8 +112,13 @@ class _TodayScreenState extends State<TodayScreen>
       },
     );
     await _loadSnapshot();
-    final bonus = result.dailyBonusAwarded ? ' +5 daily bonus!' : '';
-    _showBanner('+${result.xpAwarded} XP$bonus');
+    if (!mounted) return;
+    showActionRewardFeedback(
+      context,
+      title: '${ex.name} complete',
+      xpAwarded: result.xpAwarded,
+      dailyBonusAwarded: result.dailyBonusAwarded,
+    );
   }
 
   Event? get _latestJournalLogToday {
@@ -254,10 +242,13 @@ class _TodayScreenState extends State<TodayScreen>
                         );
                         if (result != null) {
                           await _loadSnapshot();
-                          final bonus = result.dailyBonusAwarded
-                              ? ' +5 daily bonus!'
-                              : '';
-                          _showBanner('+${result.xpAwarded} XP$bonus');
+                          if (!context.mounted) return;
+                          showActionRewardFeedback(
+                            context,
+                            title: 'Check-in saved',
+                            xpAwarded: result.xpAwarded,
+                            dailyBonusAwarded: result.dailyBonusAwarded,
+                          );
                         }
                       },
                     ),
@@ -291,10 +282,13 @@ class _TodayScreenState extends State<TodayScreen>
                         gamificationService: _gs,
                         onLogged: (result) async {
                           await _loadSnapshot();
-                          final bonus = result.dailyBonusAwarded
-                              ? ' +5 daily bonus!'
-                              : '';
-                          _showBanner('+${result.xpAwarded} XP$bonus');
+                          if (!context.mounted) return;
+                          showActionRewardFeedback(
+                            context,
+                            title: 'Appointment recorded',
+                            xpAwarded: result.xpAwarded,
+                            dailyBonusAwarded: result.dailyBonusAwarded,
+                          );
                         },
                       ),
                     ),
@@ -304,15 +298,6 @@ class _TodayScreenState extends State<TodayScreen>
               ),
             ],
           ),
-
-          // ── XP celebration banner ─────────────────────────────────────────
-          if (_xpBannerText != null)
-            Positioned(
-              top: MediaQuery.of(context).padding.top + 60,
-              left: 24,
-              right: 24,
-              child: _XpBanner(text: _xpBannerText!),
-            ),
         ],
       ),
     );
@@ -1293,44 +1278,6 @@ class _SavedRoutineVideoCard extends StatelessWidget {
               ),
               const Icon(Icons.chevron_right_rounded),
             ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _XpBanner extends StatelessWidget {
-  final String text;
-  const _XpBanner({required this.text});
-
-  @override
-  Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-    return Material(
-      color: Colors.transparent,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [AppTheme.primarySage, AppTheme.accentLavender],
-          ),
-          borderRadius: BorderRadius.circular(40),
-          boxShadow: [
-            BoxShadow(
-              color: AppTheme.primarySage.withValues(alpha: 0.4),
-              blurRadius: 16,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Center(
-          child: Text(
-            text,
-            style: tt.titleSmall?.copyWith(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-            ),
           ),
         ),
       ),
