@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'data/database_helper.dart';
 import 'theme/app_theme.dart';
 import 'theme/app_transitions.dart';
 import 'screens/splash_screen.dart';
@@ -6,8 +9,11 @@ import 'screens/onboarding_screen.dart';
 import 'screens/navigation_shell.dart';
 import 'screens/auth_screen.dart';
 import 'screens/profile_setup/profile_setup_screen.dart';
+import 'services/session_service.dart';
 
-final ValueNotifier<ThemeMode> themeModeNotifier = ValueNotifier<ThemeMode>(ThemeMode.system);
+final ValueNotifier<ThemeMode> themeModeNotifier = ValueNotifier<ThemeMode>(
+  ThemeMode.system,
+);
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -33,10 +39,8 @@ class SpineUpApp extends StatelessWidget {
           themeMode: mode,
           // Always keep cream canvas behind all routes — prevents black flash
           // when one Scaffold fades out before the next one appears.
-          builder: (context, child) => Container(
-            color: AppTheme.backgroundCream,
-            child: child,
-          ),
+          builder: (context, child) =>
+              Container(color: AppTheme.backgroundCream, child: child),
           home: SplashScreen(
             duration: splashDuration ?? const Duration(milliseconds: 4500),
           ),
@@ -57,18 +61,41 @@ Route<void> onboardingRoute([int step = 1]) {
 }
 
 /// Auth route — handles both entrance slide and peer cross-fade mode switching.
+Future<void> _navigateAfterAuth(
+  BuildContext context, {
+  bool forceProfileSetup = false,
+}) async {
+  var hasProfile = false;
+  try {
+    hasProfile = (await DatabaseHelper().getCareSubjects(
+      SessionService.currentUserId,
+    )).isNotEmpty;
+  } catch (_) {
+    // A missing platform database should behave like a fresh local session.
+  }
+  if (!context.mounted) return;
+
+  final route = forceProfileSetup || !hasProfile
+      ? profileSetupRoute()
+      : mainAppRoute();
+  Navigator.of(context).pushAndRemoveUntil(route, (route) => false);
+}
+
 Route<void> authRoute(AuthMode mode, {bool isCrossFade = false}) {
   Widget buildPage(BuildContext context) {
     return AuthScreen(
       mode: mode,
       onBack: () => Navigator.of(context).maybePop(),
       onSwitchMode: (newMode) {
-        Navigator.of(context).pushReplacement(authRoute(newMode, isCrossFade: true));
+        Navigator.of(
+          context,
+        ).pushReplacement(authRoute(newMode, isCrossFade: true));
       },
-      onSuccess: () => Navigator.of(context).pushAndRemoveUntil(
-        mode == AuthMode.signup ? profileSetupRoute() : mainAppRoute(),
-        (route) => false,
-      ),
+      onSuccess: () => unawaited(_navigateAfterAuth(context)),
+      onGuestSuccess: () {
+        SessionService.startMockSession();
+        unawaited(_navigateAfterAuth(context, forceProfileSetup: true));
+      },
     );
   }
 
@@ -109,4 +136,3 @@ Route<void> profileSetupRoute() {
     pageBuilder: (context) => const ProfileSetupScreen(),
   );
 }
-

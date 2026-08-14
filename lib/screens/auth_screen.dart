@@ -21,12 +21,14 @@ class AuthScreen extends StatefulWidget {
   final VoidCallback? onBack;
   final void Function(AuthMode mode) onSwitchMode;
   final VoidCallback onSuccess;
+  final VoidCallback onGuestSuccess;
 
   const AuthScreen({
     super.key,
     required this.mode,
     required this.onSwitchMode,
     required this.onSuccess,
+    required this.onGuestSuccess,
     this.onBack,
   });
 
@@ -191,7 +193,7 @@ class _AuthScreenState extends State<AuthScreen> {
             FilledButton(
               onPressed: () {
                 Navigator.of(context).pop();
-                widget.onSuccess();
+                widget.onGuestSuccess();
               },
               style: FilledButton.styleFrom(
                 backgroundColor: AppTheme.primarySage,
