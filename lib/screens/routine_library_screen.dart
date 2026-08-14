@@ -177,10 +177,10 @@ class _RoutineLibraryScreenState extends State<RoutineLibraryScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-      onWillPop: () async {
-        _close();
-        return false;
+    return PopScope<void>(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) _close();
       },
       child: Scaffold(
         appBar: AppBar(
@@ -302,7 +302,7 @@ class _RoutineLibraryScreenState extends State<RoutineLibraryScreen> {
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             itemCount: exercises.length,
-            onReorder: _reorderExercise,
+            onReorderItem: _reorderExercise,
             itemBuilder: (context, index) {
               final exercise = exercises[index];
               return Card(

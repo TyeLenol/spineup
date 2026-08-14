@@ -398,6 +398,7 @@ class RoutineExerciseCard extends StatefulWidget {
   final VoidCallback onMarkDone;
 
   const RoutineExerciseCard({
+    super.key,
     required this.exercise,
     required this.done,
     required this.onMarkDone,
@@ -559,6 +560,7 @@ class RoutineExerciseGuidedFlowSheet extends StatefulWidget {
   final VoidCallback onFinishEarly;
 
   const RoutineExerciseGuidedFlowSheet({
+    super.key,
     required this.exercise,
     required this.onComplete,
     required this.onFinishEarly,
