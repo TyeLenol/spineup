@@ -1,13 +1,9 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
-import 'data/database_helper.dart';
 import 'theme/app_theme.dart';
 import 'theme/app_transitions.dart';
 import 'screens/splash_screen.dart';
 import 'screens/onboarding_screen.dart';
 import 'screens/navigation_shell.dart';
-import 'screens/auth_screen.dart';
 import 'screens/profile_setup/profile_setup_screen.dart';
 import 'screens/local_first_welcome_screen.dart';
 import 'services/session_service.dart';
@@ -70,49 +66,6 @@ Route<void> localFirstWelcomeRoute() {
         Navigator.of(context).pushReplacement(profileSetupRoute());
       },
     ),
-  );
-}
-
-/// Auth route — kept for a future real account path, not shown by default.
-Future<void> _navigateAfterAuth(BuildContext context) async {
-  var hasProfile = false;
-  try {
-    hasProfile = (await DatabaseHelper().getCareSubjects(
-      SessionService.currentUserId,
-    )).isNotEmpty;
-  } catch (_) {
-    // A missing platform database should behave like a fresh local session.
-  }
-  if (!context.mounted) return;
-
-  final route = !hasProfile ? profileSetupRoute() : mainAppRoute();
-  Navigator.of(context).pushAndRemoveUntil(route, (route) => false);
-}
-
-Route<void> authRoute(AuthMode mode, {bool isCrossFade = false}) {
-  Widget buildPage(BuildContext context) {
-    return AuthScreen(
-      mode: mode,
-      onBack: () => Navigator.of(context).maybePop(),
-      onSwitchMode: (newMode) {
-        Navigator.of(
-          context,
-        ).pushReplacement(authRoute(newMode, isCrossFade: true));
-      },
-      onSuccess: () => unawaited(_navigateAfterAuth(context)),
-    );
-  }
-
-  if (isCrossFade) {
-    return AppTransitions.buildCrossFadeRoute<void>(
-      duration: const Duration(milliseconds: 320),
-      pageBuilder: buildPage,
-    );
-  }
-
-  return AppTransitions.buildEmphasizedDecelerateRoute<void>(
-    duration: const Duration(milliseconds: 520),
-    pageBuilder: buildPage,
   );
 }
 
