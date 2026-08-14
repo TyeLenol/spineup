@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../data/database_helper.dart';
 import '../main.dart' show mainAppRoute, onboardingRoute;
+import '../models/care_subject.dart';
 import '../services/session_service.dart';
 import '../theme/app_theme.dart';
 import '../theme/edge_to_edge_helper.dart';
@@ -87,9 +88,15 @@ class _SplashScreenState extends State<SplashScreen>
     _delayTimer?.cancel();
     _navigationTimer?.cancel();
 
-    final subjects = await DatabaseHelper().getCareSubjects(
-      SessionService.currentUserId,
-    );
+    List<CareSubject> subjects = const [];
+    try {
+      subjects = await DatabaseHelper().getCareSubjects(
+        SessionService.currentUserId,
+      );
+    } catch (_) {
+      // A first-run/test environment may not have a platform database yet.
+      // Default to onboarding rather than leaving the splash route mounted.
+    }
     if (!mounted) return;
 
     if (subjects.isNotEmpty) {
