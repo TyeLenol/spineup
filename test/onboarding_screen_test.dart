@@ -25,7 +25,7 @@ void main() {
 
       // Verify subtext
       expect(
-        find.textContaining('Notice, learn, and keep going'),
+        find.textContaining('Track check-ins, routines, and questions'),
         findsOneWidget,
       );
 
