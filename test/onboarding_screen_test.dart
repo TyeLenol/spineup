@@ -20,12 +20,12 @@ void main() {
       await tester.pumpAndSettle();
 
       // Verify Screen 1 headline text
-      expect(find.text('A private space'), findsOneWidget);
-      expect(find.text('for your spine journey.'), findsOneWidget);
+      expect(find.text('A calmer place'), findsOneWidget);
+      expect(find.text('to keep care together.'), findsOneWidget);
 
       // Verify subtext
       expect(
-        find.textContaining('Track check-ins, routines, and questions'),
+        find.textContaining('Build a simple record of check-ins'),
         findsOneWidget,
       );
 
@@ -66,8 +66,8 @@ void main() {
     // Step 2 -> Step 3
     await tester.tap(find.text('Next'));
     await tester.pumpAndSettle();
-    expect(find.text('Your data'), findsOneWidget);
-    expect(find.text('stays with you.'), findsOneWidget);
+    expect(find.text('Your records'), findsOneWidget);
+    expect(find.text('stay in your hands.'), findsOneWidget);
     expect(find.text('Get started'), findsOneWidget);
   });
 }

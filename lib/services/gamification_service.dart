@@ -12,7 +12,7 @@ const int kXpStretch = 30;
 const int kXpJournal = 25;
 const int kXpAngle = 50;
 const int kXpAppointment = 40;
-const int kXpProfileCompletion = 250;
+const int kXpProfileCompletion = 0;
 const int kXpDailyBonus = 5;
 const int kDailyXpTarget = 600;
 
@@ -117,7 +117,9 @@ class GamificationService {
     final startOfDay = DateTime(now.year, now.month, now.day);
     final endOfDay = startOfDay.add(const Duration(days: 1));
     final events = await _db.getEventsByDateRange(userId, startOfDay, endOfDay);
-    return events.isEmpty;
+    return events
+        .where((event) => event.type != EventType.profileCompleted)
+        .isEmpty;
   }
 
   Future<bool> hasLoggedAngleToday(String userId) async {

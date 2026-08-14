@@ -80,16 +80,11 @@ class _LearnScreenState extends State<LearnScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Learn', style: theme.textTheme.headlineMedium),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Plain-language explanations from source-linked topics. SpineUp records and educates; it does not diagnose or prescribe.',
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                      height: 1.4,
-                    ),
+                  _LearnHero(
+                    activeSection: _section,
+                    topicCount: spineUpLearnTopics.length,
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 18),
                   Card(
                     elevation: 0,
                     color: theme.colorScheme.surfaceContainer,
@@ -203,6 +198,15 @@ class _LearnScreenState extends State<LearnScreen> {
                       ),
                     ),
                   ],
+                  const SizedBox(height: 18),
+                  _LearnSectionHeader(
+                    label: _section == 'Topics'
+                        ? 'Topic guides'
+                        : '$_section library',
+                    detail: _section == 'Topics'
+                        ? '${topics.length} clear, source-linked answers'
+                        : 'Curated to keep browsing focused',
+                  ),
                   const SizedBox(height: 8),
                 ],
               ),
@@ -221,7 +225,15 @@ class _LearnScreenState extends State<LearnScreen> {
                 padding: const EdgeInsets.fromLTRB(20, 8, 20, 120),
                 sliver: SliverList.separated(
                   itemCount: topics.length,
-                  separatorBuilder: (_, _) => const SizedBox(height: 12),
+                  separatorBuilder: (_, _) => Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    child: Divider(
+                      height: 1,
+                      color: theme.colorScheme.outlineVariant.withValues(
+                        alpha: 0.55,
+                      ),
+                    ),
+                  ),
                   itemBuilder: (context, index) =>
                       _LearnTopicCard(topic: topics[index]),
                 ),
@@ -247,6 +259,125 @@ class _LearnScreenState extends State<LearnScreen> {
   }
 }
 
+class _LearnHero extends StatelessWidget {
+  final String activeSection;
+  final int topicCount;
+
+  const _LearnHero({required this.activeSection, required this.topicCount});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.primary.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: theme.colorScheme.primary.withValues(alpha: 0.16),
+        ),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: theme.colorScheme.surface.withValues(alpha: 0.76),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              activeSection == 'Videos'
+                  ? Icons.play_circle_outline_rounded
+                  : activeSection == 'Articles'
+                  ? Icons.article_outlined
+                  : activeSection == 'Saved'
+                  ? Icons.bookmark_outline_rounded
+                  : Icons.auto_stories_rounded,
+              color: theme.colorScheme.primary,
+            ),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  activeSection == 'Topics'
+                      ? 'Learn'
+                      : '$activeSection, chosen with care.',
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 5),
+                Text(
+                  activeSection == 'Topics'
+                      ? 'At your own pace: $topicCount plain-language guides with sources and clear limits.'
+                      : 'Browse trusted material without turning SpineUp into an endless feed.',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                    height: 1.4,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _LearnSectionHeader extends StatelessWidget {
+  final String label;
+  final String detail;
+
+  const _LearnSectionHeader({required this.label, required this.detail});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Container(
+              width: 4,
+              height: 22,
+              decoration: BoxDecoration(
+                color: theme.colorScheme.primary,
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            const SizedBox(width: 9),
+            Text(
+              label,
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 4),
+        Text(
+          detail,
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
+        ),
+        const SizedBox(height: 10),
+        Divider(
+          height: 1,
+          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.7),
+        ),
+      ],
+    );
+  }
+}
+
 class _LearnTopicCard extends StatelessWidget {
   final LearnTopic topic;
 
@@ -258,7 +389,12 @@ class _LearnTopicCard extends StatelessWidget {
     return Card(
       elevation: 0,
       color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.75),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+        side: BorderSide(
+          color: theme.colorScheme.primary.withValues(alpha: 0.12),
+        ),
+      ),
       child: InkWell(
         borderRadius: BorderRadius.circular(20),
         onTap: () => showLearnTopicDetail(context, topic),

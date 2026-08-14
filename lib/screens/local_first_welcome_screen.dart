@@ -22,57 +22,37 @@ class LocalFirstWelcomeScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'SPINEUP',
-                    style: GoogleFonts.outfit(
-                      color: AppTheme.profileSage,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 2.2,
-                    ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 7,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppTheme.profileSoftSage,
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Text(
-                      'Private by default',
-                      style: GoogleFonts.outfit(
-                        color: AppTheme.profileSage,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
-                ],
+              const SizedBox(height: 6),
+              Text(
+                'Before you begin',
+                style: GoogleFonts.outfit(
+                  color: AppTheme.profileMuted,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.4,
+                ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 8),
               Expanded(
                 child: SingleChildScrollView(
                   physics: const BouncingScrollPhysics(),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      const SizedBox(height: 12),
                       SizedBox(
-                        height: 330,
-                        child: Image.asset(
-                          'assets/onboarding/onboarding_data_stays_yours.png',
-                          fit: BoxFit.contain,
-                          filterQuality: FilterQuality.high,
+                        height: 340,
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(28),
+                          child: Image.asset(
+                            'assets/onboarding/onboarding_data_stays_yours_textured.png',
+                            fit: BoxFit.contain,
+                            filterQuality: FilterQuality.high,
+                          ),
                         ),
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 18),
                       Text(
-                        'Start with\nprivacy.',
+                        'Build your\ncare space.',
                         style: GoogleFonts.fraunces(
                           color: AppTheme.foregroundDark,
                           fontSize: 40,
@@ -83,7 +63,7 @@ class LocalFirstWelcomeScreen extends StatelessWidget {
                       ),
                       const SizedBox(height: 12),
                       Text(
-                        'Set up a private care profile for you or someone you care for. No account is required to begin.',
+                        'Set up a profile for yourself or someone you care for. You can keep simple records, routines, and questions together from the start.',
                         style: GoogleFonts.outfit(
                           color: AppTheme.profileMuted,
                           fontSize: 15,
@@ -109,11 +89,11 @@ class LocalFirstWelcomeScreen extends StatelessWidget {
                     fontWeight: FontWeight.w700,
                   ),
                 ),
-                child: const Text('Start privately'),
+                child: const Text('Set up a profile'),
               ),
               const SizedBox(height: 10),
               Text(
-                'Your data stays on this phone by default. You can export a protected copy later.',
+                'Your records stay on this phone unless you choose to export a protected copy.',
                 textAlign: TextAlign.center,
                 style: GoogleFonts.outfit(
                   color: AppTheme.profileMuted,

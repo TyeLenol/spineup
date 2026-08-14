@@ -24,7 +24,6 @@ class StepBasics extends StatefulWidget {
 class _StepBasicsState extends State<StepBasics> {
   late TextEditingController _nameController;
   late TextEditingController _dobController;
-  late Sex _sex;
   String _dobIso = '';
   TreatmentStage? _stage;
 
@@ -36,7 +35,6 @@ class _StepBasicsState extends State<StepBasics> {
     );
     _dobIso = widget.initialData.basics.dob;
     _dobController = TextEditingController(text: _formatDisplayDate(_dobIso));
-    _sex = widget.initialData.basics.sex;
     _stage = widget.initialData.story.treatmentStage;
 
     _nameController.addListener(_validate);
@@ -74,7 +72,7 @@ class _StepBasicsState extends State<StepBasics> {
         basics: ProfileBasics(
           displayName: _nameController.text.trim(),
           dob: _dobIso,
-          sex: _sex,
+          sex: Sex.none,
         ),
         story: widget.initialData.story.copyWith(treatmentStage: _stage),
       ),
@@ -137,27 +135,7 @@ class _StepBasicsState extends State<StepBasics> {
             ),
           ),
         ),
-        const SizedBox(height: 24),
-        ProfileField(
-          label: 'Sex assigned at birth (optional)',
-          helpTopicId: 'sex-assigned-at-birth',
-          hint:
-              'Optional. This is kept only as part of the local profile; you can skip it.',
-          child: ProfileChipGroup<Sex>(
-            selectedValue: _sex,
-            onChanged: (v) {
-              setState(() => _sex = (_sex == v) ? Sex.none : v);
-              _save();
-              _validate();
-            },
-            options: const [
-              ChipOption(value: Sex.female, label: 'Female'),
-              ChipOption(value: Sex.male, label: 'Male'),
-              ChipOption(value: Sex.intersex, label: 'Intersex'),
-              ChipOption(value: Sex.preferNot, label: 'Prefer not to say'),
-            ],
-          ),
-        ),
+
         const SizedBox(height: 24),
         ProfileField(
           label: widget.isCaregiverMode
