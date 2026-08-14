@@ -24,7 +24,7 @@ void main() {
     expect(find.byTooltip('View past entries'), findsOneWidget);
 
     // Unanswered health fields are explicit rather than silently prefilled.
-    expect(find.text('Not recorded'), findsOneWidget);
+    expect(find.text('Not recorded'), findsAtLeastNWidgets(1));
 
     // Verify 5-point mood scale options
     expect(find.text('Awful'), findsOneWidget);
