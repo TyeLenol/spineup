@@ -4,6 +4,29 @@ enum ExternalContentKind { article, video }
 
 enum ExternalVideoProvider { youtube, web }
 
+enum ExternalContentDeliveryMode {
+  curatedBrief,
+  rssDiscovery,
+  sourcePage,
+  youtubeEmbed,
+}
+
+class ExternalContentSection {
+  final String heading;
+  final String body;
+
+  const ExternalContentSection({required this.heading, required this.body});
+
+  Map<String, dynamic> toJson() => {'heading': heading, 'body': body};
+
+  factory ExternalContentSection.fromJson(Map<String, dynamic> json) {
+    return ExternalContentSection(
+      heading: json['heading'] as String? ?? '',
+      body: json['body'] as String? ?? '',
+    );
+  }
+}
+
 class ExternalContentItem {
   final String id;
   final ExternalContentKind kind;
@@ -20,6 +43,13 @@ class ExternalContentItem {
   final ExternalVideoProvider? videoProvider;
   final String? thumbnailUrl;
   final bool isExerciseVideo;
+  final ExternalContentDeliveryMode deliveryMode;
+  final String? author;
+  final DateTime? reviewedAt;
+  final int? readingMinutes;
+  final List<String> keyTakeaways;
+  final List<ExternalContentSection> sections;
+  final String? limitations;
 
   const ExternalContentItem({
     required this.id,
@@ -37,9 +67,20 @@ class ExternalContentItem {
     this.videoProvider,
     this.thumbnailUrl,
     this.isExerciseVideo = false,
+    this.deliveryMode = ExternalContentDeliveryMode.sourcePage,
+    this.author,
+    this.reviewedAt,
+    this.readingMinutes,
+    this.keyTakeaways = const [],
+    this.sections = const [],
+    this.limitations,
   });
 
   bool get isVideo => kind == ExternalContentKind.video;
+
+  bool get hasCuratedBrief =>
+      deliveryMode == ExternalContentDeliveryMode.curatedBrief &&
+      sections.isNotEmpty;
 
   Map<String, dynamic> toJson() => {
     'id': id,
@@ -57,6 +98,13 @@ class ExternalContentItem {
     'videoProvider': videoProvider?.name,
     'thumbnailUrl': thumbnailUrl,
     'isExerciseVideo': isExerciseVideo,
+    'deliveryMode': deliveryMode.name,
+    'author': author,
+    'reviewedAt': reviewedAt?.toIso8601String(),
+    'readingMinutes': readingMinutes,
+    'keyTakeaways': keyTakeaways,
+    'sections': sections.map((section) => section.toJson()).toList(),
+    'limitations': limitations,
   };
 
   String encode() => jsonEncode(toJson());
@@ -64,6 +112,10 @@ class ExternalContentItem {
   factory ExternalContentItem.fromJson(Map<String, dynamic> json) {
     final kindName = json['kind'] as String? ?? 'article';
     final providerName = json['videoProvider'] as String?;
+    final deliveryName = json['deliveryMode'] as String?;
+    final rawTakeaways = json['keyTakeaways'];
+    final rawSections = json['sections'];
+
     return ExternalContentItem(
       id: json['id'] as String,
       kind: ExternalContentKind.values.firstWhere(
@@ -92,6 +144,31 @@ class ExternalContentItem {
             ),
       thumbnailUrl: json['thumbnailUrl'] as String?,
       isExerciseVideo: json['isExerciseVideo'] as bool? ?? false,
+      deliveryMode: deliveryName == null
+          ? (json['videoProvider'] == 'youtube'
+                ? ExternalContentDeliveryMode.youtubeEmbed
+                : ExternalContentDeliveryMode.sourcePage)
+          : ExternalContentDeliveryMode.values.firstWhere(
+              (value) => value.name == deliveryName,
+              orElse: () => ExternalContentDeliveryMode.sourcePage,
+            ),
+      author: json['author'] as String?,
+      reviewedAt: DateTime.tryParse(json['reviewedAt'] as String? ?? ''),
+      readingMinutes: (json['readingMinutes'] as num?)?.toInt(),
+      keyTakeaways: rawTakeaways is List
+          ? rawTakeaways.whereType<String>().toList()
+          : const [],
+      sections: rawSections is List
+          ? rawSections
+                .whereType<Map>()
+                .map(
+                  (section) => ExternalContentSection.fromJson(
+                    Map<String, dynamic>.from(section),
+                  ),
+                )
+                .toList()
+          : const [],
+      limitations: json['limitations'] as String?,
     );
   }
 

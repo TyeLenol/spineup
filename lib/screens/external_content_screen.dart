@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:youtube_player_iframe/youtube_player_iframe.dart';
@@ -403,13 +403,43 @@ class _ExternalContentDetailPageState extends State<ExternalContentDetailPage> {
 
   Future<void> _openExternal() async {
     final uri = Uri.tryParse(widget.item.contentUrl);
-    if (uri == null ||
-        !await launchUrl(uri, mode: LaunchMode.externalApplication)) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('SpineUp could not open that source.')),
-      );
+    if (uri == null) {
+      _showSourceError();
+      return;
     }
+
+    final openedInApp = await _tryLaunch(uri, LaunchMode.inAppBrowserView);
+    if (openedInApp || !mounted) return;
+
+    final openedExternally = await _tryLaunch(
+      uri,
+      LaunchMode.externalApplication,
+    );
+    if (!openedExternally) _showSourceError();
+  }
+
+  Future<bool> _tryLaunch(Uri uri, LaunchMode mode) async {
+    try {
+      return await launchUrl(uri, mode: mode);
+    } catch (_) {
+      return false;
+    }
+  }
+
+  void _showSourceError() {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: const Text(
+          'SpineUp could not open that source. Check your connection or copy the link below.',
+        ),
+        action: SnackBarAction(
+          label: 'Copy link',
+          onPressed: () =>
+              Clipboard.setData(ClipboardData(text: widget.item.contentUrl)),
+        ),
+      ),
+    );
   }
 
   @override
@@ -477,7 +507,10 @@ class _ExternalContentDetailPageState extends State<ExternalContentDetailPage> {
           ),
           if (!item.isVideo) ...[
             const SizedBox(height: 18),
-            _ExternalArticleReader(item: item),
+            if (item.hasCuratedBrief)
+              _CuratedBrief(item: item)
+            else
+              _SourceArticleCard(onOpenSource: _openExternal),
           ],
           const SizedBox(height: 14),
           Text(
@@ -629,89 +662,118 @@ class _ExternalSafetyCard extends StatelessWidget {
   }
 }
 
-class _ExternalArticleReader extends StatefulWidget {
+class _CuratedBrief extends StatelessWidget {
   final ExternalContentItem item;
 
-  const _ExternalArticleReader({required this.item});
+  const _CuratedBrief({required this.item});
 
   @override
-  State<_ExternalArticleReader> createState() => _ExternalArticleReaderState();
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            const Icon(Icons.auto_awesome_rounded, size: 18),
+            const SizedBox(width: 8),
+            Text(
+              'SpineUp reading brief',
+              style: theme.textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+            if (item.readingMinutes != null) ...[
+              const Spacer(),
+              Text(
+                '${item.readingMinutes} min read',
+                style: theme.textTheme.labelMedium?.copyWith(
+                  color: AppTheme.mutedForeground,
+                ),
+              ),
+            ],
+          ],
+        ),
+        const SizedBox(height: 14),
+        if (item.keyTakeaways.isNotEmpty) ...[
+          Text(
+            'Key points',
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          const SizedBox(height: 8),
+          ...item.keyTakeaways.map(
+            (takeaway) => Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(
+                    Icons.check_circle_outline_rounded,
+                    size: 18,
+                    color: theme.colorScheme.primary,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(child: Text(takeaway)),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+        ],
+        ...item.sections.map(
+          (section) => Padding(
+            padding: const EdgeInsets.only(bottom: 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  section.heading,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  section.body,
+                  style: theme.textTheme.bodyLarge?.copyWith(height: 1.55),
+                ),
+              ],
+            ),
+          ),
+        ),
+        if (item.author != null || item.reviewedAt != null)
+          Text(
+            [
+              if (item.author != null) 'Author: ${item.author}',
+              if (item.reviewedAt != null)
+                'Reviewed ${DateFormat.yMMMd().format(item.reviewedAt!)}',
+            ].join(' · '),
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: AppTheme.mutedForeground,
+            ),
+          ),
+        if (item.limitations != null) ...[
+          const SizedBox(height: 12),
+          Text(
+            item.limitations!,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: AppTheme.mutedForeground,
+              fontStyle: FontStyle.italic,
+              height: 1.4,
+            ),
+          ),
+        ],
+      ],
+    );
+  }
 }
 
-class _ExternalArticleReaderState extends State<_ExternalArticleReader> {
-  String? _body;
-  String? _error;
-  bool _loading = true;
+class _SourceArticleCard extends StatelessWidget {
+  final VoidCallback onOpenSource;
 
-  @override
-  void initState() {
-    super.initState();
-    _loadArticle();
-  }
-
-  Future<void> _loadArticle() async {
-    setState(() {
-      _loading = true;
-      _error = null;
-    });
-    try {
-      final response = await http
-          .get(Uri.parse(widget.item.contentUrl))
-          .timeout(const Duration(seconds: 12));
-      if (response.statusCode < 200 || response.statusCode >= 300) {
-        throw Exception('Source returned ${response.statusCode}.');
-      }
-      final body = _extractReadableText(response.body);
-      if (body.length < 120) {
-        throw Exception('This source does not expose readable text here.');
-      }
-      if (!mounted) return;
-      setState(() {
-        _body = body;
-        _loading = false;
-      });
-    } catch (_) {
-      if (!mounted) return;
-      setState(() {
-        _error = 'This source could not be read inside SpineUp right now.';
-        _loading = false;
-      });
-    }
-  }
-
-  String _extractReadableText(String html) {
-    var source = html;
-    final article = RegExp(
-      r'<article[\s\S]*?</article>',
-      caseSensitive: false,
-    ).firstMatch(source);
-    if (article != null) source = article.group(0)!;
-    source = source.replaceAll(
-      RegExp(
-        r'<(script|style|nav|header|footer|aside)[^>]*>[\s\S]*?</\1>',
-        caseSensitive: false,
-      ),
-      ' ',
-    );
-    source = source.replaceAll(
-      RegExp(r'<br\s*/?>', caseSensitive: false),
-      '\n',
-    );
-    source = source.replaceAll(
-      RegExp(r'</(p|h1|h2|h3|h4|li|section|div)>', caseSensitive: false),
-      '\n',
-    );
-    source = source.replaceAll(RegExp(r'<[^>]+>'), ' ');
-    source = source
-        .replaceAll(RegExp(r'&nbsp;'), ' ')
-        .replaceAll(RegExp(r'&amp;'), '&')
-        .replaceAll(RegExp(r'&quot;'), '"')
-        .replaceAll(RegExp(r'&#39;'), "'");
-    return source
-        .replaceAll(RegExp(r'[ \t]+'), ' ')
-        .replaceAll(RegExp(r'\n\s*\n+'), '\n\n')
-        .trim();
-  }
+  const _SourceArticleCard({required this.onOpenSource});
 
   @override
   Widget build(BuildContext context) {
@@ -721,36 +783,41 @@ class _ExternalArticleReaderState extends State<_ExternalArticleReader> {
       decoration: BoxDecoration(
         color: theme.colorScheme.surfaceContainer,
         borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.7),
+        ),
       ),
-      child: _loading
-          ? const Row(
-              children: [
-                SizedBox(
-                  width: 18,
-                  height: 18,
-                  child: CircularProgressIndicator(strokeWidth: 2),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(Icons.public_rounded, color: theme.colorScheme.primary),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  'Read this article on the original source',
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w800,
+                  ),
                 ),
-                SizedBox(width: 12),
-                Expanded(child: Text('Loading the source article…')),
-              ],
-            )
-          : _error != null
-          ? Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(_error!, style: theme.textTheme.bodyMedium),
-                const SizedBox(height: 10),
-                OutlinedButton.icon(
-                  onPressed: _loadArticle,
-                  icon: const Icon(Icons.refresh_rounded, size: 18),
-                  label: const Text('Try again'),
-                ),
-              ],
-            )
-          : Text(
-              _body!,
-              style: theme.textTheme.bodyLarge?.copyWith(height: 1.55),
-            ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'This live source keeps its own layout, accessibility features, and review information. SpineUp will open it in a secure in-app browser when available.',
+            style: theme.textTheme.bodySmall?.copyWith(height: 1.4),
+          ),
+          const SizedBox(height: 12),
+          OutlinedButton.icon(
+            onPressed: onOpenSource,
+            icon: const Icon(Icons.open_in_new_rounded, size: 18),
+            label: const Text('Read on source'),
+          ),
+        ],
+      ),
     );
   }
 }

@@ -14,14 +14,29 @@ class ExternalContentService {
 
   static const _feedSources = [
     (
-      url: 'https://digital.nhs.uk/feed/all-blog-feed.xml',
-      name: 'NHS England Digital',
-      category: 'General health',
+      url: 'https://medlineplus.gov/feeds/topics/scoliosis.xml',
+      name: 'MedlinePlus · Scoliosis',
+      category: 'Scoliosis education',
     ),
     (
-      url: 'https://medlineplus.gov/feeds/whatsnew.xml',
-      name: 'MedlinePlus',
-      category: 'General health',
+      url: 'https://medlineplus.gov/feeds/topics/spineinjuriesanddisorders.xml',
+      name: 'MedlinePlus · Spine',
+      category: 'Spine and back',
+    ),
+    (
+      url: 'https://medlineplus.gov/feeds/topics/backpain.xml',
+      name: 'MedlinePlus · Back pain',
+      category: 'Pain and movement',
+    ),
+    (
+      url: 'https://patient.info/health/rss',
+      name: 'Patient.info · Health guides',
+      category: 'Health guides',
+    ),
+    (
+      url: 'https://patient.info/rss',
+      name: 'Patient.info · Wellbeing',
+      category: 'Mindfulness and wellbeing',
     ),
   ];
 
@@ -42,6 +57,7 @@ class ExternalContentService {
           'External general exercise content. Check that it is suitable for you and stop if you feel pain or become unwell.',
       fetchedAt: _seedDate,
       videoProvider: ExternalVideoProvider.web,
+      deliveryMode: ExternalContentDeliveryMode.sourcePage,
       isExerciseVideo: true,
     ),
     ExternalContentItem(
@@ -59,6 +75,7 @@ class ExternalContentService {
       fetchedAt: _seedDate,
       videoId: 'LrEqpGsaT68',
       videoProvider: ExternalVideoProvider.youtube,
+      deliveryMode: ExternalContentDeliveryMode.youtubeEmbed,
       thumbnailUrl: 'https://i.ytimg.com/vi/LrEqpGsaT68/hqdefault.jpg',
     ),
     ExternalContentItem(
@@ -76,6 +93,7 @@ class ExternalContentService {
       fetchedAt: _seedDate,
       videoId: 'Xc1TuZ_14lQ',
       videoProvider: ExternalVideoProvider.youtube,
+      deliveryMode: ExternalContentDeliveryMode.youtubeEmbed,
       thumbnailUrl: 'https://i.ytimg.com/vi/Xc1TuZ_14lQ/hqdefault.jpg',
       isExerciseVideo: true,
     ),
@@ -92,6 +110,64 @@ class ExternalContentService {
       safetyLabel:
           'External health information. Use it to prepare questions, not as a substitute for personal care.',
       fetchedAt: _seedDate,
+      deliveryMode: ExternalContentDeliveryMode.curatedBrief,
+      reviewedAt: _reviewedDate,
+      readingMinutes: 4,
+      keyTakeaways: const [
+        'Posture is a habit that can be supported with small, comfortable adjustments.',
+        'A useful posture is one that lets you breathe and move without unnecessary strain.',
+        'Persistent or worrying symptoms should be discussed with a qualified professional.',
+      ],
+      sections: const [
+        ExternalContentSection(
+          heading: 'A practical starting point',
+          body:
+              'Posture is not one rigid position that you must hold all day. A more useful goal is to notice how you sit, stand, and move, then make small adjustments that feel comfortable and sustainable.',
+        ),
+        ExternalContentSection(
+          heading: 'Use this as a conversation starter',
+          body:
+              'General posture information can help you prepare questions for a clinician, physiotherapist, or other qualified professional. It cannot explain the cause of an individual person\'s symptoms.',
+        ),
+      ],
+      limitations:
+          'This is a SpineUp reading brief based on the linked MedlinePlus source, not a diagnosis or treatment plan.',
+    ),
+    ExternalContentItem(
+      id: 'curated-nhs-scoliosis-overview',
+      kind: ExternalContentKind.article,
+      title: 'Scoliosis: the basics',
+      summary:
+          'A short SpineUp reading brief based on the NHS scoliosis information page.',
+      sourceName: 'NHS',
+      sourceUrl: 'https://www.nhs.uk/conditions/scoliosis/',
+      contentUrl: 'https://www.nhs.uk/conditions/scoliosis/',
+      category: 'Scoliosis education',
+      safetyLabel:
+          'Educational information only. It does not diagnose scoliosis or predict how a curve will change.',
+      fetchedAt: _seedDate,
+      deliveryMode: ExternalContentDeliveryMode.curatedBrief,
+      reviewedAt: _reviewedDate,
+      readingMinutes: 3,
+      keyTakeaways: const [
+        'Scoliosis describes a sideways curve of the spine.',
+        'A clinician is the right person to assess symptoms, measurements, and treatment questions.',
+        'A health app can help you record experiences and prepare for conversations; it cannot replace assessment.',
+      ],
+      sections: const [
+        ExternalContentSection(
+          heading: 'What this brief covers',
+          body:
+              'This brief introduces the term scoliosis and explains why personal assessment belongs with a qualified healthcare professional. SpineUp records what a person chooses to track; it does not diagnose or predict progression.',
+        ),
+        ExternalContentSection(
+          heading: 'When to seek help',
+          body:
+              'If pain, weakness, numbness, breathing difficulty, or other worrying symptoms are new, severe, or worsening, seek appropriate medical advice rather than relying on an app.',
+        ),
+      ],
+      limitations:
+          'This is a concise SpineUp summary of the linked NHS source. Read the original source for the complete information and review date.',
     ),
     ExternalContentItem(
       id: 'curated-nhs-mindfulness',
@@ -107,10 +183,33 @@ class ExternalContentService {
       safetyLabel:
           'External wellbeing information. Mindfulness is not a replacement for help with severe or worsening distress.',
       fetchedAt: _seedDate,
+      deliveryMode: ExternalContentDeliveryMode.curatedBrief,
+      reviewedAt: _reviewedDate,
+      readingMinutes: 5,
+      keyTakeaways: const [
+        'Mindfulness exercises can be used as gentle wellbeing practices, not as a substitute for care.',
+        'Short, repeatable practices are often easier to fit into a routine than long sessions.',
+        'Stop and seek support if an exercise increases distress or feels unsafe.',
+      ],
+      sections: const [
+        ExternalContentSection(
+          heading: 'A gentle way to begin',
+          body:
+              'Mindfulness is the practice of noticing present-moment experience with curiosity. A short breathing or body-awareness exercise can be a low-pressure way to explore whether this kind of practice feels useful for you.',
+        ),
+        ExternalContentSection(
+          heading: 'Keep the boundary clear',
+          body:
+              'Mindfulness can support wellbeing, but it is not a replacement for professional help with severe, persistent, or worsening distress. Choose a comfortable pace and stop if the exercise feels unhelpful.',
+        ),
+      ],
+      limitations:
+          'This is a SpineUp reading brief based on the linked NHS Foundation Trust source, not medical or mental-health treatment.',
     ),
   ];
 
   static final _seedDate = DateTime(2026, 8, 13);
+  static final _reviewedDate = DateTime(2026, 8, 14);
 
   static Future<List<ExternalContentItem>> loadContent({
     bool refresh = false,
@@ -224,6 +323,7 @@ class ExternalContentService {
                   'External health information. Review the source and speak with a qualified professional about personal concerns.',
               publishedAt: DateTime.tryParse(item.pubDate ?? ''),
               fetchedAt: DateTime.now(),
+              deliveryMode: ExternalContentDeliveryMode.rssDiscovery,
             ),
           );
         }
@@ -292,8 +392,10 @@ class ExternalContentService {
       'mindfulness',
       'stress',
       'wellness',
+      'wellbeing',
       'pain',
       'mental health',
+      'mindful',
     ];
     return keywords.any(lower.contains);
   }

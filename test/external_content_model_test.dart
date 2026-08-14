@@ -20,6 +20,7 @@ void main() {
       videoProvider: ExternalVideoProvider.youtube,
       thumbnailUrl: 'https://i.ytimg.com/vi/abc123/hqdefault.jpg',
       isExerciseVideo: true,
+      deliveryMode: ExternalContentDeliveryMode.youtubeEmbed,
     );
 
     final decoded = ExternalContentItem.decode(item.encode());
@@ -28,7 +29,38 @@ void main() {
     expect(decoded.kind, ExternalContentKind.video);
     expect(decoded.videoId, 'abc123');
     expect(decoded.videoProvider, ExternalVideoProvider.youtube);
+    expect(decoded.deliveryMode, ExternalContentDeliveryMode.youtubeEmbed);
     expect(decoded.isExerciseVideo, isTrue);
     expect(decoded.title, item.title);
+  });
+
+  test('curated briefs preserve readable sections and metadata', () {
+    final item = ExternalContentItem(
+      id: 'article-brief',
+      kind: ExternalContentKind.article,
+      title: 'A reviewed brief',
+      summary: 'A concise source-aware brief.',
+      sourceName: 'Example source',
+      sourceUrl: 'https://example.com/source',
+      contentUrl: 'https://example.com/source',
+      category: 'Education',
+      safetyLabel: 'Educational content.',
+      fetchedAt: DateTime(2026, 8, 13),
+      deliveryMode: ExternalContentDeliveryMode.curatedBrief,
+      readingMinutes: 4,
+      keyTakeaways: const ['Takeaway one'],
+      sections: const [
+        ExternalContentSection(heading: 'A heading', body: 'A readable body.'),
+      ],
+      limitations: 'A limitation.',
+    );
+
+    final decoded = ExternalContentItem.decode(item.encode());
+
+    expect(decoded.hasCuratedBrief, isTrue);
+    expect(decoded.readingMinutes, 4);
+    expect(decoded.keyTakeaways, ['Takeaway one']);
+    expect(decoded.sections.single.heading, 'A heading');
+    expect(decoded.limitations, 'A limitation.');
   });
 }
