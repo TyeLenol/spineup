@@ -154,6 +154,7 @@ class _ExternalContentSectionState extends State<ExternalContentSection> {
         SizedBox(
           height: 40,
           child: ListView.separated(
+            padding: const EdgeInsets.symmetric(horizontal: 2),
             scrollDirection: Axis.horizontal,
             itemCount: categories.length,
             separatorBuilder: (_, _) => const SizedBox(width: 8),
@@ -170,6 +171,15 @@ class _ExternalContentSectionState extends State<ExternalContentSection> {
         const SizedBox(height: 12),
         Row(
           children: [
+            Container(
+              width: 4,
+              height: 22,
+              decoration: BoxDecoration(
+                color: theme.colorScheme.primary,
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            const SizedBox(width: 9),
             Text(
               widget.kindFilter == null
                   ? 'Saved content'
@@ -186,23 +196,36 @@ class _ExternalContentSectionState extends State<ExternalContentSection> {
             ),
           ],
         ),
+        const SizedBox(height: 4),
+        Divider(
+          height: 1,
+          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.7),
+        ),
+        const SizedBox(height: 12),
         if (items.isEmpty)
           _ExternalContentEmptyState(savedOnly: widget.kindFilter == null)
         else
-          ...items.map(
-            (item) => Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: ExternalContentCard(
-                item: item,
-                saved: _savedIds.contains(item.id),
-                inRoutine: _routineIds.contains(item.id),
-                onToggleSaved: () => _toggleSaved(item),
-                onToggleRoutine: item.isExerciseVideo
-                    ? () => _toggleRoutine(item)
-                    : null,
+          for (var index = 0; index < items.length; index++) ...[
+            if (index > 0)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: Divider(
+                  height: 1,
+                  color: theme.colorScheme.outlineVariant.withValues(
+                    alpha: 0.55,
+                  ),
+                ),
               ),
+            ExternalContentCard(
+              item: items[index],
+              saved: _savedIds.contains(items[index].id),
+              inRoutine: _routineIds.contains(items[index].id),
+              onToggleSaved: () => _toggleSaved(items[index]),
+              onToggleRoutine: items[index].isExerciseVideo
+                  ? () => _toggleRoutine(items[index])
+                  : null,
             ),
-          ),
+          ],
       ],
     );
   }
@@ -231,7 +254,12 @@ class ExternalContentCard extends StatelessWidget {
     return Card(
       elevation: 0,
       color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.75),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+        side: BorderSide(
+          color: theme.colorScheme.primary.withValues(alpha: 0.12),
+        ),
+      ),
       child: InkWell(
         borderRadius: BorderRadius.circular(20),
         onTap: () => Navigator.of(context).push(

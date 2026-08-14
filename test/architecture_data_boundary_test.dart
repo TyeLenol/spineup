@@ -157,7 +157,7 @@ void main() {
     },
   );
 
-  test('profile completion uses the authoritative ledger reward', () async {
+  test('profile completion is recorded without awarding starter XP', () async {
     final service = GamificationService(db: dbHelper);
     final result = await service.logEvent(
       eventId: uuid.v4(),
@@ -169,9 +169,10 @@ void main() {
       },
     );
 
-    expect(result.xpAwarded, 250);
+    expect(result.xpAwarded, 0);
     expect(result.dailyBonusAwarded, isFalse);
-    expect((await service.getSnapshot(userId)).totalXp, 250);
+    expect((await service.getSnapshot(userId)).totalXp, 0);
+    expect((await service.getSnapshot(userId)).currentLevel, 1);
   });
 
   test(
