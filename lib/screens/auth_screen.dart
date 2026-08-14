@@ -21,14 +21,12 @@ class AuthScreen extends StatefulWidget {
   final VoidCallback? onBack;
   final void Function(AuthMode mode) onSwitchMode;
   final VoidCallback onSuccess;
-  final VoidCallback onGuestSuccess;
 
   const AuthScreen({
     super.key,
     required this.mode,
     required this.onSwitchMode,
     required this.onSuccess,
-    required this.onGuestSuccess,
     this.onBack,
   });
 
@@ -151,86 +149,13 @@ class _AuthScreenState extends State<AuthScreen> {
     );
   }
 
-  void _showGuestWarningModal() {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          backgroundColor: AppTheme.backgroundCream,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(24),
-          ),
-          title: Text(
-            'Continue as guest?',
-            style: GoogleFonts.fraunces(
-              fontSize: 24,
-              fontWeight: FontWeight.w700,
-              color: AppTheme.foregroundDark,
-              height: 1.1,
-              letterSpacing: -0.5,
-            ),
-          ),
-          content: Text(
-            'Guest data stays on this device and will be lost if you change devices. Use protected export/import when you want to move records to another device.',
-            style: GoogleFonts.outfit(
-              fontSize: 15,
-              height: 1.4,
-              color: AppTheme.mutedForeground,
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: Text(
-                'Cancel',
-                style: GoogleFonts.outfit(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
-                  color: AppTheme.mutedForeground,
-                ),
-              ),
-            ),
-            FilledButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-                widget.onGuestSuccess();
-              },
-              style: FilledButton.styleFrom(
-                backgroundColor: AppTheme.primarySage,
-                foregroundColor: AppTheme.onPrimaryDark,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 12,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
-                ),
-              ),
-              child: Text(
-                'Continue',
-                style: GoogleFonts.outfit(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
   // ── Build ───────────────────────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
     EdgeToEdgeHelper.configureSystemUi(context);
-    final accentColor = _isLogin
-        ? AppTheme.primarySage
-        : AppTheme.secondaryCoral;
-    final bgColor = _isLogin
-        ? const Color(0xFFF0F5F4)
-        : const Color(0xFFFDF5F2);
+    final accentColor = AppTheme.profileSage;
+    final bgColor = AppTheme.profileCanvas;
 
     return Scaffold(
       backgroundColor: bgColor,
@@ -251,34 +176,10 @@ class _AuthScreenState extends State<AuthScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Top Row: Back button & Guest action
+                    // Account access is kept for a future real account path;
+                    // local-first entry no longer appears as a guest escape hatch.
                     const SizedBox(height: 8),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        AuthBackButton(onBack: widget.onBack),
-                        TextButton(
-                          onPressed: _showGuestWarningModal,
-                          style: TextButton.styleFrom(
-                            foregroundColor: AppTheme.foregroundDark,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 8,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                          ),
-                          child: Text(
-                            'Continue as guest',
-                            style: GoogleFonts.outfit(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
+                    AuthBackButton(onBack: widget.onBack),
                     const SizedBox(height: 24),
 
                     // Heading
