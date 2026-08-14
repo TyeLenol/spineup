@@ -8,6 +8,7 @@ import 'learn_screen.dart';
 import '../services/gamification_service.dart';
 import '../services/session_service.dart';
 import '../theme/app_theme.dart';
+import '../widgets/action_reward_feedback.dart';
 import 'activity_history_screen.dart';
 import 'cobb_angle_logger_modal.dart';
 import 'appointment_logger_modal.dart';
@@ -58,16 +59,11 @@ class _MyJourneyScreenState extends State<MyJourneyScreen>
   void _handleLogged(LogEventResult result) async {
     await _loadAll();
     if (!mounted) return;
-    final bonus = result.dailyBonusAwarded ? ' +5 daily bonus!' : '';
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          'Record saved${result.xpAwarded > 0 ? ' · +${result.xpAwarded} XP$bonus' : ''}',
-        ),
-        backgroundColor: AppTheme.primarySage,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      ),
+    showActionRewardFeedback(
+      context,
+      title: 'Record saved',
+      xpAwarded: result.xpAwarded,
+      dailyBonusAwarded: result.dailyBonusAwarded,
     );
   }
 
