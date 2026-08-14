@@ -147,16 +147,19 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   child: Row(
                     children: [
                       SizedBox(
-                        width: 48,
+                        width: 72,
                         height: 48,
-                        child: _currentStep > 1
-                            ? OnboardingIconButton(
-                                icon: Icons.arrow_back_rounded,
-                                label: 'Go back',
-                                onClick: _previous,
-                                tint: screen.tint,
-                              )
-                            : const SizedBox.shrink(),
+                        child: Align(
+                          alignment: Alignment.centerLeft,
+                          child: _currentStep > 1
+                              ? OnboardingIconButton(
+                                  icon: Icons.arrow_back_rounded,
+                                  label: 'Go back',
+                                  onClick: _previous,
+                                  tint: screen.tint,
+                                )
+                              : const SizedBox.shrink(),
+                        ),
                       ),
                       const Spacer(),
                       ProgressDots(
@@ -166,16 +169,19 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       ),
                       const Spacer(),
                       SizedBox(
-                        width: 48,
+                        width: 72,
                         height: 48,
-                        child: _currentStep < total
-                            ? OnboardingSmallLink(
-                                text: 'Skip',
-                                ariaLabel: 'Skip onboarding',
-                                onClick: _complete,
-                                tint: screen.tint,
-                              )
-                            : const SizedBox.shrink(),
+                        child: Align(
+                          alignment: Alignment.centerRight,
+                          child: _currentStep < total
+                              ? OnboardingSmallLink(
+                                  text: 'Skip',
+                                  ariaLabel: 'Skip onboarding',
+                                  onClick: _complete,
+                                  tint: screen.tint,
+                                )
+                              : const SizedBox.shrink(),
+                        ),
                       ),
                     ],
                   ),
@@ -183,7 +189,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 Expanded(
                   child: AnimatedSwitcher(
                     duration: Duration(
-                      milliseconds: disableAnimations ? 0 : 520,
+                      milliseconds: disableAnimations ? 0 : 300,
                     ),
                     switchInCurve: Curves.easeOutCubic,
                     switchOutCurve: Curves.easeInCubic,
@@ -192,28 +198,20 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       children: [...previousChildren, ?currentChild],
                     ),
                     transitionBuilder: (child, animation) {
-                      final slide =
+                      final settle =
                           Tween<Offset>(
-                            begin: const Offset(0.08, 0.025),
+                            begin: const Offset(0, 0.018),
                             end: Offset.zero,
                           ).animate(
                             CurvedAnimation(
                               parent: animation,
                               curve: Curves.easeOutCubic,
+                              reverseCurve: Curves.easeInCubic,
                             ),
                           );
-                      final scale = Tween<double>(begin: 0.965, end: 1).animate(
-                        CurvedAnimation(
-                          parent: animation,
-                          curve: Curves.easeOutBack,
-                        ),
-                      );
                       return FadeTransition(
                         opacity: animation,
-                        child: SlideTransition(
-                          position: slide,
-                          child: ScaleTransition(scale: scale, child: child),
-                        ),
+                        child: SlideTransition(position: settle, child: child),
                       );
                     },
                     child: Padding(
@@ -224,9 +222,19 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   ),
                 ),
                 AnimatedSwitcher(
-                  duration: Duration(milliseconds: disableAnimations ? 0 : 360),
+                  duration: Duration(milliseconds: disableAnimations ? 0 : 260),
                   switchInCurve: Curves.easeOutCubic,
                   switchOutCurve: Curves.easeInCubic,
+                  transitionBuilder: (child, animation) => FadeTransition(
+                    opacity: animation,
+                    child: SlideTransition(
+                      position: Tween<Offset>(
+                        begin: const Offset(0, 0.012),
+                        end: Offset.zero,
+                      ).animate(animation),
+                      child: child,
+                    ),
+                  ),
                   child: Padding(
                     key: ValueKey('copy-$_currentStep'),
                     padding: const EdgeInsets.fromLTRB(24, 10, 24, 24),
