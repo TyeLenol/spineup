@@ -82,26 +82,29 @@ class _KeycapCtaState extends State<KeycapCta> {
                 padding: EdgeInsets.symmetric(
                   horizontal: widget.compact ? 14.0 : 32.0,
                 ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      widget.label,
-                      style: TextStyle(
-                        color: widget.text,
-                        fontSize: widget.compact ? 15.0 : 16.0,
-                        fontWeight: FontWeight.bold,
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        widget.label,
+                        style: TextStyle(
+                          color: widget.text,
+                          fontSize: widget.compact ? 15.0 : 16.0,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
-                    ),
-                    if (widget.icon != null) ...[
-                      SizedBox(width: widget.compact ? 8.0 : 10.0),
-                      Icon(
-                        widget.icon,
-                        color: widget.text,
-                        size: widget.compact ? 18.0 : 20.0,
-                      ),
+                      if (widget.icon != null) ...[
+                        SizedBox(width: widget.compact ? 8.0 : 10.0),
+                        Icon(
+                          widget.icon,
+                          color: widget.text,
+                          size: widget.compact ? 18.0 : 20.0,
+                        ),
+                      ],
                     ],
-                  ],
+                  ),
                 ),
               ),
             ],
