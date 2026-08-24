@@ -24,7 +24,7 @@ class LocalFirstWelcomeScreen extends StatelessWidget {
             children: [
               const SizedBox(height: 6),
               Text(
-                'Before you begin',
+                'A gentle place to begin',
                 style: GoogleFonts.outfit(
                   color: AppTheme.profileMuted,
                   fontSize: 13,
@@ -44,7 +44,7 @@ class LocalFirstWelcomeScreen extends StatelessWidget {
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(28),
                           child: Image.asset(
-                            'assets/onboarding/onboarding_data_stays_yours_textured.png',
+                            'assets/onboarding/onboarding_keep_your_path_close.png',
                             fit: BoxFit.contain,
                             filterQuality: FilterQuality.high,
                           ),
@@ -52,7 +52,7 @@ class LocalFirstWelcomeScreen extends StatelessWidget {
                       ),
                       const SizedBox(height: 18),
                       Text(
-                        'Build your\ncare space.',
+                        'Make room for\ncare.',
                         style: GoogleFonts.fraunces(
                           color: AppTheme.foregroundDark,
                           fontSize: 40,
@@ -63,7 +63,7 @@ class LocalFirstWelcomeScreen extends StatelessWidget {
                       ),
                       const SizedBox(height: 12),
                       Text(
-                        'Set up a profile for yourself or someone you care for. You can keep simple records, routines, and questions together from the start.',
+                        'Set up a space for yourself or someone you care for. Keep the small things together from the start—check-ins, routines, and questions.',
                         style: GoogleFonts.outfit(
                           color: AppTheme.profileMuted,
                           fontSize: 15,
@@ -89,7 +89,7 @@ class LocalFirstWelcomeScreen extends StatelessWidget {
                     fontWeight: FontWeight.w700,
                   ),
                 ),
-                child: const Text('Set up a profile'),
+                child: const Text('Set up my space'),
               ),
               const SizedBox(height: 10),
               Text(
