@@ -34,10 +34,10 @@ class _KeycapCtaState extends State<KeycapCta> {
     final disableAnimations = MediaQuery.of(context).disableAnimations;
 
     return Align(
-      alignment: compact ? Alignment.centerRight : Alignment.center,
+      alignment: widget.compact ? Alignment.centerRight : Alignment.center,
       child: ConstrainedBox(
         constraints: BoxConstraints(
-          maxWidth: compact ? 240.0 : 320.0,
+          maxWidth: widget.compact ? 240.0 : 320.0,
           minHeight: 56.0,
         ),
         child: GestureDetector(
@@ -80,7 +80,7 @@ class _KeycapCtaState extends State<KeycapCta> {
                 ),
                 alignment: Alignment.center,
                 padding: EdgeInsets.symmetric(
-                  horizontal: compact ? 22.0 : 32.0,
+                  horizontal: widget.compact ? 22.0 : 32.0,
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
