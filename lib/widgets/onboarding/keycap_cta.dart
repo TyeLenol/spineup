@@ -80,7 +80,7 @@ class _KeycapCtaState extends State<KeycapCta> {
                 ),
                 alignment: Alignment.center,
                 padding: EdgeInsets.symmetric(
-                  horizontal: widget.compact ? 22.0 : 32.0,
+                  horizontal: widget.compact ? 14.0 : 32.0,
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -89,13 +89,17 @@ class _KeycapCtaState extends State<KeycapCta> {
                       widget.label,
                       style: TextStyle(
                         color: widget.text,
-                        fontSize: 16.0,
+                        fontSize: widget.compact ? 15.0 : 16.0,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                     if (widget.icon != null) ...[
-                      const SizedBox(width: 10.0),
-                      Icon(widget.icon, color: widget.text, size: 20.0),
+                      SizedBox(width: widget.compact ? 8.0 : 10.0),
+                      Icon(
+                        widget.icon,
+                        color: widget.text,
+                        size: widget.compact ? 18.0 : 20.0,
+                      ),
                     ],
                   ],
                 ),
