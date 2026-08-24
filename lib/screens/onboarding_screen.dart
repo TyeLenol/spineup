@@ -11,6 +11,7 @@ class OnboardingScreenData {
   final Color tint;
   final Color tintSoft;
   final Color deep;
+  final String eyebrow;
   final List<String> headline;
   final String subtext;
   final String cta;
@@ -21,6 +22,7 @@ class OnboardingScreenData {
     required this.tint,
     required this.tintSoft,
     required this.deep,
+    required this.eyebrow,
     required this.headline,
     required this.subtext,
     required this.cta,
@@ -30,37 +32,40 @@ class OnboardingScreenData {
 
 const List<OnboardingScreenData> kOnboardingScreens = [
   OnboardingScreenData(
-    bg: Color(0xFFF7FAF8),
-    tint: Color(0xFF2F8668),
-    tintSoft: Color(0xFF68736D),
-    deep: Color(0xFF1F5F4B),
-    headline: ['A calmer place', 'to keep care together.'],
+    bg: Color(0xFFFFF8F0),
+    tint: Color(0xFF176B61),
+    tintSoft: Color(0xFF7B5A70),
+    deep: Color(0xFF104C47),
+    eyebrow: 'A gentle place to begin',
+    headline: ['Make room', 'for care.'],
     subtext:
-        'Build a simple record of check-ins, routines, and questions around what matters to you.',
+        'Keep check-ins, routines, and questions together—so the small things are easier to notice.',
     cta: 'Next',
-    imageAsset: 'assets/onboarding/onboarding_private_space_textured.png',
+    imageAsset: 'assets/onboarding/onboarding_make_room_for_care.png',
   ),
   OnboardingScreenData(
-    bg: Color(0xFFF7FAF8),
-    tint: Color(0xFF2F8668),
-    tintSoft: Color(0xFF68736D),
-    deep: Color(0xFF1F5F4B),
-    headline: ['Made for real life,', 'and real support.'],
+    bg: Color(0xFFFFF8F0),
+    tint: Color(0xFF176B61),
+    tintSoft: Color(0xFF7B5A70),
+    deep: Color(0xFF104C47),
+    eyebrow: 'For you or someone you care for',
+    headline: ['Care can', 'be shared.'],
     subtext:
-        'Set up a profile for yourself or someone you care for, with each person’s records kept separate.',
+        'Create a space for yourself or someone you care for, with each person’s records kept separate.',
     cta: 'Next',
-    imageAsset: 'assets/onboarding/onboarding_shared_care_textured.png',
+    imageAsset: 'assets/onboarding/onboarding_care_can_be_shared.png',
   ),
   OnboardingScreenData(
-    bg: Color(0xFFF7FAF8),
-    tint: Color(0xFF2F8668),
-    tintSoft: Color(0xFF68736D),
-    deep: Color(0xFF1F5F4B),
-    headline: ['Your records', 'stay in your hands.'],
+    bg: Color(0xFFFFF8F0),
+    tint: Color(0xFF176B61),
+    tintSoft: Color(0xFF7B5A70),
+    deep: Color(0xFF104C47),
+    eyebrow: 'Yours to carry',
+    headline: ['Keep your path', 'close.'],
     subtext:
-        'SpineUp works on this phone. When you choose, you can make a protected copy before moving to another device.',
-    cta: 'Get started',
-    imageAsset: 'assets/onboarding/onboarding_data_stays_yours_textured.png',
+        'SpineUp works on this phone. When you choose, you can export a protected copy for a new device.',
+    cta: 'Set up my space',
+    imageAsset: 'assets/onboarding/onboarding_keep_your_path_close.png',
   ),
 ];
 
@@ -189,7 +194,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 Expanded(
                   child: AnimatedSwitcher(
                     duration: Duration(
-                      milliseconds: disableAnimations ? 0 : 300,
+                      milliseconds: disableAnimations ? 0 : 380,
                     ),
                     switchInCurve: Curves.easeOutCubic,
                     switchOutCurve: Curves.easeInCubic,
@@ -245,7 +250,18 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Text(
+                            screen.eyebrow.toUpperCase(),
+                            style: GoogleFonts.outfit(
+                              color: screen.tint,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 1.2,
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          Text(
                             screen.headline[0],
+
                             style: GoogleFonts.fraunces(
                               color: screen.tint,
                               fontSize: 39,
@@ -270,9 +286,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           Text(
                             screen.subtext,
                             style: GoogleFonts.outfit(
-                              color: screen.tintSoft,
-                              fontSize: 14.5,
-                              height: 1.5,
+                              color: const Color(0xFF5C4B45),
+                              fontSize: 15,
+                              height: 1.55,
                             ),
                           ),
                           const SizedBox(height: 24),
@@ -297,32 +313,80 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 }
 
-class _OnboardingIllustration extends StatelessWidget {
+class _OnboardingIllustration extends StatefulWidget {
   final String asset;
 
   const _OnboardingIllustration({required this.asset});
 
   @override
+  State<_OnboardingIllustration> createState() =>
+      _OnboardingIllustrationState();
+}
+
+class _OnboardingIllustrationState extends State<_OnboardingIllustration>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _loopController;
+  late final Animation<double> _breath;
+
+  @override
+  void initState() {
+    super.initState();
+    _loopController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 8),
+    )..repeat(reverse: true);
+    _breath = Tween<double>(begin: -1, end: 1).animate(
+      CurvedAnimation(parent: _loopController, curve: Curves.easeInOutSine),
+    );
+  }
+
+  @override
+  void dispose() {
+    _loopController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return Semantics(
+    final reduceMotion = MediaQuery.of(context).disableAnimations;
+    final image = Semantics(
       image: true,
       label: 'A hand-drawn SpineUp onboarding illustration',
       child: ClipRRect(
         borderRadius: BorderRadius.circular(28),
         child: DecoratedBox(
           decoration: BoxDecoration(
-            color: const Color(0xFFF7FAF8),
+            color: const Color(0xFFFFF8F0),
             border: Border.all(
-              color: const Color(0xFF2F8668).withValues(alpha: 0.08),
+              color: const Color(0xFF176B61).withValues(alpha: 0.08),
             ),
             borderRadius: BorderRadius.circular(28),
           ),
           child: Image.asset(
-            asset,
+            widget.asset,
             fit: BoxFit.contain,
             filterQuality: FilterQuality.high,
           ),
         ),
+      ),
+    );
+
+    if (reduceMotion) {
+      if (_loopController.isAnimating) {
+        _loopController.stop(canceled: false);
+      }
+      return image;
+    }
+    if (!_loopController.isAnimating) {
+      _loopController.repeat(reverse: true);
+    }
+
+    return AnimatedBuilder(
+      animation: _breath,
+      child: image,
+      builder: (context, child) => Transform.translate(
+        offset: Offset(0, _breath.value * 2),
+        child: child,
       ),
     );
   }

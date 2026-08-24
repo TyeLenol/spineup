@@ -12,10 +12,10 @@ void main() {
       MaterialApp(home: LocalFirstWelcomeScreen(onStart: () => started = true)),
     );
 
-    expect(find.text('Set up a profile'), findsOneWidget);
+    expect(find.text('Set up my space'), findsOneWidget);
     expect(find.text('Continue as guest'), findsNothing);
 
-    await tester.tap(find.text('Set up a profile'));
+    await tester.tap(find.text('Set up my space'));
     await tester.pump();
 
     expect(started, isTrue);

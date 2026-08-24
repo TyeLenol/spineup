@@ -20,12 +20,12 @@ void main() {
       await tester.pumpAndSettle();
 
       // Verify Screen 1 headline text
-      expect(find.text('A calmer place'), findsOneWidget);
-      expect(find.text('to keep care together.'), findsOneWidget);
+      expect(find.text('Make room'), findsOneWidget);
+      expect(find.text('for care.'), findsOneWidget);
 
       // Verify subtext
       expect(
-        find.textContaining('Build a simple record of check-ins'),
+        find.textContaining('Keep check-ins, routines, and questions together'),
         findsOneWidget,
       );
 
@@ -37,8 +37,8 @@ void main() {
       await tester.pumpAndSettle();
 
       // Verify Screen 2 content
-      expect(find.text('Made for real life,'), findsOneWidget);
-      expect(find.text('and real support.'), findsOneWidget);
+      expect(find.text('Care can'), findsOneWidget);
+      expect(find.text('be shared.'), findsOneWidget);
       expect(find.text('Skip'), findsOneWidget);
     },
   );
@@ -61,13 +61,13 @@ void main() {
     // Step 1 -> Step 2
     await tester.tap(find.text('Next'));
     await tester.pumpAndSettle();
-    expect(find.text('Made for real life,'), findsOneWidget);
+    expect(find.text('Care can'), findsOneWidget);
 
     // Step 2 -> Step 3
     await tester.tap(find.text('Next'));
     await tester.pumpAndSettle();
-    expect(find.text('Your records'), findsOneWidget);
-    expect(find.text('stay in your hands.'), findsOneWidget);
-    expect(find.text('Get started'), findsOneWidget);
+    expect(find.text('Keep your path'), findsOneWidget);
+    expect(find.text('close.'), findsOneWidget);
+    expect(find.text('Set up my space'), findsOneWidget);
   });
 }
