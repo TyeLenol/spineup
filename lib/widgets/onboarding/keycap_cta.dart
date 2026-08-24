@@ -8,6 +8,8 @@ class KeycapCta extends StatefulWidget {
   final Color fill;
   final Color ink;
   final Color text;
+  final IconData? icon;
+  final bool compact;
 
   const KeycapCta({
     super.key,
@@ -16,6 +18,8 @@ class KeycapCta extends StatefulWidget {
     required this.fill,
     required this.ink,
     required this.text,
+    this.icon,
+    this.compact = false,
   });
 
   @override
@@ -29,9 +33,13 @@ class _KeycapCtaState extends State<KeycapCta> {
   Widget build(BuildContext context) {
     final disableAnimations = MediaQuery.of(context).disableAnimations;
 
-    return Center(
+    return Align(
+      alignment: compact ? Alignment.centerRight : Alignment.center,
       child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 320.0, minHeight: 56.0),
+        constraints: BoxConstraints(
+          maxWidth: compact ? 240.0 : 320.0,
+          minHeight: 56.0,
+        ),
         child: GestureDetector(
           onTapDown: (_) => setState(() => _isPressed = true),
           onTapUp: (_) {
@@ -71,14 +79,25 @@ class _KeycapCtaState extends State<KeycapCta> {
                   borderRadius: BorderRadius.circular(_isPressed ? 16.0 : 18.0),
                 ),
                 alignment: Alignment.center,
-                padding: const EdgeInsets.symmetric(horizontal: 32.0),
-                child: Text(
-                  widget.label,
-                  style: TextStyle(
-                    color: widget.text,
-                    fontSize: 16.0,
-                    fontWeight: FontWeight.bold,
-                  ),
+                padding: EdgeInsets.symmetric(
+                  horizontal: compact ? 22.0 : 32.0,
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      widget.label,
+                      style: TextStyle(
+                        color: widget.text,
+                        fontSize: 16.0,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    if (widget.icon != null) ...[
+                      const SizedBox(width: 10.0),
+                      Icon(widget.icon, color: widget.text, size: 20.0),
+                    ],
+                  ],
                 ),
               ),
             ],

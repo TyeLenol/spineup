@@ -36,10 +36,11 @@ void main() {
       await tester.tap(find.text('Next'));
       await tester.pumpAndSettle();
 
-      // Verify Screen 2 content
+      // Verify Screen 2 content and navigation placement
       expect(find.text('Care can'), findsOneWidget);
       expect(find.text('be shared.'), findsOneWidget);
       expect(find.text('Skip'), findsOneWidget);
+      expect(find.byIcon(Icons.arrow_back_rounded), findsOneWidget);
     },
   );
 
@@ -67,7 +68,33 @@ void main() {
     await tester.tap(find.text('Next'));
     await tester.pumpAndSettle();
     expect(find.text('Keep your path'), findsOneWidget);
+    expect(find.byIcon(Icons.arrow_back_rounded), findsOneWidget);
+    expect(find.text('Skip'), findsNothing);
     expect(find.text('close.'), findsOneWidget);
     expect(find.text('Set up my space'), findsOneWidget);
+  });
+
+  testWidgets('OnboardingScreen back control returns to the previous step', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.lightTheme,
+        home: const MediaQuery(
+          data: MediaQueryData(disableAnimations: true),
+          child: OnboardingScreen(),
+        ),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Next'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byIcon(Icons.arrow_back_rounded));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Make room'), findsOneWidget);
+    expect(find.text('for care.'), findsOneWidget);
+    expect(find.text('Skip'), findsOneWidget);
   });
 }
