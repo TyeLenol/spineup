@@ -2,7 +2,6 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
-import '../main.dart';
 import '../models/event.dart';
 import '../models/milestone.dart';
 import '../models/profile_data.dart';

@@ -333,6 +333,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       return;
     }
 
+    if (!mounted) return;
     final passphrase = await showArchivePassphraseDialog(
       context,
       confirm: false,
