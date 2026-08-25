@@ -29,6 +29,6 @@ void main() {
 
     expect(find.text('Check-in saved'), findsOneWidget);
     expect(find.text('+25 XP'), findsOneWidget);
-    expect(find.text('A small daily boost was added too.'), findsOneWidget);
+    expect(find.text('Saved · daily bonus included'), findsOneWidget);
   });
 }
