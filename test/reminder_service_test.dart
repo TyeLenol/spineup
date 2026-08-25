@@ -1,10 +1,16 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:spineup/services/reminder_service.dart';
 
 void main() {
   setUp(() {
+    debugDefaultTargetPlatformOverride = TargetPlatform.linux;
     SharedPreferences.setMockInitialValues({});
+  });
+
+  tearDown(() {
+    debugDefaultTargetPlatformOverride = null;
   });
 
   test('reminder settings default to off at 6:00 PM', () async {
