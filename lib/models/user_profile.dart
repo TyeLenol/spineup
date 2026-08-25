@@ -49,19 +49,19 @@ class UserProfile {
   const UserProfile({
     required this.presetId,
     this.customPhotoPath,
-    this.name = 'Alex',
-    this.diagnosis = 'Thoracic Curve',
-    this.braceStatus = 'Yes',
-    this.ageRange = '13-17',
+    this.name = 'You',
+    this.diagnosis = 'Not added',
+    this.braceStatus = 'Not added',
+    this.ageRange = 'Not added',
   });
 
   factory UserProfile.defaultProfile() {
     return const UserProfile(
       presetId: 'preset_sun',
-      name: 'Alex',
-      diagnosis: 'Thoracic Curve',
-      braceStatus: 'Yes',
-      ageRange: '13-17',
+      name: 'You',
+      diagnosis: 'Not added',
+      braceStatus: 'Not added',
+      ageRange: 'Not added',
     );
   }
 

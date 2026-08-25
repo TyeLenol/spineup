@@ -223,8 +223,17 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
             'Only fill in what you know from a clinic visit or report. If you do not have it handy, skip it and add it later.';
         secondaryLabel = 'I don\'t have this info';
         onSecondaryTap = _nextStep;
-        child = StepCurve(initialData: _data, onSave: (data) => _data = data);
-        _stepValid = true;
+        child = StepCurve(
+          initialData: _data,
+          onSave: (data) => _data = data,
+          onValidityChanged: (valid) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (mounted && _stepValid != valid) {
+                setState(() => _stepValid = valid);
+              }
+            });
+          },
+        );
         break;
       case 5:
         title = isWard ? 'Their care routine.' : 'Your care routine.';

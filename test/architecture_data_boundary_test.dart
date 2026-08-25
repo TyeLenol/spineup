@@ -216,7 +216,7 @@ void main() {
     },
   );
 
-  test('profile mapper produces one runtime summary from onboarding data', () {
+  test('profile mapper preserves explicitly selected curve data', () {
     const data = ProfileData(
       basics: ProfileBasics(displayName: 'Morgan', dob: '2010-01-01'),
       curve: ProfileCurve(curveType: CurveType.doubleS),
@@ -229,6 +229,15 @@ void main() {
     expect(runtime.diagnosis, 'Double Major');
     expect(runtime.braceStatus, 'No');
     expect(runtime.ageRange, '13-17');
+  });
+
+  test('profile mapper keeps skipped clinical fields neutral', () {
+    final runtime = ProfileMapper.toRuntimeProfile(const ProfileData());
+
+    expect(runtime.name, 'You');
+    expect(runtime.diagnosis, 'Not added');
+    expect(runtime.braceStatus, 'Not added');
+    expect(runtime.ageRange, 'Not added');
   });
 
   test(

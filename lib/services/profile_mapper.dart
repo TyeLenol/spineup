@@ -11,10 +11,10 @@ class ProfileMapper {
     ProfileData data, {
     UserProfile fallback = const UserProfile(
       presetId: 'preset_sun',
-      name: 'Alex',
-      diagnosis: 'Thoracic Curve',
-      braceStatus: 'Yes',
-      ageRange: '13-17',
+      name: 'You',
+      diagnosis: 'Not added',
+      braceStatus: 'Not added',
+      ageRange: 'Not added',
     ),
   }) {
     final name = data.basics.displayName.trim();
