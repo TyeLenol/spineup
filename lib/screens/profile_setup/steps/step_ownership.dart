@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import '../../../models/profile_data.dart';
+import '../../../theme/app_theme.dart';
 import '../profile_fields.dart';
 
 class StepOwnership extends StatefulWidget {
@@ -88,6 +90,8 @@ class _StepOwnershipState extends State<StepOwnership> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        const _PrivateSpaceNote(),
+        const SizedBox(height: 18),
         ProfileField(
           label: 'Who is this profile for?',
           hint: widget.allowSelf
@@ -128,6 +132,39 @@ class _StepOwnershipState extends State<StepOwnership> {
           ),
         ],
       ],
+    );
+  }
+}
+
+class _PrivateSpaceNote extends StatelessWidget {
+  const _PrivateSpaceNote();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(14, 13, 14, 13),
+      decoration: BoxDecoration(
+        color: AppTheme.profileWarm.withValues(alpha: 0.22),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: AppTheme.profileWarm.withValues(alpha: 0.48)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(Icons.lock_outline_rounded, color: AppTheme.profileAction),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              'Private by default. Your information starts on this phone, and you choose if or when to export a protected copy.',
+              style: GoogleFonts.outfit(
+                fontSize: 13,
+                height: 1.4,
+                color: AppTheme.profileMuted,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

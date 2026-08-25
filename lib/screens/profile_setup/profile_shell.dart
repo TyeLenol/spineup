@@ -101,7 +101,7 @@ class ProfileShell extends StatelessWidget {
                                           height: 5,
                                           width: constraints.maxWidth * pct,
                                           decoration: BoxDecoration(
-                                            color: AppTheme.profileSage,
+                                            color: AppTheme.profileAction,
                                             borderRadius: BorderRadius.circular(
                                               3,
                                             ),
@@ -179,9 +179,10 @@ class ProfileShell extends StatelessWidget {
                                     ? null
                                     : onPrimaryTap,
                                 style: FilledButton.styleFrom(
-                                  backgroundColor: AppTheme.profileSage,
+                                  backgroundColor: AppTheme.profileAction,
                                   foregroundColor: Colors.white,
-                                  disabledBackgroundColor: AppTheme.profileSage
+                                  disabledBackgroundColor: AppTheme
+                                      .profileAction
                                       .withValues(alpha: 0.4),
                                   disabledForegroundColor: Colors.white
                                       .withValues(alpha: 0.7),
@@ -206,7 +207,7 @@ class ProfileShell extends StatelessWidget {
                                 TextButton(
                                   onPressed: onSecondaryTap,
                                   style: TextButton.styleFrom(
-                                    foregroundColor: AppTheme.profileSage,
+                                    foregroundColor: AppTheme.profileAction,
                                     minimumSize: const Size.fromHeight(44),
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(14),

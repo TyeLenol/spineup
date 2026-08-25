@@ -169,11 +169,11 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
     switch (_step) {
       case 1:
         title = widget.createNewWard
-            ? 'Add someone you care for.'
-            : 'Who is this profile for?';
+            ? 'A private space for them.'
+            : 'Start with a private space.';
         explainer = widget.createNewWard
-            ? 'Create a separate private workspace for another person. Your own profile will not be changed.'
-            : 'Choose whose information you are setting up. Each person’s records stay in their own private workspace.';
+            ? 'Create a separate local workspace for another person. Your own profile will not be changed.'
+            : 'First, choose whose information you are setting up. Each person’s records stay in their own private workspace.';
         child = StepOwnership(
           initialData: _data,
           allowSelf: !widget.createNewWard,

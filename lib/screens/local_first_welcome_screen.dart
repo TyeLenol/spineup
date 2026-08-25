@@ -78,7 +78,7 @@ class LocalFirstWelcomeScreen extends StatelessWidget {
               FilledButton(
                 onPressed: onStart,
                 style: FilledButton.styleFrom(
-                  backgroundColor: AppTheme.profileSage,
+                  backgroundColor: AppTheme.profileAction,
                   foregroundColor: Colors.white,
                   minimumSize: const Size.fromHeight(56),
                   shape: RoundedRectangleBorder(

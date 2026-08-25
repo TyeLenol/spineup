@@ -100,7 +100,7 @@ class ProfileTextInput extends StatelessWidget {
         floatingLabelStyle: GoogleFonts.outfit(
           fontSize: 13,
           fontWeight: FontWeight.w700,
-          color: AppTheme.profileSage,
+          color: AppTheme.profileAction,
         ),
         hintText: hintText,
         errorText: errorText,
@@ -124,7 +124,7 @@ class ProfileTextInput extends StatelessWidget {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: AppTheme.profileSage, width: 2),
+          borderSide: const BorderSide(color: AppTheme.profileAction, width: 2),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
@@ -203,9 +203,10 @@ class ProfileChipGroup<T> extends StatelessWidget {
                   color: on
                       ? AppTheme.profileSoftSage
                       : AppTheme.profileSurface,
+
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(
-                    color: on ? AppTheme.profileSage : AppTheme.profileBorder,
+                    color: on ? AppTheme.profileAction : AppTheme.profileBorder,
                     width: on ? 1.8 : 1.2,
                   ),
                 ),
@@ -219,7 +220,7 @@ class ProfileChipGroup<T> extends StatelessWidget {
                         fontSize: 14,
                         fontWeight: FontWeight.w700,
                         color: on
-                            ? AppTheme.profileSage
+                            ? AppTheme.profileActionDeep
                             : AppTheme.foregroundDark,
                       ),
                     ),
@@ -231,7 +232,9 @@ class ProfileChipGroup<T> extends StatelessWidget {
                           fontSize: 11,
                           fontWeight: FontWeight.w400,
                           color: on
-                              ? AppTheme.profileSage.withValues(alpha: 0.78)
+                              ? AppTheme.profileActionDeep.withValues(
+                                  alpha: 0.78,
+                                )
                               : AppTheme.profileMuted,
                         ),
                       ),
@@ -262,7 +265,7 @@ class ProfileSlider extends StatelessWidget {
     this.max = 10,
     required this.divisions,
     required this.onChanged,
-    this.tint = AppTheme.secondaryCoral,
+    this.tint = AppTheme.profileAction,
   });
 
   @override

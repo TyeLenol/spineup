@@ -176,7 +176,7 @@ class _StepCurveState extends State<StepCurve> {
                   child: Icon(
                     Icons.expand_more_rounded,
                     size: 16,
-                    color: AppTheme.primarySage,
+                    color: AppTheme.profileAction,
                   ),
                 ),
                 const SizedBox(width: 4),
@@ -185,7 +185,7 @@ class _StepCurveState extends State<StepCurve> {
                   style: GoogleFonts.outfit(
                     fontSize: 14,
                     fontWeight: FontWeight.w700,
-                    color: AppTheme.primarySage,
+                    color: AppTheme.profileAction,
                   ),
                 ),
               ],

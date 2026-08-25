@@ -78,8 +78,18 @@ class _ProfileDoodlePainter extends CustomPainter {
       teal,
       berry,
     );
+    _drawStar(
+      canvas,
+      Offset(width * 0.18, height * 0.23),
+      7,
+      terracotta,
+      rotation: 0.18,
+    );
     _drawSunburst(canvas, Offset(width * 0.88, height * 0.73), terracotta);
     _drawLeafySprig(canvas, Offset(width * 0.10, height * 0.68), teal);
+    _drawLooseArc(canvas, Offset(width * 0.75, height * 0.34), berry);
+    _drawWavyMark(canvas, Offset(width * 0.18, height * 0.47), teal);
+    _drawDotCluster(canvas, Offset(width * 0.76, height * 0.59), terracotta);
   }
 
   void _drawStars(Canvas canvas, Offset center, Paint teal, Paint berry) {
@@ -140,6 +150,53 @@ class _ProfileDoodlePainter extends CustomPainter {
           Offset(math.cos(angle), math.sin(angle)) * (26 + (i.isEven ? 2 : 0));
       canvas.drawLine(start, end, paint);
     }
+  }
+
+  void _drawLooseArc(Canvas canvas, Offset center, Paint paint) {
+    final arc = Path()
+      ..moveTo(center.dx - 20, center.dy + 5)
+      ..cubicTo(
+        center.dx - 5,
+        center.dy - 16,
+        center.dx + 18,
+        center.dy - 15,
+        center.dx + 24,
+        center.dy + 2,
+      );
+    canvas.drawPath(arc, paint);
+    canvas.drawCircle(center + const Offset(30, 7), 1.7, paint);
+  }
+
+  void _drawWavyMark(Canvas canvas, Offset start, Paint paint) {
+    final wave = Path()
+      ..moveTo(start.dx, start.dy)
+      ..cubicTo(
+        start.dx + 10,
+        start.dy - 9,
+        start.dx + 18,
+        start.dy + 9,
+        start.dx + 28,
+        start.dy,
+      )
+      ..cubicTo(
+        start.dx + 38,
+        start.dy - 9,
+        start.dx + 46,
+        start.dy + 9,
+        start.dx + 56,
+        start.dy,
+      );
+    canvas.drawPath(wave, paint);
+  }
+
+  void _drawDotCluster(Canvas canvas, Offset center, Paint paint) {
+    final dotPaint = Paint()
+      ..color = paint.color.withValues(alpha: 0.72)
+      ..style = PaintingStyle.fill;
+    canvas.drawCircle(center, 2.3, dotPaint);
+    canvas.drawCircle(center + const Offset(12, -8), 1.5, dotPaint);
+    canvas.drawCircle(center + const Offset(18, 5), 1.9, dotPaint);
+    canvas.drawCircle(center + const Offset(7, 15), 1.2, dotPaint);
   }
 
   void _drawLeafySprig(Canvas canvas, Offset base, Paint paint) {
