@@ -11,6 +11,7 @@ import '../models/user_profile.dart';
 import '../services/gamification_service.dart';
 import '../services/portable_archive_service.dart';
 import '../services/profile_store.dart';
+import '../services/reminder_service.dart';
 import '../services/session_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/avatar_display.dart';
@@ -962,9 +963,152 @@ class _SettingsSection extends StatefulWidget {
 }
 
 class _SettingsSectionState extends State<_SettingsSection> {
-  bool _notificationsEnabled = true;
+  ReminderSettings _reminderSettings = ReminderSettings.defaults;
+  bool _reminderLoading = true;
+  bool _reminderBusy = false;
   bool _archiveBusy = false;
   final _archiveService = PortableArchiveService();
+
+  @override
+  void initState() {
+    super.initState();
+    _loadReminderSettings();
+  }
+
+  Future<void> _loadReminderSettings() async {
+    final settings = await ReminderService.load(ownerUserId: widget.userId);
+    if (!mounted) return;
+    setState(() {
+      _reminderSettings = settings;
+      _reminderLoading = false;
+    });
+  }
+
+  Future<TimeOfDay?> _pickReminderTime({required TimeOfDay initialTime}) {
+    return showTimePicker(
+      context: context,
+      initialTime: initialTime,
+      helpText: 'Choose a daily reminder time',
+      cancelText: 'Not now',
+      confirmText: 'Save time',
+    );
+  }
+
+  String _formatReminderTime(BuildContext context) {
+    final time = TimeOfDay(
+      hour: _reminderSettings.hour,
+      minute: _reminderSettings.minute,
+    );
+    return MaterialLocalizations.of(context).formatTimeOfDay(time);
+  }
+
+  Future<void> _toggleReminder(bool enabled) async {
+    if (_reminderBusy) return;
+    if (enabled) {
+      await _enableReminder();
+    } else {
+      await _disableReminder();
+    }
+  }
+
+  Future<void> _enableReminder() async {
+    final initialTime = TimeOfDay(
+      hour: _reminderSettings.hour,
+      minute: _reminderSettings.minute,
+    );
+    final pickedTime = await _pickReminderTime(initialTime: initialTime);
+    if (pickedTime == null || !mounted) return;
+
+    setState(() => _reminderBusy = true);
+    try {
+      final enabled = await ReminderService.enable(
+        ownerUserId: widget.userId,
+        hour: pickedTime.hour,
+        minute: pickedTime.minute,
+      );
+      if (!mounted) return;
+      if (!enabled) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Reminder stays off until Android notifications are allowed.',
+            ),
+          ),
+        );
+        return;
+      }
+      setState(() {
+        _reminderSettings = ReminderSettings(
+          enabled: true,
+          hour: pickedTime.hour,
+          minute: pickedTime.minute,
+        );
+      });
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('SpineUp could not set that reminder.')),
+      );
+    } finally {
+      if (mounted) setState(() => _reminderBusy = false);
+    }
+  }
+
+  Future<void> _changeReminderTime() async {
+    if (_reminderBusy || !_reminderSettings.enabled) return;
+    final pickedTime = await _pickReminderTime(
+      initialTime: TimeOfDay(
+        hour: _reminderSettings.hour,
+        minute: _reminderSettings.minute,
+      ),
+    );
+    if (pickedTime == null || !mounted) return;
+
+    setState(() => _reminderBusy = true);
+    try {
+      await ReminderService.updateTime(
+        ownerUserId: widget.userId,
+        hour: pickedTime.hour,
+        minute: pickedTime.minute,
+      );
+      if (!mounted) return;
+      setState(() {
+        _reminderSettings = _reminderSettings.copyWith(
+          hour: pickedTime.hour,
+          minute: pickedTime.minute,
+        );
+      });
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('SpineUp could not update that reminder.'),
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _reminderBusy = false);
+    }
+  }
+
+  Future<void> _disableReminder() async {
+    setState(() => _reminderBusy = true);
+    try {
+      await ReminderService.disable(ownerUserId: widget.userId);
+      if (!mounted) return;
+      setState(() {
+        _reminderSettings = _reminderSettings.copyWith(enabled: false);
+      });
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('SpineUp could not turn that reminder off.'),
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _reminderBusy = false);
+    }
+  }
 
   void _showAppearanceDialog() {
     showDialog(
@@ -1176,9 +1320,9 @@ class _SettingsSectionState extends State<_SettingsSection> {
       context: context,
       builder: (ctx) {
         return AlertDialog(
-          title: const Text('Delete Account & Data?'),
+          title: const Text('Delete all local data?'),
           content: const Text(
-            'This action is irreversible. It permanently removes all local health history, measurements, appointments, progress, and settings for every profile owned by this app session.',
+            'This action is irreversible. It permanently removes all local health history, measurements, appointments, progress, reminders, and settings for every profile owned by this app session.',
           ),
           actions: [
             TextButton(
@@ -1189,6 +1333,7 @@ class _SettingsSectionState extends State<_SettingsSection> {
               onPressed: () async {
                 Navigator.pop(ctx);
                 final userId = SessionService.currentUserId;
+                await ReminderService.clear(ownerUserId: userId);
                 await widget.gamificationService.clearUserData(userId: userId);
                 await ProfileStore.clearProfilesForOwner(userId: userId);
                 SessionService.signOut();
@@ -1198,8 +1343,10 @@ class _SettingsSectionState extends State<_SettingsSection> {
                   (route) => false,
                 );
               },
-              style: TextButton.styleFrom(foregroundColor: Colors.red),
-              child: const Text('Delete Everything'),
+              style: TextButton.styleFrom(
+                foregroundColor: Theme.of(context).colorScheme.error,
+              ),
+              child: const Text('Delete all local data'),
             ),
           ],
         );
@@ -1244,6 +1391,33 @@ class _SettingsSectionState extends State<_SettingsSection> {
               trailing: const Icon(Icons.chevron_right_rounded),
               onTap: _showAppearanceDialog,
             ),
+            if (ReminderService.isSupported) ...[
+              const Divider(height: 1),
+              ListTile(
+                leading: const Icon(Icons.notifications_none_rounded),
+                title: const Text('Daily reminder'),
+                subtitle: Text(
+                  _reminderLoading
+                      ? 'Loading…'
+                      : _reminderSettings.enabled
+                      ? 'Every day at ${_formatReminderTime(context)}'
+                      : 'Off',
+                ),
+                trailing: _reminderBusy || _reminderLoading
+                    ? const SizedBox(
+                        width: 22,
+                        height: 22,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : Switch.adaptive(
+                        value: _reminderSettings.enabled,
+                        onChanged: _toggleReminder,
+                      ),
+                onTap: _reminderSettings.enabled
+                    ? _changeReminderTime
+                    : () => _toggleReminder(true),
+              ),
+            ],
             if (widget.onReplayQuickTour != null) ...[
               const Divider(height: 1),
               ListTile(
@@ -1254,14 +1428,6 @@ class _SettingsSectionState extends State<_SettingsSection> {
                 onTap: _replayQuickTour,
               ),
             ],
-            const Divider(height: 1),
-            SwitchListTile(
-              secondary: const Icon(Icons.notifications_none_rounded),
-              title: const Text('Notifications'),
-              subtitle: const Text('Daily stretch & logging reminders'),
-              value: _notificationsEnabled,
-              onChanged: (val) => setState(() => _notificationsEnabled = val),
-            ),
           ],
         ),
         const SizedBox(height: 24),
@@ -1304,14 +1470,14 @@ class _SettingsSectionState extends State<_SettingsSection> {
         groupedCard(
           children: [
             ListTile(
-              leading: const Icon(
+              leading: Icon(
                 Icons.delete_forever_outlined,
-                color: Colors.red,
+                color: Theme.of(context).colorScheme.error,
               ),
-              title: const Text(
-                'Delete Account & Data',
+              title: Text(
+                'Delete all local data',
                 style: TextStyle(
-                  color: Colors.red,
+                  color: Theme.of(context).colorScheme.error,
                   fontWeight: FontWeight.bold,
                 ),
               ),
