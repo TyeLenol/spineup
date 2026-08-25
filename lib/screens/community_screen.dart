@@ -5,12 +5,10 @@ import '../models/community_post.dart';
 import '../models/milestone.dart';
 import '../theme/app_theme.dart';
 import '../services/gamification_service.dart';
+import '../services/session_service.dart';
 import '../models/user_profile.dart';
 import '../widgets/avatar_display.dart';
 import '../widgets/badge_icon.dart';
-
-const String _kUserId = 'local_user_001';
-const String _kUserName = 'You';
 
 class CommunityScreen extends StatefulWidget {
   const CommunityScreen({super.key});
@@ -41,8 +39,8 @@ class _CommunityScreenState extends State<CommunityScreen>
   Future<void> _loadAll() async {
     // Simulate network delay for fetching community posts
     await Future.delayed(const Duration(milliseconds: 600));
-    final snap = await _gs.getSnapshot('local_user_001'); // Using mock auth ID
-    
+    final snap = await _gs.getSnapshot(SessionService.currentCareSubjectId);
+
     if (mounted) {
       setState(() {
         _snap = snap;
@@ -75,7 +73,9 @@ class _CommunityScreenState extends State<CommunityScreen>
     });
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(nowSaved ? 'Post saved to bookmarks.' : 'Post removed from saved.'),
+        content: Text(
+          nowSaved ? 'Post saved to bookmarks.' : 'Post removed from saved.',
+        ),
         duration: const Duration(seconds: 2),
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -89,7 +89,7 @@ class _CommunityScreenState extends State<CommunityScreen>
 
     final report = ModerationReport(
       postId: postId,
-      reportedByUserId: _kUserId,
+      reportedByUserId: SessionService.currentUserId,
       timestamp: DateTime.now(),
     );
     _moderationQueue.add(report);
@@ -115,7 +115,7 @@ class _CommunityScreenState extends State<CommunityScreen>
     if (body.trim().isEmpty) return;
     final reply = CommunityReply(
       id: const Uuid().v4(),
-      authorName: _kUserName,
+      authorName: SessionService.displayName,
       body: body.trim(),
       timestamp: DateTime.now(),
     );
@@ -185,7 +185,7 @@ class _CommunityScreenState extends State<CommunityScreen>
     if (result != null && result.trim().isNotEmpty) {
       final newPost = CommunityPost(
         id: const Uuid().v4(),
-        authorName: _kUserName,
+        authorName: SessionService.displayName,
         body: result.trim(),
         timestamp: DateTime.now(),
         upvotes: 0,
@@ -198,7 +198,9 @@ class _CommunityScreenState extends State<CommunityScreen>
   Widget build(BuildContext context) {
     super.build(context);
     final tt = Theme.of(context).textTheme;
-    final displayedPosts = _posts.where((p) => _feedFilter == 'All' || p.isSaved).toList();
+    final displayedPosts = _posts
+        .where((p) => _feedFilter == 'All' || p.isSaved)
+        .toList();
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -228,7 +230,8 @@ class _CommunityScreenState extends State<CommunityScreen>
                   ),
                 ],
                 selected: {_feedFilter},
-                onSelectionChanged: (set) => setState(() => _feedFilter = set.first),
+                onSelectionChanged: (set) =>
+                    setState(() => _feedFilter = set.first),
                 style: const ButtonStyle(
                   visualDensity: VisualDensity.compact,
                   tapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -247,7 +250,9 @@ class _CommunityScreenState extends State<CommunityScreen>
                         ? 'No saved posts yet.\nTap the bookmark icon on any post to save it for later!'
                         : 'No community posts yet.',
                     textAlign: TextAlign.center,
-                    style: tt.bodyMedium?.copyWith(color: AppTheme.mutedForeground),
+                    style: tt.bodyMedium?.copyWith(
+                      color: AppTheme.mutedForeground,
+                    ),
                   ),
                 ),
               ),
@@ -256,20 +261,17 @@ class _CommunityScreenState extends State<CommunityScreen>
             SliverPadding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 120),
               sliver: SliverList(
-                delegate: SliverChildBuilderDelegate(
-                  (_, i) {
-                    final post = displayedPosts[i];
-                    return _PostCard(
-                      post: post,
-                      localSnap: _snap,
-                      onUpvote: () => _toggleUpvote(post.id),
-                      onSave: () => _toggleSave(post.id),
-                      onReport: () => _reportPost(post.id),
-                      onOpenReplies: () => _openReplySheet(post),
-                    );
-                  },
-                  childCount: displayedPosts.length,
-                ),
+                delegate: SliverChildBuilderDelegate((_, i) {
+                  final post = displayedPosts[i];
+                  return _PostCard(
+                    post: post,
+                    localSnap: _snap,
+                    onUpvote: () => _toggleUpvote(post.id),
+                    onSave: () => _toggleSave(post.id),
+                    onReport: () => _reportPost(post.id),
+                    onOpenReplies: () => _openReplySheet(post),
+                  );
+                }, childCount: displayedPosts.length),
               ),
             ),
         ],
@@ -310,11 +312,14 @@ class _PostCard extends StatelessWidget {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
 
-    final isMe = post.authorName == _kUserName;
+    final isMe = post.authorName == SessionService.displayName;
     final displayProfile = isMe
         ? localSnap.userProfile
         : UserProfile(
-            presetId: presetAvatars[post.authorName.hashCode.abs() % presetAvatars.length].id,
+            presetId:
+                presetAvatars[post.authorName.hashCode.abs() %
+                        presetAvatars.length]
+                    .id,
             customPhotoPath: null,
           );
 
@@ -344,8 +349,9 @@ class _PostCard extends StatelessWidget {
                   Text(post.authorName, style: tt.titleSmall),
                   Text(
                     _timeAgo(post.timestamp),
-                    style: tt.labelSmall
-                        ?.copyWith(color: AppTheme.mutedForeground),
+                    style: tt.labelSmall?.copyWith(
+                      color: AppTheme.mutedForeground,
+                    ),
                   ),
                 ],
               ),
@@ -355,7 +361,10 @@ class _PostCard extends StatelessWidget {
                   tooltip: 'Report post',
                   icon: const Icon(Icons.flag_outlined, size: 18),
                   color: AppTheme.mutedForeground,
-                  constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+                  constraints: const BoxConstraints(
+                    minWidth: 48,
+                    minHeight: 48,
+                  ),
                   padding: EdgeInsets.zero,
                   onPressed: onReport,
                 ),
@@ -377,7 +386,10 @@ class _PostCard extends StatelessWidget {
                   ),
                 );
                 return Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: AppTheme.primarySage.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(20),
@@ -448,8 +460,9 @@ class _PostCard extends StatelessWidget {
                 const Spacer(),
                 Text(
                   'Reported',
-                  style: tt.labelSmall
-                      ?.copyWith(color: AppTheme.mutedForeground),
+                  style: tt.labelSmall?.copyWith(
+                    color: AppTheme.mutedForeground,
+                  ),
                 ),
               ],
             ],
@@ -497,11 +510,13 @@ class _ActionChip extends StatelessWidget {
           children: [
             Icon(icon, size: 16, color: color),
             const SizedBox(width: 4),
-            Text(label,
-                style: tt.labelSmall?.copyWith(
-                  color: color,
-                  fontWeight: FontWeight.w600,
-                )),
+            Text(
+              label,
+              style: tt.labelSmall?.copyWith(
+                color: color,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ],
         ),
       ),
@@ -566,8 +581,9 @@ class _ReplySheetState extends State<_ReplySheet> {
                     widget.post.body,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: tt.bodySmall
-                        ?.copyWith(color: AppTheme.mutedForeground),
+                    style: tt.bodySmall?.copyWith(
+                      color: AppTheme.mutedForeground,
+                    ),
                   ),
                   const Divider(height: 24),
                 ],
@@ -580,8 +596,9 @@ class _ReplySheetState extends State<_ReplySheet> {
                   ? Center(
                       child: Text(
                         'No replies yet. Be the first!',
-                        style: tt.bodyMedium
-                            ?.copyWith(color: AppTheme.mutedForeground),
+                        style: tt.bodyMedium?.copyWith(
+                          color: AppTheme.mutedForeground,
+                        ),
                       ),
                     )
                   : ListView.builder(
@@ -602,13 +619,13 @@ class _ReplySheetState extends State<_ReplySheet> {
                             children: [
                               Row(
                                 children: [
-                                  Text(r.authorName,
-                                      style: tt.titleSmall),
+                                  Text(r.authorName, style: tt.titleSmall),
                                   const Spacer(),
                                   Text(
                                     _timeAgo(r.timestamp),
                                     style: tt.labelSmall?.copyWith(
-                                        color: AppTheme.mutedForeground),
+                                      color: AppTheme.mutedForeground,
+                                    ),
                                   ),
                                 ],
                               ),
@@ -644,7 +661,9 @@ class _ReplySheetState extends State<_ReplySheet> {
                           borderSide: BorderSide.none,
                         ),
                         contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 12),
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
                       ),
                     ),
                   ),

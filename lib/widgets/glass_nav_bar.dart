@@ -14,8 +14,10 @@ class GlassNavigationBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final bottomInset = MediaQuery.paddingOf(context).bottom;
+
     return Container(
-      margin: const EdgeInsets.only(left: 24, right: 24, bottom: 24),
+      margin: EdgeInsets.only(left: 20, right: 20, bottom: bottomInset + 12),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(32),
         boxShadow: [
@@ -59,9 +61,9 @@ class GlassNavigationBar extends StatelessWidget {
                   onTap: () => onItemSelected(1),
                 ),
                 _NavItem(
-                  icon: Icons.people_outline_rounded,
-                  activeIcon: Icons.people_rounded,
-                  label: 'Community',
+                  icon: Icons.menu_book_outlined,
+                  activeIcon: Icons.menu_book_rounded,
+                  label: 'Learn',
                   isSelected: selectedIndex == 2,
                   onTap: () => onItemSelected(2),
                 ),
@@ -105,7 +107,10 @@ class _NavItem extends StatelessWidget {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeOutCubic,
-        padding: EdgeInsets.symmetric(horizontal: isSelected ? 16 : 8, vertical: 8),
+        padding: EdgeInsets.symmetric(
+          horizontal: isSelected ? 16 : 8,
+          vertical: 8,
+        ),
         decoration: BoxDecoration(
           color: isSelected ? cs.secondaryContainer : Colors.transparent,
           borderRadius: BorderRadius.circular(24),
@@ -121,7 +126,9 @@ class _NavItem extends StatelessWidget {
               child: Icon(
                 isSelected ? activeIcon : icon,
                 key: ValueKey(isSelected),
-                color: isSelected ? cs.onSecondaryContainer : cs.onSurfaceVariant,
+                color: isSelected
+                    ? cs.onSecondaryContainer
+                    : cs.onSurfaceVariant,
                 size: 24,
               ),
             ),

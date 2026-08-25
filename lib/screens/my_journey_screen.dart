@@ -4,12 +4,14 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_expandable_fab/flutter_expandable_fab.dart';
 import '../models/event.dart';
+import 'learn_screen.dart';
 import '../services/gamification_service.dart';
+import '../services/session_service.dart';
 import '../theme/app_theme.dart';
+import '../widgets/action_reward_feedback.dart';
+import 'activity_history_screen.dart';
 import 'cobb_angle_logger_modal.dart';
 import 'appointment_logger_modal.dart';
-
-const String _kUserId = 'local_user_001';
 
 class MyJourneyScreen extends StatefulWidget {
   final EventType? initialEventFilter;
@@ -32,19 +34,19 @@ class _MyJourneyScreenState extends State<MyJourneyScreen>
   // Chart Filters
   String _chartTimeRange = 'Month'; // 'Week', 'Month', 'Year', 'All'
   String _overlayOption = 'None'; // 'None', 'Pain Level', 'Stretches'
-  EventType? _timelineFilter;
 
   @override
   void initState() {
     super.initState();
-    _timelineFilter = widget.initialEventFilter;
     _loadAll();
   }
 
   Future<void> _loadAll() async {
     setState(() => _loading = true);
-    final cobbs = await _gs.getCobbAngleHistory(_kUserId);
-    final events = await _gs.getAllEvents(_kUserId);
+    final cobbs = await _gs.getCobbAngleHistory(
+      SessionService.currentCareSubjectId,
+    );
+    final events = await _gs.getAllEvents(SessionService.currentCareSubjectId);
     if (mounted) {
       setState(() {
         _cobbHistory = cobbs;
@@ -57,14 +59,11 @@ class _MyJourneyScreenState extends State<MyJourneyScreen>
   void _handleLogged(LogEventResult result) async {
     await _loadAll();
     if (!mounted) return;
-    final bonus = result.dailyBonusAwarded ? ' +5 daily bonus!' : '';
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('+${result.xpAwarded} XP$bonus'),
-        backgroundColor: AppTheme.primarySage,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      ),
+    showActionRewardFeedback(
+      context,
+      title: 'Record saved',
+      xpAwarded: result.xpAwarded,
+      dailyBonusAwarded: result.dailyBonusAwarded,
     );
   }
 
@@ -80,6 +79,12 @@ class _MyJourneyScreenState extends State<MyJourneyScreen>
     return _cobbHistory.where((e) => e.date.isAfter(cutoff)).toList();
   }
 
+  List<Event> get _recentEvents {
+    final events = List<Event>.from(_allEvents)
+      ..sort((a, b) => b.timestamp.compareTo(a.timestamp));
+    return events.take(3).toList();
+  }
+
   List<({DateTime date, double value})> get _overlayData {
     if (_overlayOption == 'None') return [];
     final days = switch (_chartTimeRange) {
@@ -89,34 +94,38 @@ class _MyJourneyScreenState extends State<MyJourneyScreen>
       _ => 365,
     };
     final cutoff = DateTime.now().subtract(Duration(days: days));
-    final filtered = _allEvents.where((e) => e.timestamp.isAfter(cutoff)).toList();
+    final filtered = _allEvents
+        .where((e) => e.timestamp.isAfter(cutoff))
+        .toList();
 
     if (_overlayOption == 'Pain Level') {
-      final journals = filtered.where((e) => e.type == EventType.journalEntry).toList();
+      final journals = filtered
+          .where((e) => e.type == EventType.journalEntry)
+          .toList();
       return journals
-          .map((e) => (
-                date: e.timestamp,
-                value: ((e.payload['pain_level'] as num?) ?? 0).toDouble(),
-              ))
+          .map(
+            (e) => (
+              date: e.timestamp,
+              value: ((e.payload['pain_level'] as num?) ?? 0).toDouble(),
+            ),
+          )
           .toList();
     } else if (_overlayOption == 'Stretches') {
-      final stretches = filtered.where((e) => e.type == EventType.stretchCompleted).toList();
+      final stretches = filtered
+          .where((e) => e.type == EventType.stretchCompleted)
+          .toList();
       final Map<String, int> countsByDay = {};
       for (final s in stretches) {
-        final key = '${s.timestamp.year}-${s.timestamp.month.toString().padLeft(2, '0')}-${s.timestamp.day.toString().padLeft(2, '0')}';
+        final key =
+            '${s.timestamp.year}-${s.timestamp.month.toString().padLeft(2, '0')}-${s.timestamp.day.toString().padLeft(2, '0')}';
         countsByDay[key] = (countsByDay[key] ?? 0) + 1;
       }
       return countsByDay.entries.map((entry) {
-        return (
-          date: DateTime.parse(entry.key),
-          value: entry.value.toDouble(),
-        );
+        return (date: DateTime.parse(entry.key), value: entry.value.toDouble());
       }).toList()..sort((a, b) => a.date.compareTo(b.date));
     }
     return [];
   }
-
-
 
   @override
   Widget build(BuildContext context) {
@@ -148,7 +157,16 @@ class _MyJourneyScreenState extends State<MyJourneyScreen>
                         const SizedBox(height: 20),
 
                         // ── Cobb angle graph ───────────────────────────────
-                        _SectionHeader(title: 'Cobb Angle Progression'),
+                        Row(
+                          children: [
+                            const Expanded(
+                              child: _SectionHeader(
+                                title: 'Your Recorded Measurements',
+                              ),
+                            ),
+                            ContextualHelpIcon(topicId: 'measurement-log'),
+                          ],
+                        ),
                         const SizedBox(height: 12),
 
                         // Time Range & Overlay Filter Bar (Scrollable to prevent edge clipping)
@@ -158,10 +176,34 @@ class _MyJourneyScreenState extends State<MyJourneyScreen>
                             children: [
                               SegmentedButton<String>(
                                 segments: const [
-                                  ButtonSegment(value: 'Week', label: Text('Week', style: TextStyle(fontSize: 11))),
-                                  ButtonSegment(value: 'Month', label: Text('Month', style: TextStyle(fontSize: 11))),
-                                  ButtonSegment(value: 'Year', label: Text('Year', style: TextStyle(fontSize: 11))),
-                                  ButtonSegment(value: 'All', label: Text('All', style: TextStyle(fontSize: 11))),
+                                  ButtonSegment(
+                                    value: 'Week',
+                                    label: Text(
+                                      'Week',
+                                      style: TextStyle(fontSize: 11),
+                                    ),
+                                  ),
+                                  ButtonSegment(
+                                    value: 'Month',
+                                    label: Text(
+                                      'Month',
+                                      style: TextStyle(fontSize: 11),
+                                    ),
+                                  ),
+                                  ButtonSegment(
+                                    value: 'Year',
+                                    label: Text(
+                                      'Year',
+                                      style: TextStyle(fontSize: 11),
+                                    ),
+                                  ),
+                                  ButtonSegment(
+                                    value: 'All',
+                                    label: Text(
+                                      'All',
+                                      style: TextStyle(fontSize: 11),
+                                    ),
+                                  ),
                                 ],
                                 selected: {_chartTimeRange},
                                 onSelectionChanged: (set) {
@@ -169,7 +211,8 @@ class _MyJourneyScreenState extends State<MyJourneyScreen>
                                 },
                                 style: const ButtonStyle(
                                   visualDensity: VisualDensity.compact,
-                                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                  tapTargetSize:
+                                      MaterialTapTargetSize.shrinkWrap,
                                 ),
                               ),
                               const SizedBox(width: 16),
@@ -177,15 +220,33 @@ class _MyJourneyScreenState extends State<MyJourneyScreen>
                                 value: _overlayOption,
                                 isDense: true,
                                 underline: const SizedBox.shrink(),
-                                icon: const Icon(Icons.layers_outlined, size: 18, color: AppTheme.primarySage),
-                                style: tt.labelSmall?.copyWith(color: AppTheme.primarySage, fontWeight: FontWeight.bold),
+                                icon: const Icon(
+                                  Icons.layers_outlined,
+                                  size: 18,
+                                  color: AppTheme.primarySage,
+                                ),
+                                style: tt.labelSmall?.copyWith(
+                                  color: AppTheme.primarySage,
+                                  fontWeight: FontWeight.bold,
+                                ),
                                 items: const [
-                                  DropdownMenuItem(value: 'None', child: Text('No Overlay')),
-                                  DropdownMenuItem(value: 'Pain Level', child: Text('+ Pain Level')),
-                                  DropdownMenuItem(value: 'Stretches', child: Text('+ Stretches')),
+                                  DropdownMenuItem(
+                                    value: 'None',
+                                    child: Text('No Overlay'),
+                                  ),
+                                  DropdownMenuItem(
+                                    value: 'Pain Level',
+                                    child: Text('+ Pain Level'),
+                                  ),
+                                  DropdownMenuItem(
+                                    value: 'Stretches',
+                                    child: Text('+ Stretches'),
+                                  ),
                                 ],
                                 onChanged: (v) {
-                                  if (v != null) setState(() => _overlayOption = v);
+                                  if (v != null) {
+                                    setState(() => _overlayOption = v);
+                                  }
                                 },
                               ),
                             ],
@@ -199,44 +260,57 @@ class _MyJourneyScreenState extends State<MyJourneyScreen>
                           overlayOption: _overlayOption,
                           timeRange: _chartTimeRange,
                         ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Recorded from your entries; not a diagnosis or prediction.',
+                          style: tt.bodySmall?.copyWith(
+                            color: AppTheme.mutedForeground,
+                            height: 1.35,
+                          ),
+                        ),
                         const SizedBox(height: 24),
 
-                        // ── Activity timeline ──────────────────────────────
+                        // ── Recent records preview ─────────────────────────
                         Row(
                           children: [
-                            _SectionHeader(title: 'Activity Log'),
-                            const Spacer(),
-                            if (_timelineFilter != null)
-                              FilterChip(
-                                label: const Text('Filtered: Journal Entries', style: TextStyle(fontSize: 11)),
-                                selected: true,
-                                onSelected: (_) => setState(() => _timelineFilter = null),
-                                deleteIcon: const Icon(Icons.close, size: 14),
-                                onDeleted: () => setState(() => _timelineFilter = null),
-                              ),
+                            const Expanded(
+                              child: _SectionHeader(title: 'Recent records'),
+                            ),
+                            TextButton(
+                              onPressed: () {
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (_) => ActivityHistoryScreen(
+                                      initialFilter: widget.initialEventFilter,
+                                    ),
+                                  ),
+                                );
+                              },
+                              child: const Text('View all history'),
+                            ),
                           ],
                         ),
-                        const SizedBox(height: 12),
-                        if (_allEvents.where((e) => _timelineFilter == null || e.type == _timelineFilter).isEmpty)
-                          Center(
-                            child: Padding(
-                              padding: const EdgeInsets.all(32),
-                              child: Text(
-                                _timelineFilter == null
-                                    ? 'No activity yet.\nStart logging to see your history!'
-                                    : 'No journal entries logged yet.',
-                                textAlign: TextAlign.center,
-                                style: tt.bodyMedium?.copyWith(
-                                  color: AppTheme.mutedForeground,
-                                ),
+                        const SizedBox(height: 8),
+                        if (_allEvents.isEmpty)
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.all(20),
+                            decoration: BoxDecoration(
+                              color: cs.surfaceContainer,
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: Text(
+                              'Your recorded check-ins, routines, and measurements will appear here.',
+                              textAlign: TextAlign.center,
+                              style: tt.bodySmall?.copyWith(
+                                color: AppTheme.mutedForeground,
                               ),
                             ),
                           )
                         else
-                          ..._allEvents
-                              .where((e) => _timelineFilter == null || e.type == _timelineFilter)
-                              .take(30)
-                              .map((e) => _EventTile(event: e)),
+                          ..._recentEvents.map(
+                            (event) => _EventTile(event: event, showXp: false),
+                          ),
                       ]),
                     ),
                   ),
@@ -255,7 +329,11 @@ class _MyJourneyScreenState extends State<MyJourneyScreen>
             shape: const CircleBorder(),
           ),
           closeButtonBuilder: DefaultFloatingActionButtonBuilder(
-            child: const Icon(Icons.close_rounded, color: Colors.white, size: 24),
+            child: const Icon(
+              Icons.close_rounded,
+              color: Colors.white,
+              size: 24,
+            ),
             fabSize: ExpandableFabSize.regular,
             shape: const CircleBorder(),
           ),
@@ -264,7 +342,7 @@ class _MyJourneyScreenState extends State<MyJourneyScreen>
               heroTag: 'fab_cobb',
               onPressed: () => showCobbAngleLogger(
                 context: context,
-                userId: _kUserId,
+                userId: SessionService.currentCareSubjectId,
                 gamificationService: _gs,
                 onLogged: _handleLogged,
               ),
@@ -277,7 +355,7 @@ class _MyJourneyScreenState extends State<MyJourneyScreen>
               heroTag: 'fab_appointment',
               onPressed: () => showAppointmentLogger(
                 context: context,
-                userId: _kUserId,
+                userId: SessionService.currentCareSubjectId,
                 gamificationService: _gs,
                 onLogged: _handleLogged,
               ),
@@ -369,7 +447,11 @@ class _CobbChart extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.show_chart_rounded, size: 36, color: AppTheme.accentLavender),
+              const Icon(
+                Icons.show_chart_rounded,
+                size: 36,
+                color: AppTheme.accentLavender,
+              ),
               const SizedBox(height: 10),
               Text(
                 'No data yet — log your first angle to see your trend',
@@ -378,7 +460,7 @@ class _CobbChart extends StatelessWidget {
               ),
               const SizedBox(height: 4),
               Text(
-                'Log your first Cobb angle reading using the + button to track curve progression over time.',
+                'Log a measurement from your clinic record using the + button. SpineUp shows what you recorded and does not interpret clinical change.',
                 textAlign: TextAlign.center,
                 style: tt.bodySmall?.copyWith(color: AppTheme.mutedForeground),
               ),
@@ -388,7 +470,10 @@ class _CobbChart extends StatelessWidget {
       );
     }
 
-    final minDeg = math.max(0.0, history.map((e) => e.degrees).reduce(math.min) - 5);
+    final minDeg = math.max(
+      0.0,
+      history.map((e) => e.degrees).reduce(math.min) - 5,
+    );
     final maxDeg = history.map((e) => e.degrees).reduce(math.max) + 5;
 
     final now = DateTime.now();
@@ -400,19 +485,28 @@ class _CobbChart extends StatelessWidget {
     switch (timeRange) {
       case 'Week':
       case '7d':
-        minX = now.subtract(const Duration(days: 7)).millisecondsSinceEpoch.toDouble();
+        minX = now
+            .subtract(const Duration(days: 7))
+            .millisecondsSinceEpoch
+            .toDouble();
         xInterval = const Duration(days: 1).inMilliseconds.toDouble();
         formatX = (dt) => DateFormat.E().format(dt);
         break;
       case 'Month':
       case '30d':
-        minX = now.subtract(const Duration(days: 30)).millisecondsSinceEpoch.toDouble();
+        minX = now
+            .subtract(const Duration(days: 30))
+            .millisecondsSinceEpoch
+            .toDouble();
         xInterval = const Duration(days: 7).inMilliseconds.toDouble();
         formatX = (dt) => DateFormat.Md().format(dt);
         break;
       case 'Year':
       case '90d':
-        minX = now.subtract(const Duration(days: 365)).millisecondsSinceEpoch.toDouble();
+        minX = now
+            .subtract(const Duration(days: 365))
+            .millisecondsSinceEpoch
+            .toDouble();
         xInterval = const Duration(days: 60).inMilliseconds.toDouble();
         formatX = (dt) => DateFormat.MMM().format(dt);
         break;
@@ -440,7 +534,9 @@ class _CobbChart extends StatelessWidget {
       }).toList();
     }
 
-    final overlayColor = overlayOption == 'Pain Level' ? AppTheme.secondaryCoral : AppTheme.primarySage;
+    final overlayColor = overlayOption == 'Pain Level'
+        ? AppTheme.secondaryCoral
+        : AppTheme.primarySage;
 
     return Container(
       height: 220,
@@ -456,7 +552,7 @@ class _CobbChart extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Latest: ${history.last.degrees.toStringAsFixed(1)}° Cobb',
+                'Latest recorded: ${history.last.degrees.toStringAsFixed(1)}°',
                 style: tt.labelSmall?.copyWith(
                   color: AppTheme.accentLavender,
                   fontWeight: FontWeight.bold,
@@ -490,19 +586,32 @@ class _CobbChart extends StatelessWidget {
                   ),
                 ),
                 titlesData: FlTitlesData(
-                  topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                  rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  topTitles: const AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
+                  rightTitles: const AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
                   leftTitles: AxisTitles(
                     sideTitles: SideTitles(
                       showTitles: true,
-                      reservedSize: 34,
+                      reservedSize: 40,
                       interval: 10,
                       getTitlesWidget: (value, meta) {
                         return SideTitleWidget(
                           meta: meta,
+                          fitInside: SideTitleFitInsideData(
+                            enabled: true,
+                            distanceFromEdge: 4,
+                            parentAxisSize: meta.parentAxisSize,
+                            axisPosition: meta.axisPosition,
+                          ),
                           child: Text(
                             '${value.toInt()}°',
-                            style: const TextStyle(fontSize: 10, color: AppTheme.mutedForeground),
+                            style: const TextStyle(
+                              fontSize: 10,
+                              color: AppTheme.mutedForeground,
+                            ),
                           ),
                         );
                       },
@@ -511,15 +620,26 @@ class _CobbChart extends StatelessWidget {
                   bottomTitles: AxisTitles(
                     sideTitles: SideTitles(
                       showTitles: true,
-                      reservedSize: 28,
+                      reservedSize: 34,
                       interval: xInterval,
                       getTitlesWidget: (value, meta) {
-                        final dt = DateTime.fromMillisecondsSinceEpoch(value.toInt());
+                        final dt = DateTime.fromMillisecondsSinceEpoch(
+                          value.toInt(),
+                        );
                         return SideTitleWidget(
                           meta: meta,
+                          fitInside: SideTitleFitInsideData(
+                            enabled: true,
+                            distanceFromEdge: 4,
+                            parentAxisSize: meta.parentAxisSize,
+                            axisPosition: meta.axisPosition,
+                          ),
                           child: Text(
                             formatX(dt),
-                            style: const TextStyle(fontSize: 10, color: AppTheme.mutedForeground),
+                            style: const TextStyle(
+                              fontSize: 10,
+                              color: AppTheme.mutedForeground,
+                            ),
                           ),
                         );
                       },
@@ -556,7 +676,9 @@ class _CobbChart extends StatelessWidget {
                     getTooltipItems: (touchedSpots) {
                       return touchedSpots.map((spot) {
                         final isCobb = spot.barIndex == 0;
-                        final dt = DateTime.fromMillisecondsSinceEpoch(spot.x.toInt());
+                        final dt = DateTime.fromMillisecondsSinceEpoch(
+                          spot.x.toInt(),
+                        );
                         final dateStr = DateFormat.MMMd().format(dt);
                         final label = isCobb
                             ? '$dateStr: ${spot.y.toStringAsFixed(1)}°'
@@ -564,7 +686,9 @@ class _CobbChart extends StatelessWidget {
                         return LineTooltipItem(
                           label,
                           TextStyle(
-                            color: isCobb ? AppTheme.accentLavender : overlayColor,
+                            color: isCobb
+                                ? AppTheme.accentLavender
+                                : overlayColor,
                             fontWeight: FontWeight.bold,
                             fontSize: 12,
                           ),
@@ -586,12 +710,20 @@ class _CobbChart extends StatelessWidget {
 
 class _EventTile extends StatelessWidget {
   final Event event;
-  const _EventTile({required this.event});
+  final bool showXp;
+
+  const _EventTile({required this.event, this.showXp = true});
 
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
+
+    final painValue = event.payload['pain_level'];
+    final painLabel = painValue is num
+        ? 'pain ${painValue.round()}/10'
+        : 'pain not recorded';
+    final moodLabel = event.payload['mood'] ?? 'mood not recorded';
 
     final (icon, label, color) = switch (event.type) {
       EventType.stretchCompleted => (
@@ -601,7 +733,7 @@ class _EventTile extends StatelessWidget {
       ),
       EventType.journalEntry => (
         Icons.edit_note_rounded,
-        'Journal: pain ${event.payload['pain_level']}/10 · ${event.payload['mood']}',
+        'Journal: $painLabel · $moodLabel',
         AppTheme.secondaryCoral,
       ),
       EventType.angleLogged => (
@@ -613,6 +745,11 @@ class _EventTile extends StatelessWidget {
         Icons.medical_services_rounded,
         'Doctor appointment',
         AppTheme.primarySage,
+      ),
+      EventType.profileCompleted => (
+        Icons.person_rounded,
+        'Profile completed',
+        AppTheme.accentLavender,
       ),
     };
 
@@ -642,20 +779,21 @@ class _EventTile extends StatelessWidget {
               ],
             ),
           ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Text(
-              '+${event.xpValue} XP',
-              style: tt.labelSmall?.copyWith(
-                color: color,
-                fontWeight: FontWeight.bold,
+          if (showXp)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text(
+                '+${event.xpValue} XP',
+                style: tt.labelSmall?.copyWith(
+                  color: color,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
-          ),
         ],
       ),
     );

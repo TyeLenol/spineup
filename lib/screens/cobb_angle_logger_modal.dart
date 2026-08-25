@@ -3,11 +3,12 @@ import 'package:uuid/uuid.dart';
 import '../models/event.dart';
 import '../services/gamification_service.dart';
 import '../theme/app_theme.dart';
+import 'learn_screen.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Cobb Angle Logger Modal
 // Single-entry: manual degree input
-// Writes angle_logged (+50 XP) with method='manual'
+// Writes an angle_logged event with method='manual'
 // ─────────────────────────────────────────────────────────────────────────────
 
 class CobbAngleLoggerModal extends StatefulWidget {
@@ -45,7 +46,9 @@ class _CobbAngleLoggerModalState extends State<CobbAngleLoggerModal> {
     if (degrees == null || degrees <= 0 || degrees > 180) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Please enter a valid angle between 1 and 180.')),
+          const SnackBar(
+            content: Text('Please enter a valid angle between 1 and 180.'),
+          ),
         );
       }
       return;
@@ -70,9 +73,9 @@ class _CobbAngleLoggerModalState extends State<CobbAngleLoggerModal> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to log angle: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to log angle: $e')));
       }
     } finally {
       if (mounted) setState(() => _loading = false);
@@ -120,21 +123,16 @@ class _CobbAngleLoggerModalState extends State<CobbAngleLoggerModal> {
                         color: AppTheme.accentLavender.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: const Icon(Icons.architecture_rounded,
-                          color: AppTheme.accentLavender),
+                      child: const Icon(
+                        Icons.architecture_rounded,
+                        color: AppTheme.accentLavender,
+                      ),
                     ),
                     const SizedBox(width: 12),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('Log Cobb Angle', style: tt.titleMedium),
-                        Text('+$kXpAngle XP',
-                            style: tt.labelSmall?.copyWith(
-                              color: AppTheme.accentLavender,
-                              fontWeight: FontWeight.bold,
-                            )),
-                      ],
+                    Expanded(
+                      child: Text('Log Cobb Angle', style: tt.titleMedium),
                     ),
+                    const ContextualHelpIcon(topicId: 'measurement-log'),
                   ],
                 ),
                 const SizedBox(height: 16),
@@ -187,8 +185,11 @@ class _DisclaimerBanner extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(Icons.info_outline_rounded,
-              size: 20, color: AppTheme.mutedForeground),
+          Icon(
+            Icons.info_outline_rounded,
+            size: 20,
+            color: AppTheme.mutedForeground,
+          ),
           const SizedBox(width: 10),
           Expanded(
             child: Text(
@@ -228,16 +229,13 @@ class _ManualEntryPanel extends StatelessWidget {
             labelText: 'Cobb angle (degrees)',
             hintText: 'e.g. 28',
             suffixText: '°',
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
           ),
         ),
       ],
     );
   }
 }
-
 
 // ─── Helper ───────────────────────────────────────────────────────────────────
 

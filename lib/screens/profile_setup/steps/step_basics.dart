@@ -1,15 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import '../../../models/profile_data.dart';
 import '../profile_fields.dart';
 
 class StepBasics extends StatefulWidget {
   final ProfileData initialData;
+  final bool isCaregiverMode;
   final ValueChanged<ProfileData> onSave;
   final ValueChanged<bool> onValidityChanged;
 
   const StepBasics({
     super.key,
     required this.initialData,
+    required this.isCaregiverMode,
     required this.onSave,
     required this.onValidityChanged,
   });
@@ -21,20 +24,24 @@ class StepBasics extends StatefulWidget {
 class _StepBasicsState extends State<StepBasics> {
   late TextEditingController _nameController;
   late TextEditingController _dobController;
-  late Sex _sex;
+  String _dobIso = '';
   TreatmentStage? _stage;
 
   @override
   void initState() {
     super.initState();
-    _nameController = TextEditingController(text: widget.initialData.basics.displayName);
-    _dobController = TextEditingController(text: widget.initialData.basics.dob);
-    _sex = widget.initialData.basics.sex;
+    _nameController = TextEditingController(
+      text: widget.initialData.basics.displayName,
+    );
+    _dobIso = widget.initialData.basics.dob;
+    _dobController = TextEditingController(text: _formatDisplayDate(_dobIso));
     _stage = widget.initialData.story.treatmentStage;
-    
+
     _nameController.addListener(_validate);
     _dobController.addListener(_validate);
-    
+    _nameController.addListener(_save);
+    _dobController.addListener(_save);
+
     // Initial validation
     WidgetsBinding.instance.addPostFrameCallback((_) => _validate());
   }
@@ -46,24 +53,30 @@ class _StepBasicsState extends State<StepBasics> {
     super.dispose();
   }
 
+  String _formatDisplayDate(String value) {
+    if (value.trim().isEmpty) return '';
+    final parsed = DateTime.tryParse(value);
+    return parsed == null ? value : DateFormat.yMMMd().format(parsed);
+  }
+
   void _validate() {
     final nameValid = _nameController.text.trim().isNotEmpty;
-    final dobValid = _dobController.text.trim().isNotEmpty;
+    final dobValid = _dobIso.trim().isNotEmpty;
     final stageValid = _stage != null;
     widget.onValidityChanged(nameValid && dobValid && stageValid);
   }
 
   void _save() {
-    widget.onSave(widget.initialData.copyWith(
-      basics: ProfileBasics(
-        displayName: _nameController.text.trim(),
-        dob: _dobController.text.trim(),
-        sex: _sex,
+    widget.onSave(
+      widget.initialData.copyWith(
+        basics: ProfileBasics(
+          displayName: _nameController.text.trim(),
+          dob: _dobIso,
+          sex: Sex.none,
+        ),
+        story: widget.initialData.story.copyWith(treatmentStage: _stage),
       ),
-      story: widget.initialData.story.copyWith(
-        treatmentStage: _stage,
-      ),
-    ));
+    );
   }
 
   @override
@@ -80,7 +93,10 @@ class _StepBasicsState extends State<StepBasics> {
       lastDate: DateTime.now(),
     );
     if (date != null) {
-      _dobController.text = date.toIso8601String().substring(0, 10);
+      _dobIso = date.toIso8601String().substring(0, 10);
+      _dobController.text = DateFormat.yMMMd().format(date);
+      _save();
+      _validate();
     }
   }
 
@@ -90,63 +106,72 @@ class _StepBasicsState extends State<StepBasics> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         ProfileField(
-          label: 'What should Spry call you?',
+          label: widget.isCaregiverMode
+              ? 'What should we call them?'
+              : 'What should we call you?',
           child: ProfileTextInput(
             controller: _nameController,
             labelText: 'Name',
-            hintText: 'Your first name or nickname',
+            hintText: widget.isCaregiverMode
+                ? 'Their first name or nickname'
+                : 'Your first name or nickname',
           ),
         ),
         const SizedBox(height: 24),
         ProfileField(
-          label: 'Date of birth',
-          hint: 'Used for age-appropriate content and growth tracking.',
+          label: widget.isCaregiverMode
+              ? 'Their date of birth'
+              : 'Date of birth',
+          hint:
+              'Used only to present age-appropriate information and recordkeeping.',
           child: GestureDetector(
             onTap: _pickDate,
             child: AbsorbPointer(
               child: ProfileTextInput(
                 controller: _dobController,
                 labelText: 'Birth Date',
-                hintText: 'YYYY-MM-DD',
+                hintText: 'Select your birth date',
               ),
             ),
           ),
         ),
+
         const SizedBox(height: 24),
         ProfileField(
-          label: 'Sex assigned at birth (optional)',
-          hint: 'Scoliosis progression risk differs — you can skip this.',
-          child: ProfileChipGroup<Sex>(
-            selectedValue: _sex,
-            onChanged: (v) {
-              setState(() => _sex = (_sex == v) ? Sex.none : v);
-              _validate();
-            },
-            options: const [
-              ChipOption(value: Sex.female, label: 'Female'),
-              ChipOption(value: Sex.male, label: 'Male'),
-              ChipOption(value: Sex.intersex, label: 'Intersex'),
-              ChipOption(value: Sex.preferNot, label: 'Prefer not to say'),
-            ],
-          ),
-        ),
-        const SizedBox(height: 24),
-        ProfileField(
-          label: 'Where are you in your journey?',
-          hint: 'Shapes what Spry cheers you on for. You can change this any time.',
+          label: widget.isCaregiverMode
+              ? 'Where are they in their journey?'
+              : 'Where are you in your journey?',
+          hint: 'Shapes tracking and reminders. You can change this any time.',
           child: ProfileChipGroup<TreatmentStage>(
             columns: 1,
             selectedValue: _stage,
             onChanged: (v) {
               setState(() => _stage = v);
+              _save();
               _validate();
             },
             options: const [
-              ChipOption(value: TreatmentStage.observation, label: 'Being monitored', hint: 'Watch-and-wait, no brace yet'),
-              ChipOption(value: TreatmentStage.bracing, label: 'Wearing a brace'),
-              ChipOption(value: TreatmentStage.preOp, label: 'Preparing for surgery'),
-              ChipOption(value: TreatmentStage.postOp, label: 'Recovering from surgery'),
-              ChipOption(value: TreatmentStage.adult, label: 'Adult with scoliosis'),
+              ChipOption(
+                value: TreatmentStage.observation,
+                label: 'Being monitored',
+                hint: 'Watch-and-wait, no brace yet',
+              ),
+              ChipOption(
+                value: TreatmentStage.bracing,
+                label: 'Wearing a brace',
+              ),
+              ChipOption(
+                value: TreatmentStage.preOp,
+                label: 'Preparing for surgery',
+              ),
+              ChipOption(
+                value: TreatmentStage.postOp,
+                label: 'Recovering from surgery',
+              ),
+              ChipOption(
+                value: TreatmentStage.adult,
+                label: 'Adult with scoliosis',
+              ),
               ChipOption(value: TreatmentStage.unsure, label: 'Not sure yet'),
             ],
           ),

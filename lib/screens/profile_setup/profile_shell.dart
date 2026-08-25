@@ -40,30 +40,31 @@ class ProfileShell extends StatelessWidget {
     final pct = step / totalSteps;
 
     return Scaffold(
-      backgroundColor: AppTheme.backgroundCream,
+      backgroundColor: AppTheme.profileCanvas,
       resizeToAvoidBottomInset: true,
       body: Stack(
         children: [
-          // Background
           Positioned.fill(child: LivingBackground(step: step)),
-          
-          // Foreground Content
+
+          // Foreground content
           SafeArea(
             child: Column(
               children: [
                 // Top Bar
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  padding: const EdgeInsets.fromLTRB(12, 8, 12, 10),
                   child: Row(
                     children: [
                       // Back Button
                       IconButton(
                         onPressed: step > 1 ? onBack : null,
                         icon: const Icon(Icons.arrow_back_rounded, size: 24),
-                        color: AppTheme.foregroundDark,
-                        disabledColor: AppTheme.foregroundDark.withValues(alpha: 0.3),
+                        color: AppTheme.profileSage,
+                        disabledColor: AppTheme.profileMuted.withValues(
+                          alpha: 0.35,
+                        ),
                       ),
-                      
+
                       // Progress Bar
                       Expanded(
                         child: Padding(
@@ -74,15 +75,15 @@ class ProfileShell extends StatelessWidget {
                               Text(
                                 'STEP $step OF $totalSteps',
                                 style: GoogleFonts.outfit(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w800,
-                                  color: AppTheme.mutedForeground,
-                                  letterSpacing: 1.5,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w700,
+                                  color: AppTheme.profileMuted,
+                                  letterSpacing: 1.2,
                                 ),
                               ),
-                              const SizedBox(height: 6),
+                              const SizedBox(height: 7),
                               Container(
-                                height: 6,
+                                height: 5,
                                 width: double.infinity,
                                 decoration: BoxDecoration(
                                   color: AppTheme.borderCream,
@@ -93,13 +94,17 @@ class ProfileShell extends StatelessWidget {
                                     return Stack(
                                       children: [
                                         AnimatedContainer(
-                                          duration: const Duration(milliseconds: 500),
+                                          duration: const Duration(
+                                            milliseconds: 420,
+                                          ),
                                           curve: Curves.easeOutCubic,
-                                          height: 6,
+                                          height: 5,
                                           width: constraints.maxWidth * pct,
                                           decoration: BoxDecoration(
-                                            color: AppTheme.primarySage,
-                                            borderRadius: BorderRadius.circular(3),
+                                            color: AppTheme.profileAction,
+                                            borderRadius: BorderRadius.circular(
+                                              3,
+                                            ),
                                           ),
                                         ),
                                       ],
@@ -111,73 +116,79 @@ class ProfileShell extends StatelessWidget {
                           ),
                         ),
                       ),
-                      
+
                       // Close Button
                       IconButton(
                         onPressed: onClose,
                         icon: const Icon(Icons.close_rounded, size: 24),
-                        color: AppTheme.mutedForeground,
+                        color: AppTheme.profileMuted,
                       ),
                     ],
                   ),
                 ),
-                
+
                 // Body
                 Expanded(
                   child: CustomScrollView(
-                    keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+                    keyboardDismissBehavior:
+                        ScrollViewKeyboardDismissBehavior.onDrag,
                     slivers: [
                       SliverPadding(
-                        padding: const EdgeInsets.only(left: 24, right: 24, bottom: 24, top: 16),
+                        padding: const EdgeInsets.fromLTRB(24, 18, 24, 28),
                         sliver: SliverList(
-                        delegate: SliverChildListDelegate.fixed([
-                          Text(
-                            title,
-                            style: GoogleFonts.fraunces(
-                              fontSize: 36,
-                              fontWeight: FontWeight.w900,
-                              height: 0.95,
-                              letterSpacing: -0.5,
-                              color: AppTheme.foregroundDark,
+                          delegate: SliverChildListDelegate.fixed([
+                            Text(
+                              title,
+                              style: GoogleFonts.fraunces(
+                                fontSize: 34,
+                                fontWeight: FontWeight.w800,
+                                height: 1.05,
+                                letterSpacing: -0.7,
+                                color: AppTheme.foregroundDark,
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 12),
-                          Text(
-                            explainer,
-                            style: GoogleFonts.outfit(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
-                              color: AppTheme.mutedForeground,
-                              height: 1.4,
+                            const SizedBox(height: 12),
+                            Text(
+                              explainer,
+                              style: GoogleFonts.outfit(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w400,
+                                color: AppTheme.profileMuted,
+                                height: 1.5,
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 32),
-                          
-                          // Step specific children
-                          child,
-                          
-                          const SizedBox(height: 32),
-                        ]),
-                      ),
+                            const SizedBox(height: 32),
+
+                            // Step specific children
+                            child,
+
+                            const SizedBox(height: 32),
+                          ]),
+                        ),
                       ),
                       SliverFillRemaining(
                         hasScrollBody: false,
-                        child: Align(
-                          alignment: Alignment.bottomCenter,
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(24, 0, 24, 18),
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
                               FilledButton(
-                                onPressed: primaryDisabled ? null : onPrimaryTap,
+                                onPressed: primaryDisabled
+                                    ? null
+                                    : onPrimaryTap,
                                 style: FilledButton.styleFrom(
-                                  backgroundColor: AppTheme.primarySage,
-                                  foregroundColor: AppTheme.onPrimaryDark,
-                                  disabledBackgroundColor: AppTheme.primarySage.withValues(alpha: 0.4),
-                                  disabledForegroundColor: AppTheme.onPrimaryDark.withValues(alpha: 0.4),
-                                  minimumSize: const Size.fromHeight(56),
+                                  backgroundColor: AppTheme.profileAction,
+                                  foregroundColor: Colors.white,
+                                  disabledBackgroundColor: AppTheme
+                                      .profileAction
+                                      .withValues(alpha: 0.4),
+                                  disabledForegroundColor: Colors.white
+                                      .withValues(alpha: 0.7),
+                                  minimumSize: const Size.fromHeight(54),
                                   shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(28),
+                                    borderRadius: BorderRadius.circular(16),
                                   ),
                                   elevation: 0,
                                 ),
@@ -190,23 +201,23 @@ class ProfileShell extends StatelessWidget {
                                   ),
                                 ),
                               ),
-                              if (secondaryLabel != null && onSecondaryTap != null) ...[
+                              if (secondaryLabel != null &&
+                                  onSecondaryTap != null) ...[
                                 const SizedBox(height: 8),
                                 TextButton(
                                   onPressed: onSecondaryTap,
                                   style: TextButton.styleFrom(
-                                    foregroundColor: AppTheme.mutedForeground,
+                                    foregroundColor: AppTheme.profileAction,
                                     minimumSize: const Size.fromHeight(44),
                                     shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(22),
+                                      borderRadius: BorderRadius.circular(14),
                                     ),
                                   ),
                                   child: Text(
                                     secondaryLabel!,
                                     style: GoogleFonts.outfit(
                                       fontSize: 14,
-                                      fontWeight: FontWeight.w600,
-                                      decoration: TextDecoration.underline,
+                                      fontWeight: FontWeight.w700,
                                     ),
                                   ),
                                 ),

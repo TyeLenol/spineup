@@ -1,0 +1,57 @@
+name: Flutter quality
+
+on:
+  push:
+    branches:
+      - '**'
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  analyze-and-test:
+    name: Analyze and test
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.44.9'
+          channel: stable
+          cache: true
+
+      - name: Resolve dependencies
+        run: flutter pub get
+
+      - name: Check formatting
+        shell: bash
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: |
+          set -euo pipefail
+          if [[ "$BASE_SHA" =~ ^0+$ ]] || ! git cat-file -e "$BASE_SHA^{commit}" 2>/dev/null; then
+            BASE_SHA="$(git rev-parse HEAD^)"
+          fi
+          files="$(git diff --name-only --diff-filter=ACMR "$BASE_SHA" "$GITHUB_SHA" -- 'lib/**/*.dart' 'test/**/*.dart')"
+          if [ -n "$files" ]; then
+            dart format --output=none --set-exit-if-changed $files
+          else
+            echo 'No changed Dart files to format.'
+          fi
+
+      - name: Analyze Dart and Flutter code
+        run: flutter analyze
+
+      - name: Run tests
+        run: flutter test
+
+      - name: Build Android debug APK
+        run: flutter build apk --debug

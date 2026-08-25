@@ -12,6 +12,7 @@ const int kXpStretch = 30;
 const int kXpJournal = 25;
 const int kXpAngle = 50;
 const int kXpAppointment = 40;
+const int kXpProfileCompletion = 0;
 const int kXpDailyBonus = 5;
 const int kDailyXpTarget = 600;
 
@@ -90,8 +91,7 @@ class GamificationService {
   final DatabaseHelper _db;
   UserProfile _userProfile = UserProfile.defaultProfile();
 
-  GamificationService({DatabaseHelper? db})
-      : _db = db ?? DatabaseHelper();
+  GamificationService({DatabaseHelper? db}) : _db = db ?? DatabaseHelper();
 
   // ── Base XP helper ─────────────────────────────────────────────────────────
 
@@ -105,6 +105,8 @@ class GamificationService {
         return kXpAngle;
       case EventType.appointmentAttended:
         return kXpAppointment;
+      case EventType.profileCompleted:
+        return kXpProfileCompletion;
     }
   }
 
@@ -115,7 +117,9 @@ class GamificationService {
     final startOfDay = DateTime(now.year, now.month, now.day);
     final endOfDay = startOfDay.add(const Duration(days: 1));
     final events = await _db.getEventsByDateRange(userId, startOfDay, endOfDay);
-    return events.isEmpty;
+    return events
+        .where((event) => event.type != EventType.profileCompleted)
+        .isEmpty;
   }
 
   Future<bool> hasLoggedAngleToday(String userId) async {
@@ -133,9 +137,15 @@ class GamificationService {
     required String userId,
     required EventType type,
     required Map<String, dynamic> payload,
+    bool includeDailyBonus = true,
   }) async {
     int base = baseXpFor(type);
 
+    final eventsBefore = await _db.getEventsByUser(userId);
+    final previousTotalXp = eventsBefore.fold<int>(
+      0,
+      (sum, event) => sum + event.xpValue,
+    );
     final firstToday = await isFirstEventToday(userId);
 
     if (type == EventType.angleLogged) {
@@ -145,7 +155,7 @@ class GamificationService {
       }
     }
 
-    final bonus = firstToday ? kXpDailyBonus : 0;
+    final bonus = includeDailyBonus && firstToday ? kXpDailyBonus : 0;
     final total = base + bonus;
 
     final event = Event(
@@ -160,19 +170,41 @@ class GamificationService {
     await _db.insertEvent(event);
 
     final snapshot = await getSnapshot(userId);
-    final previousEvents = await _db.getEventsByUser(userId);
-    
+    final eventsAfter = await _db.getEventsByUser(userId);
+
     final newMilestones = _detectNewMilestones(
       type: type,
       snapshot: snapshot,
-      allEvents: previousEvents,
+      allEvents: eventsAfter,
+      previousTotalXp: previousTotalXp,
     );
 
     return LogEventResult(
       xpAwarded: total,
-      dailyBonusAwarded: firstToday,
+      dailyBonusAwarded: includeDailyBonus && firstToday,
       newMilestones: newMilestones,
     );
+  }
+
+  /// Updates an existing journal entry owned by [userId] without awarding XP again.
+  Future<void> updateJournalEntry({
+    required String eventId,
+    required String userId,
+    required Map<String, dynamic> payload,
+  }) async {
+    final existing = await _db.getEventById(eventId, userId);
+    if (existing == null) {
+      throw StateError('Journal entry not found for the active user: $eventId');
+    }
+    if (existing.type != EventType.journalEntry) {
+      throw ArgumentError.value(
+        eventId,
+        'eventId',
+        'Event is not a journal entry.',
+      );
+    }
+
+    await _db.updateEvent(existing.copyWith(payload: payload));
   }
 
   Future<void> reportPost(String postId, String userId) async {
@@ -209,9 +241,9 @@ class GamificationService {
     );
   }
 
-  /// Completely wipes all data for account deletion.
-  Future<void> clearAllUserData() async {
-    await _db.clearAllUserData();
+  /// Deletes all local data belonging to [userId] for account deletion.
+  Future<void> clearUserData({required String userId}) async {
+    await _db.clearUserData(userId);
     _userProfile = UserProfile.defaultProfile();
   }
 
@@ -221,14 +253,14 @@ class GamificationService {
     required EventType type,
     required GamificationSnapshot snapshot,
     required List<Event> allEvents,
+    required int previousTotalXp,
   }) {
     final result = <Milestone>[];
     for (final m in allMilestones) {
       if (m.requiredXp != null) {
-        // XP-gated: newly unlocked if totalXp now crosses the threshold and
-        // the pre-event xp was below it.
-        final xpBeforeThis = snapshot.totalXp - kXpStretch; // pessimistic guess
-        if (snapshot.totalXp >= m.requiredXp! && xpBeforeThis < m.requiredXp!) {
+        // XP-gated: newly unlocked only when this event crosses the threshold.
+        if (snapshot.totalXp >= m.requiredXp! &&
+            previousTotalXp < m.requiredXp!) {
           result.add(m);
         }
       } else if (m.requiredEventType != null && m.requiredEventCount != null) {
@@ -247,6 +279,11 @@ class GamificationService {
     return result;
   }
 
+  static String _storedProfileValue(Object? raw, String fallback) {
+    final value = raw as String?;
+    return value == null || value.trim().isEmpty ? fallback : value;
+  }
+
   // ── Snapshot ────────────────────────────────────────────────────────────────
 
   /// Compute a full [GamificationSnapshot] for [userId] by reading all events.
@@ -258,15 +295,21 @@ class GamificationService {
       _userProfile = UserProfile(
         presetId: userProfileMap['preset_id'] as String? ?? 'preset_sun',
         customPhotoPath: userProfileMap['custom_photo_path'] as String?,
-        name: userProfileMap['name'] as String? ?? 'Alex',
-        diagnosis: userProfileMap['diagnosis'] as String? ?? 'Thoracic Curve',
-        braceStatus: userProfileMap['brace_status'] as String? ?? 'Yes',
-        ageRange: userProfileMap['age_range'] as String? ?? '13-17',
+        name: _storedProfileValue(userProfileMap['name'], 'You'),
+        diagnosis: _storedProfileValue(
+          userProfileMap['diagnosis'],
+          'Not added',
+        ),
+        braceStatus: _storedProfileValue(
+          userProfileMap['brace_status'],
+          'Not added',
+        ),
+        ageRange: _storedProfileValue(userProfileMap['age_range'], 'Not added'),
       );
     }
 
     final totalXp = events.fold(0, (sum, e) => sum + e.xpValue);
-    
+
     int level = 1;
     int remainingXp = totalXp;
     while (true) {
@@ -278,7 +321,7 @@ class GamificationService {
         break;
       }
     }
-    
+
     final xpInLevel = remainingXp;
     final progress = xpInLevel / (100 + (level - 1) * 25);
 
@@ -310,11 +353,18 @@ class GamificationService {
     if (events.isEmpty) return 0;
 
     // Collect unique calendar dates (UTC-normalised for consistency).
-    final dates = events
-        .map((e) => DateTime(e.timestamp.year, e.timestamp.month, e.timestamp.day))
-        .toSet()
-        .toList()
-      ..sort((a, b) => b.compareTo(a)); // descending
+    final dates =
+        events
+            .map(
+              (e) => DateTime(
+                e.timestamp.year,
+                e.timestamp.month,
+                e.timestamp.day,
+              ),
+            )
+            .toSet()
+            .toList()
+          ..sort((a, b) => b.compareTo(a)); // descending
 
     final today = DateTime(
       DateTime.now().year,
@@ -358,7 +408,8 @@ class GamificationService {
         if (count >= m.requiredEventCount!) {
           result.add(m);
         }
-      } else if (m.requiredStreakDays != null && streakDays >= m.requiredStreakDays!) {
+      } else if (m.requiredStreakDays != null &&
+          streakDays >= m.requiredStreakDays!) {
         result.add(m);
       }
     }
@@ -371,15 +422,15 @@ class GamificationService {
   Future<List<({DateTime date, double degrees})>> getCobbAngleHistory(
     String userId,
   ) async {
-    final events = await _db.getEventsByUserAndType(userId, EventType.angleLogged);
+    final events = await _db.getEventsByUserAndType(
+      userId,
+      EventType.angleLogged,
+    );
     final result = <({DateTime date, double degrees})>[];
     for (final e in events) {
       final deg = e.payload['degrees'];
       if (deg != null) {
-        result.add((
-          date: e.timestamp,
-          degrees: (deg as num).toDouble(),
-        ));
+        result.add((date: e.timestamp, degrees: (deg as num).toDouble()));
       }
     }
     // Return in ascending order for the chart.
@@ -446,8 +497,19 @@ class GamificationService {
     if (appointment == null) {
       throw ArgumentError('Appointment not found: $appointmentId');
     }
+    if (appointment.userId != userId) {
+      throw StateError('Appointment does not belong to the active user.');
+    }
+    if (appointment.isCompleted || appointment.completedEventId != null) {
+      throw StateError('Appointment has already been completed.');
+    }
+    if (appointment.isCancelled) {
+      throw StateError('Cannot complete a cancelled appointment.');
+    }
     if (appointment.scheduledDateTime.isAfter(DateTime.now())) {
-      throw StateError('Cannot complete future appointment before scheduled date/time.');
+      throw StateError(
+        'Cannot complete future appointment before scheduled date/time.',
+      );
     }
 
     final eventId = const Uuid().v4();

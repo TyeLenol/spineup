@@ -17,6 +17,18 @@ class AppTheme {
   static const Color mutedForeground = Color(0xFF6B6158);
   static const Color borderCream = Color(0xFFDDCDB0);
 
+  // Warm care palette shared by local entry and profile setup. Deep teal keeps
+  // actions grounded while ivory, peach, and terracotta soften the form journey.
+  static const Color profileCanvas = Color(0xFFFFF5EA);
+  static const Color profileSurface = Color(0xFFFFFCF7);
+  static const Color profileSoftSage = Color(0xFFFCE4D2);
+  static const Color profileSage = Color(0xFF176B61);
+  static const Color profileMuted = Color(0xFF765E58);
+  static const Color profileBorder = Color(0xFFEBD2C2);
+  static const Color profileWarm = Color(0xFFF3B58E);
+  static const Color profileAction = Color(0xFFD7673D);
+  static const Color profileActionDeep = Color(0xFFAF4E2E);
+
   // Brand Colors (Dark Theme)
   static const Color darkBackground = Color(0xFF241E19);
   static const Color darkForeground = Color(0xFFF0E9DF);

@@ -4,10 +4,13 @@ import 'theme/app_transitions.dart';
 import 'screens/splash_screen.dart';
 import 'screens/onboarding_screen.dart';
 import 'screens/navigation_shell.dart';
-import 'screens/auth_screen.dart';
 import 'screens/profile_setup/profile_setup_screen.dart';
+import 'screens/local_first_welcome_screen.dart';
+import 'services/session_service.dart';
 
-final ValueNotifier<ThemeMode> themeModeNotifier = ValueNotifier<ThemeMode>(ThemeMode.system);
+final ValueNotifier<ThemeMode> themeModeNotifier = ValueNotifier<ThemeMode>(
+  ThemeMode.system,
+);
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -33,10 +36,8 @@ class SpineUpApp extends StatelessWidget {
           themeMode: mode,
           // Always keep cream canvas behind all routes — prevents black flash
           // when one Scaffold fades out before the next one appears.
-          builder: (context, child) => Container(
-            color: AppTheme.backgroundCream,
-            child: child,
-          ),
+          builder: (context, child) =>
+              Container(color: AppTheme.backgroundCream, child: child),
           home: SplashScreen(
             duration: splashDuration ?? const Duration(milliseconds: 4500),
           ),
@@ -56,29 +57,15 @@ Route<void> onboardingRoute([int step = 1]) {
   );
 }
 
-/// Auth route — handles both entrance slide and peer cross-fade mode switching.
-Route<void> authRoute(AuthMode mode, {bool isCrossFade = false}) {
-  Widget buildPage(BuildContext context) {
-    return AuthScreen(
-      mode: mode,
-      onBack: () => Navigator.of(context).maybePop(),
-      onSwitchMode: (newMode) {
-        Navigator.of(context).pushReplacement(authRoute(newMode, isCrossFade: true));
-      },
-      onSuccess: () => Navigator.of(context).pushAndRemoveUntil(profileSetupRoute(), (route) => false),
-    );
-  }
-
-  if (isCrossFade) {
-    return AppTransitions.buildCrossFadeRoute<void>(
-      duration: const Duration(milliseconds: 320),
-      pageBuilder: buildPage,
-    );
-  }
-
+Route<void> localFirstWelcomeRoute() {
   return AppTransitions.buildEmphasizedDecelerateRoute<void>(
-    duration: const Duration(milliseconds: 520),
-    pageBuilder: buildPage,
+    duration: const Duration(milliseconds: 420),
+    pageBuilder: (context) => LocalFirstWelcomeScreen(
+      onStart: () {
+        SessionService.startMockSession();
+        Navigator.of(context).pushReplacement(profileSetupRoute());
+      },
+    ),
   );
 }
 
@@ -106,4 +93,3 @@ Route<void> profileSetupRoute() {
     pageBuilder: (context) => const ProfileSetupScreen(),
   );
 }
-

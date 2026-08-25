@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../../../models/profile_data.dart';
 import '../profile_fields.dart';
 
@@ -25,7 +26,7 @@ class _StepGoalsState extends State<StepGoals> {
   void initState() {
     super.initState();
     _goals = List.from(widget.initialData.goals);
-    
+
     WidgetsBinding.instance.addPostFrameCallback((_) => _validate());
   }
 
@@ -46,11 +47,9 @@ class _StepGoalsState extends State<StepGoals> {
   }
 
   void _save() {
-    widget.onSave(widget.initialData.copyWith(
-      goals: _goals,
-      xp: (widget.initialData.xp == 0 ? 250 : widget.initialData.xp),
-      completedAt: DateTime.now(),
-    ));
+    widget.onSave(
+      widget.initialData.copyWith(goals: _goals, completedAt: DateTime.now()),
+    );
   }
 
   @override
@@ -72,12 +71,31 @@ class _StepGoalsState extends State<StepGoals> {
             selectedValues: _goals,
             onChanged: _toggle,
             options: const [
-              ChipOption(value: Goal.reducePain, label: 'Reduce pain', hint: 'Gentler days, better sleep'),
-              ChipOption(value: Goal.braceHours, label: 'Hit my brace-hour targets'),
-              ChipOption(value: Goal.ptConsistency, label: 'Stay consistent with physio'),
-              ChipOption(value: Goal.prepSurgery, label: 'Prepare for surgery'),
-              ChipOption(value: Goal.trackProgression, label: 'Track how my curve is changing'),
-              ChipOption(value: Goal.exploring, label: 'Just exploring for now'),
+              ChipOption(
+                value: Goal.reducePain,
+                label: 'Reduce pain',
+                hint: 'Gentler days, better sleep',
+              ),
+              ChipOption(
+                value: Goal.braceHours,
+                label: 'Hit my brace-hour targets',
+              ),
+              ChipOption(
+                value: Goal.ptConsistency,
+                label: 'Stay consistent with physio',
+              ),
+              ChipOption(
+                value: Goal.prepSurgery,
+                label: 'Prepare questions about surgery',
+              ),
+              ChipOption(
+                value: Goal.trackProgression,
+                label: 'Track how my curve is changing',
+              ),
+              ChipOption(
+                value: Goal.exploring,
+                label: 'Just exploring for now',
+              ),
             ],
           ),
         ),

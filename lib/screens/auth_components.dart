@@ -16,7 +16,11 @@ class AuthBackButton extends StatelessWidget {
       child: const SizedBox(
         width: 48,
         height: 48,
-        child: Icon(Icons.chevron_left_rounded, color: AppTheme.mutedForeground, size: 28),
+        child: Icon(
+          Icons.chevron_left_rounded,
+          color: AppTheme.mutedForeground,
+          size: 28,
+        ),
       ),
     );
   }
@@ -79,33 +83,24 @@ class AuthTextField extends StatelessWidget {
       builder: (context, child) {
         final isFocused = focusNode.hasFocus;
         return AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          height: 56,
+          duration: const Duration(milliseconds: 180),
+          height: 58,
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.65),
+            color: AppTheme.profileSurface.withValues(alpha: 0.94),
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: isFocused
-                  ? accentColor
-                  : AppTheme.borderCream.withValues(alpha: 0.95),
-              width: isFocused ? 2.0 : 1.5,
+              color: isFocused ? accentColor : AppTheme.profileBorder,
+              width: isFocused ? 2.0 : 1.2,
             ),
             boxShadow: isFocused
                 ? [
                     BoxShadow(
-                      color: accentColor.withValues(alpha: 0.18),
-                      blurRadius: 10,
-                      spreadRadius: 1,
+                      color: accentColor.withValues(alpha: 0.10),
+                      blurRadius: 8,
                       offset: const Offset(0, 2),
                     ),
                   ]
-                : [
-                    BoxShadow(
-                      color: AppTheme.foregroundDark.withValues(alpha: 0.03),
-                      blurRadius: 6,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
+                : null,
           ),
           child: Row(
             children: [
@@ -122,17 +117,21 @@ class AuthTextField extends StatelessWidget {
                   style: GoogleFonts.outfit(
                     fontSize: 16,
                     color: AppTheme.foregroundDark,
-                    fontWeight: textAlign == TextAlign.center ? FontWeight.w600 : FontWeight.normal,
+                    fontWeight: FontWeight.w500,
                   ),
                   decoration: InputDecoration(
-                    counterText: "", // Hide character counter if maxLength is set
+                    counterText:
+                        "", // Hide character counter if maxLength is set
                     hintText: hintText,
                     hintStyle: GoogleFonts.outfit(
-                      fontSize: 16,
-                      color: AppTheme.mutedForeground.withValues(alpha: 0.5),
+                      fontSize: 15,
+                      color: AppTheme.profileMuted.withValues(alpha: 0.65),
                     ),
                     border: InputBorder.none,
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 17,
+                    ),
                   ),
                 ),
               ),
@@ -150,7 +149,11 @@ class AuthTextField extends StatelessWidget {
 class AuthEyeToggle extends StatelessWidget {
   final bool showPassword;
   final VoidCallback onToggle;
-  const AuthEyeToggle({super.key, required this.showPassword, required this.onToggle});
+  const AuthEyeToggle({
+    super.key,
+    required this.showPassword,
+    required this.onToggle,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -200,13 +203,13 @@ class AuthPrimaryButton extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: loading ? null : onTap,
-        borderRadius: BorderRadius.circular(28),
+        borderRadius: BorderRadius.circular(16),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 150),
           height: 56,
           decoration: BoxDecoration(
             color: loading ? color.withValues(alpha: 0.7) : color,
-            borderRadius: BorderRadius.circular(28),
+            borderRadius: BorderRadius.circular(16),
           ),
           child: Center(
             child: loading

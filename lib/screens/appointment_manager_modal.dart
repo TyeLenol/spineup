@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import '../models/appointment.dart';
 import '../services/gamification_service.dart';
 import '../theme/app_theme.dart';
 
 /// Unified modal sheet for managing doctor appointments.
-/// Allows scheduling, viewing upcoming/past visits, editing, deleting, and marking completed (+40 XP).
+/// Allows scheduling, viewing upcoming/past visits, editing, deleting, and marking visits attended.
 class AppointmentManagerModal extends StatefulWidget {
   final String userId;
   final GamificationService gamificationService;
@@ -18,7 +19,8 @@ class AppointmentManagerModal extends StatefulWidget {
   });
 
   @override
-  State<AppointmentManagerModal> createState() => _AppointmentManagerModalState();
+  State<AppointmentManagerModal> createState() =>
+      _AppointmentManagerModalState();
 }
 
 class _AppointmentManagerModalState extends State<AppointmentManagerModal>
@@ -42,7 +44,9 @@ class _AppointmentManagerModalState extends State<AppointmentManagerModal>
 
   Future<void> _loadAppointments() async {
     setState(() => _loading = true);
-    final appointments = await widget.gamificationService.getAppointments(widget.userId);
+    final appointments = await widget.gamificationService.getAppointments(
+      widget.userId,
+    );
     if (mounted) {
       setState(() {
         _allAppointments = appointments;
@@ -58,7 +62,9 @@ class _AppointmentManagerModalState extends State<AppointmentManagerModal>
   }
 
   List<Appointment> get _pastAppointments {
-    final list = _allAppointments.where((a) => a.isCompleted || a.isCancelled).toList();
+    final list = _allAppointments
+        .where((a) => a.isCompleted || a.isCancelled)
+        .toList();
     list.sort((a, b) => b.scheduledDateTime.compareTo(a.scheduledDateTime));
     return list;
   }
@@ -145,7 +151,10 @@ class _AppointmentManagerModalState extends State<AppointmentManagerModal>
                     color: AppTheme.primarySage.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: const Icon(Icons.medical_services_rounded, color: AppTheme.primarySage),
+                  child: const Icon(
+                    Icons.medical_services_rounded,
+                    color: AppTheme.primarySage,
+                  ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -153,7 +162,12 @@ class _AppointmentManagerModalState extends State<AppointmentManagerModal>
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text('Appointments', style: tt.titleLarge),
-                      Text('Schedule visits & claim +40 XP', style: tt.bodySmall?.copyWith(color: AppTheme.mutedForeground)),
+                      Text(
+                        'Keep appointments and visit notes together',
+                        style: tt.bodySmall?.copyWith(
+                          color: AppTheme.mutedForeground,
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -162,7 +176,10 @@ class _AppointmentManagerModalState extends State<AppointmentManagerModal>
                   icon: const Icon(Icons.add_rounded, size: 18),
                   label: const Text('Schedule'),
                   style: FilledButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 8,
+                    ),
                   ),
                 ),
               ],
@@ -189,8 +206,14 @@ class _AppointmentManagerModalState extends State<AppointmentManagerModal>
                 : TabBarView(
                     controller: _tabController,
                     children: [
-                      _buildAppointmentsList(_upcomingAppointments, isUpcoming: true),
-                      _buildAppointmentsList(_pastAppointments, isUpcoming: false),
+                      _buildAppointmentsList(
+                        _upcomingAppointments,
+                        isUpcoming: true,
+                      ),
+                      _buildAppointmentsList(
+                        _pastAppointments,
+                        isUpcoming: false,
+                      ),
                     ],
                   ),
           ),
@@ -199,7 +222,10 @@ class _AppointmentManagerModalState extends State<AppointmentManagerModal>
     );
   }
 
-  Widget _buildAppointmentsList(List<Appointment> items, {required bool isUpcoming}) {
+  Widget _buildAppointmentsList(
+    List<Appointment> items, {
+    required bool isUpcoming,
+  }) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
 
@@ -211,20 +237,24 @@ class _AppointmentManagerModalState extends State<AppointmentManagerModal>
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(
-                isUpcoming ? Icons.event_available_rounded : Icons.history_toggle_off_rounded,
+                isUpcoming
+                    ? Icons.event_available_rounded
+                    : Icons.history_toggle_off_rounded,
                 size: 48,
                 color: AppTheme.mutedForeground.withValues(alpha: 0.5),
               ),
               const SizedBox(height: 12),
               Text(
-                isUpcoming ? 'No upcoming appointments' : 'No past appointments logged',
+                isUpcoming
+                    ? 'No upcoming appointments'
+                    : 'No past appointments logged',
                 style: tt.titleSmall?.copyWith(color: AppTheme.mutedForeground),
               ),
               const SizedBox(height: 4),
               Text(
                 isUpcoming
                     ? 'Tap "+ Schedule" above to book your doctor or therapy visit.'
-                    : 'Completed visits will show up here along with earned XP.',
+                    : 'Recorded visits will show up here for your reference.',
                 textAlign: TextAlign.center,
                 style: tt.bodySmall?.copyWith(color: AppTheme.mutedForeground),
               ),
@@ -240,7 +270,7 @@ class _AppointmentManagerModalState extends State<AppointmentManagerModal>
       itemBuilder: (context, index) {
         final apt = items[index];
         final dt = apt.scheduledDateTime;
-        final dateStr = '${dt.year}-${dt.month.toString().padLeft(2, '0')}-${dt.day.toString().padLeft(2, '0')} at ${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
+        final dateStr = DateFormat('MMM d, y · h:mm a').format(dt);
 
         return Card(
           elevation: 0,
@@ -263,7 +293,9 @@ class _AppointmentManagerModalState extends State<AppointmentManagerModal>
                       Expanded(
                         child: Text(
                           apt.title,
-                          style: tt.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+                          style: tt.titleSmall?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                       _buildStatusBadge(apt),
@@ -272,9 +304,18 @@ class _AppointmentManagerModalState extends State<AppointmentManagerModal>
                   const SizedBox(height: 8),
                   Row(
                     children: [
-                      const Icon(Icons.access_time_rounded, size: 16, color: AppTheme.primarySage),
+                      const Icon(
+                        Icons.access_time_rounded,
+                        size: 16,
+                        color: AppTheme.primarySage,
+                      ),
                       const SizedBox(width: 6),
-                      Text(dateStr, style: tt.bodySmall?.copyWith(color: AppTheme.mutedForeground)),
+                      Text(
+                        dateStr,
+                        style: tt.bodySmall?.copyWith(
+                          color: AppTheme.mutedForeground,
+                        ),
+                      ),
                     ],
                   ),
                   if (apt.notes != null && apt.notes!.isNotEmpty) ...[
@@ -283,7 +324,10 @@ class _AppointmentManagerModalState extends State<AppointmentManagerModal>
                       apt.notes!,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: tt.bodySmall?.copyWith(color: AppTheme.mutedForeground, fontStyle: FontStyle.italic),
+                      style: tt.bodySmall?.copyWith(
+                        color: AppTheme.mutedForeground,
+                        fontStyle: FontStyle.italic,
+                      ),
                     ),
                   ],
                 ],
@@ -303,7 +347,7 @@ class _AppointmentManagerModalState extends State<AppointmentManagerModal>
     if (apt.isCompleted) {
       bg = AppTheme.primarySage.withValues(alpha: 0.15);
       fg = AppTheme.primarySage;
-      label = 'Completed (+40 XP)';
+      label = 'Visit recorded';
     } else if (apt.isCancelled) {
       bg = AppTheme.mutedForeground.withValues(alpha: 0.15);
       fg = AppTheme.mutedForeground;
@@ -356,12 +400,24 @@ class _ScheduleFormSheetState extends State<_ScheduleFormSheet> {
   @override
   void initState() {
     super.initState();
-    _titleController = TextEditingController(text: widget.existing?.title ?? 'Orthopedist Follow-up');
-    _notesController = TextEditingController(text: widget.existing?.notes ?? '');
-    
-    final initial = widget.existing?.scheduledDateTime ?? DateTime.now().add(const Duration(hours: 2));
+    _titleController = TextEditingController(
+      text: widget.existing?.title ?? '',
+    );
+    _notesController = TextEditingController(
+      text: widget.existing?.notes ?? '',
+    );
+
+    final initial =
+        widget.existing?.scheduledDateTime ?? _defaultAppointmentTime();
     // Ensure initial selected datetime is not in the past
-    _selectedDateTime = initial.isBefore(DateTime.now()) ? DateTime.now().add(const Duration(hours: 1)) : initial;
+    _selectedDateTime = initial.isBefore(DateTime.now())
+        ? DateTime.now().add(const Duration(hours: 1))
+        : initial;
+  }
+
+  DateTime _defaultAppointmentTime() {
+    final tomorrow = DateTime.now().add(const Duration(days: 1));
+    return DateTime(tomorrow.year, tomorrow.month, tomorrow.day, 9);
   }
 
   @override
@@ -378,7 +434,9 @@ class _ScheduleFormSheetState extends State<_ScheduleFormSheet> {
     // 1. Date picker — block past dates at UI level
     final pickedDate = await showDatePicker(
       context: context,
-      initialDate: _selectedDateTime.isBefore(todayStart) ? todayStart : _selectedDateTime,
+      initialDate: _selectedDateTime.isBefore(todayStart)
+          ? todayStart
+          : _selectedDateTime,
       firstDate: todayStart, // Disables all past dates in UI
       lastDate: now.add(const Duration(days: 365)),
     );
@@ -403,7 +461,9 @@ class _ScheduleFormSheetState extends State<_ScheduleFormSheet> {
     if (combined.isBefore(DateTime.now())) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Please choose a future date and time.')),
+          const SnackBar(
+            content: Text('Please choose a future date and time.'),
+          ),
         );
       }
       return;
@@ -461,7 +521,7 @@ class _ScheduleFormSheetState extends State<_ScheduleFormSheet> {
     final tt = Theme.of(context).textTheme;
 
     final dt = _selectedDateTime;
-    final dateStr = '${dt.year}-${dt.month.toString().padLeft(2, '0')}-${dt.day.toString().padLeft(2, '0')} at ${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
+    final dateStr = DateFormat('MMM d, y · h:mm a').format(dt);
 
     return Padding(
       padding: EdgeInsets.only(
@@ -487,7 +547,9 @@ class _ScheduleFormSheetState extends State<_ScheduleFormSheet> {
           const SizedBox(height: 16),
 
           Text(
-            widget.existing == null ? 'Schedule Appointment' : 'Edit Appointment',
+            widget.existing == null
+                ? 'Schedule Appointment'
+                : 'Edit Appointment',
             style: tt.titleMedium,
           ),
           const SizedBox(height: 16),
@@ -498,9 +560,11 @@ class _ScheduleFormSheetState extends State<_ScheduleFormSheet> {
             textCapitalization: TextCapitalization.words,
             decoration: InputDecoration(
               labelText: 'Appointment Title / Type',
-              hintText: 'e.g. "Orthopedist", "Physical Therapy"',
+              hintText: 'e.g. Orthopedist or physical therapy',
               prefixIcon: const Icon(Icons.badge_outlined),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
             ),
           ),
           const SizedBox(height: 14),
@@ -517,13 +581,27 @@ class _ScheduleFormSheetState extends State<_ScheduleFormSheet> {
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.calendar_today_rounded, size: 20, color: AppTheme.primarySage),
+                  const Icon(
+                    Icons.calendar_today_rounded,
+                    size: 20,
+                    color: AppTheme.primarySage,
+                  ),
                   const SizedBox(width: 12),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Scheduled Date & Time', style: tt.labelSmall?.copyWith(color: AppTheme.mutedForeground)),
-                      Text(dateStr, style: tt.bodyMedium?.copyWith(fontWeight: FontWeight.w600)),
+                      Text(
+                        'Scheduled Date & Time',
+                        style: tt.labelSmall?.copyWith(
+                          color: AppTheme.mutedForeground,
+                        ),
+                      ),
+                      Text(
+                        dateStr,
+                        style: tt.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                     ],
                   ),
                   const Spacer(),
@@ -542,7 +620,9 @@ class _ScheduleFormSheetState extends State<_ScheduleFormSheet> {
             decoration: InputDecoration(
               labelText: 'Notes (optional)',
               hintText: 'e.g. "Bring latest X-ray scan report"',
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
             ),
           ),
           const SizedBox(height: 20),
@@ -553,9 +633,15 @@ class _ScheduleFormSheetState extends State<_ScheduleFormSheet> {
             child: FilledButton.icon(
               onPressed: _loading ? null : _save,
               icon: _loading
-                  ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
                   : const Icon(Icons.check_rounded),
-              label: Text(widget.existing == null ? 'Schedule Appointment' : 'Save Changes'),
+              label: Text(
+                widget.existing == null ? 'Save visit' : 'Save changes',
+              ),
             ),
           ),
         ],
@@ -584,7 +670,8 @@ class _AppointmentDetailSheet extends StatefulWidget {
   });
 
   @override
-  State<_AppointmentDetailSheet> createState() => _AppointmentDetailSheetState();
+  State<_AppointmentDetailSheet> createState() =>
+      _AppointmentDetailSheetState();
 }
 
 class _AppointmentDetailSheetState extends State<_AppointmentDetailSheet> {
@@ -595,9 +682,14 @@ class _AppointmentDetailSheetState extends State<_AppointmentDetailSheet> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Cancel Appointment?'),
-        content: const Text('Are you sure you want to delete this scheduled appointment? No XP is lost.'),
+        content: const Text(
+          'Are you sure you want to delete this scheduled appointment? This removes the visit record from this profile.',
+        ),
         actions: [
-          TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: const Text('Keep')),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Keep'),
+          ),
           FilledButton(
             onPressed: () => Navigator.of(ctx).pop(true),
             style: FilledButton.styleFrom(backgroundColor: Colors.red),
@@ -628,9 +720,9 @@ class _AppointmentDetailSheetState extends State<_AppointmentDetailSheet> {
     } catch (e) {
       if (mounted) {
         setState(() => _loading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error marking done: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error marking done: $e')));
       }
     }
   }
@@ -641,7 +733,7 @@ class _AppointmentDetailSheetState extends State<_AppointmentDetailSheet> {
     final tt = Theme.of(context).textTheme;
     final apt = widget.appointment;
     final dt = apt.scheduledDateTime;
-    final dateStr = '${dt.year}-${dt.month.toString().padLeft(2, '0')}-${dt.day.toString().padLeft(2, '0')} at ${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
+    final dateStr = DateFormat('MMM d, y · h:mm a').format(dt);
 
     final canComplete = apt.canBeCompleted;
 
@@ -666,11 +758,13 @@ class _AppointmentDetailSheetState extends State<_AppointmentDetailSheet> {
           // Header
           Row(
             children: [
-              Icon(Icons.medical_services_rounded, color: AppTheme.primarySage, size: 28),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(apt.title, style: tt.titleMedium),
+              Icon(
+                Icons.medical_services_rounded,
+                color: AppTheme.primarySage,
+                size: 28,
               ),
+              const SizedBox(width: 12),
+              Expanded(child: Text(apt.title, style: tt.titleMedium)),
             ],
           ),
           const SizedBox(height: 16),
@@ -688,14 +782,28 @@ class _AppointmentDetailSheetState extends State<_AppointmentDetailSheet> {
               children: [
                 Row(
                   children: [
-                    const Icon(Icons.access_time_rounded, size: 18, color: AppTheme.primarySage),
+                    const Icon(
+                      Icons.access_time_rounded,
+                      size: 18,
+                      color: AppTheme.primarySage,
+                    ),
                     const SizedBox(width: 8),
-                    Text(dateStr, style: tt.bodyMedium?.copyWith(fontWeight: FontWeight.w600)),
+                    Text(
+                      dateStr,
+                      style: tt.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                   ],
                 ),
                 if (apt.notes != null && apt.notes!.isNotEmpty) ...[
                   const Divider(height: 20),
-                  Text('Notes:', style: tt.labelSmall?.copyWith(color: AppTheme.mutedForeground)),
+                  Text(
+                    'Notes:',
+                    style: tt.labelSmall?.copyWith(
+                      color: AppTheme.mutedForeground,
+                    ),
+                  ),
                   const SizedBox(height: 4),
                   Text(apt.notes!, style: tt.bodyMedium),
                 ],
@@ -706,15 +814,19 @@ class _AppointmentDetailSheetState extends State<_AppointmentDetailSheet> {
 
           // Scheduled Status Action Options
           if (apt.isScheduled) ...[
-            // Mark as Done Button
+            // Mark as attended button
             SizedBox(
               width: double.infinity,
               child: FilledButton.icon(
                 onPressed: canComplete && !_loading ? _markDone : null,
                 icon: _loading
-                    ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
                     : const Icon(Icons.check_circle_rounded),
-                label: const Text('Mark as Done (+40 XP)'),
+                label: const Text('Mark as attended'),
               ),
             ),
             if (!canComplete) ...[
@@ -722,7 +834,10 @@ class _AppointmentDetailSheetState extends State<_AppointmentDetailSheet> {
               Center(
                 child: Text(
                   'Can be marked done once appointment time has arrived.',
-                  style: tt.bodySmall?.copyWith(color: AppTheme.mutedForeground, fontStyle: FontStyle.italic),
+                  style: tt.bodySmall?.copyWith(
+                    color: AppTheme.mutedForeground,
+                    fontStyle: FontStyle.italic,
+                  ),
                 ),
               ),
             ],
@@ -742,9 +857,17 @@ class _AppointmentDetailSheetState extends State<_AppointmentDetailSheet> {
                 Expanded(
                   child: OutlinedButton.icon(
                     onPressed: _delete,
-                    icon: const Icon(Icons.delete_outline_rounded, color: Colors.red),
-                    label: const Text('Delete', style: TextStyle(color: Colors.red)),
-                    style: OutlinedButton.styleFrom(side: const BorderSide(color: Colors.red)),
+                    icon: const Icon(
+                      Icons.delete_outline_rounded,
+                      color: Colors.red,
+                    ),
+                    label: const Text(
+                      'Delete',
+                      style: TextStyle(color: Colors.red),
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      side: const BorderSide(color: Colors.red),
+                    ),
                   ),
                 ),
               ],
@@ -758,9 +881,17 @@ class _AppointmentDetailSheetState extends State<_AppointmentDetailSheet> {
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.check_circle_rounded, color: AppTheme.primarySage),
+                  const Icon(
+                    Icons.check_circle_rounded,
+                    color: AppTheme.primarySage,
+                  ),
                   const SizedBox(width: 10),
-                  Text('Completed & +40 XP Awarded', style: tt.titleSmall?.copyWith(color: AppTheme.primarySage)),
+                  Text(
+                    'Visit recorded',
+                    style: tt.titleMedium?.copyWith(
+                      color: AppTheme.primarySage,
+                    ),
+                  ),
                 ],
               ),
             ),

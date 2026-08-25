@@ -24,8 +24,10 @@
 	<string>????</string>
 	<key>CFBundleVersion</key>
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
-	<key>LSRequiresIPhoneOS</key>
-	<true/>
+		<key>LSRequiresIPhoneOS</key>
+		<true/>
+		<key>NSPhotoLibraryUsageDescription</key>
+		<string>SpineUp uses your photo library so you can choose an avatar image.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
