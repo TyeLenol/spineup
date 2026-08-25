@@ -1,13 +1,73 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../theme/app_theme.dart';
 import '../learn_screen.dart';
+
+/// A small hand-sketched 6-point star drawn with CustomPaint.
+/// Slightly irregular arm lengths give it a casual, handmade feel.
+class _HandmadeStar extends StatelessWidget {
+  const _HandmadeStar();
+
+  @override
+  Widget build(BuildContext context) {
+    return const SizedBox(
+      width: 10,
+      height: 10,
+      child: CustomPaint(
+        painter: _HandmadeStarPainter(color: AppTheme.profileSage),
+      ),
+    );
+  }
+}
+
+class _HandmadeStarPainter extends CustomPainter {
+  final Color color;
+  const _HandmadeStarPainter({required this.color});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = 1.35
+      ..strokeCap = StrokeCap.round
+      ..style = PaintingStyle.stroke;
+
+    final cx = size.width / 2;
+    final cy = size.height / 2;
+    // Slightly irregular outer radii for a hand-drawn look
+    const outerR = [0.48, 0.45, 0.47, 0.46, 0.48, 0.44];
+    const innerR = 0.18;
+    const points = 6;
+
+    final path = Path();
+    for (int i = 0; i < points * 2; i++) {
+      final angle = (math.pi / points) * i - math.pi / 2;
+      final r = i.isEven
+          ? outerR[i ~/ 2] * size.width
+          : innerR * size.width;
+      final x = cx + r * math.cos(angle);
+      final y = cy + r * math.sin(angle);
+      if (i == 0) {
+        path.moveTo(x, y);
+      } else {
+        path.lineTo(x, y);
+      }
+    }
+    path.close();
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(_HandmadeStarPainter old) => old.color != color;
+}
 
 class ProfileField extends StatelessWidget {
   final String label;
   final String? hint;
   final String? helpTopicId;
   final Widget child;
+  final bool required;
 
   const ProfileField({
     super.key,
@@ -15,6 +75,7 @@ class ProfileField extends StatelessWidget {
     this.hint,
     this.helpTopicId,
     required this.child,
+    this.required = false,
   });
 
   @override
@@ -23,16 +84,28 @@ class ProfileField extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Expanded(
-              child: Text(
-                label,
-                style: GoogleFonts.outfit(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 0.1,
-                  color: AppTheme.foregroundDark,
-                ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Flexible(
+                    child: Text(
+                      label,
+                      style: GoogleFonts.outfit(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.1,
+                        color: AppTheme.foregroundDark,
+                      ),
+                    ),
+                  ),
+                  if (required) ...[
+                    const SizedBox(width: 5),
+                    const _HandmadeStar(),
+                  ],
+                ],
               ),
             ),
             if (helpTopicId != null)

@@ -19,15 +19,15 @@ class AppTheme {
 
   // Warm care palette shared by local entry and profile setup. Deep teal keeps
   // actions grounded while ivory, peach, and terracotta soften the form journey.
-  static const Color profileCanvas = Color(0xFFFFF5EA);
-  static const Color profileSurface = Color(0xFFFFFCF7);
-  static const Color profileSoftSage = Color(0xFFFCE4D2);
-  static const Color profileSage = Color(0xFF176B61);
-  static const Color profileMuted = Color(0xFF765E58);
-  static const Color profileBorder = Color(0xFFEBD2C2);
-  static const Color profileWarm = Color(0xFFF3B58E);
-  static const Color profileAction = Color(0xFFD7673D);
-  static const Color profileActionDeep = Color(0xFFAF4E2E);
+  static const Color profileCanvas = Color(0xFFFEEDD8);       // warmer amber-cream
+  static const Color profileSurface = Color(0xFFFFF8EF);
+  static const Color profileSoftSage = Color(0xFFFAD4B8);     // warm peachy blush
+  static const Color profileSage = Color(0xFF0D8A7A);         // rich saturated teal
+  static const Color profileMuted = Color(0xFF765E58);        // original warm brown
+  static const Color profileBorder = Color(0xFFEAC8A8);
+  static const Color profileWarm = Color(0xFFF3A06A);
+  static const Color profileAction = Color(0xFFD94F1E);       // vivid paprika – vibrant CTA
+  static const Color profileActionDeep = Color(0xFFA63511);   // deep mahogany shadow
 
   // Brand Colors (Dark Theme)
   static const Color darkBackground = Color(0xFF241E19);

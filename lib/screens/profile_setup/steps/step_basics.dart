@@ -109,6 +109,7 @@ class _StepBasicsState extends State<StepBasics> {
           label: widget.isCaregiverMode
               ? 'What should we call them?'
               : 'What should we call you?',
+          required: true,
           child: ProfileTextInput(
             controller: _nameController,
             labelText: 'Name',
@@ -122,6 +123,7 @@ class _StepBasicsState extends State<StepBasics> {
           label: widget.isCaregiverMode
               ? 'Their date of birth'
               : 'Date of birth',
+          required: true,
           hint:
               'Used only to present age-appropriate information and recordkeeping.',
           child: GestureDetector(
@@ -141,6 +143,7 @@ class _StepBasicsState extends State<StepBasics> {
           label: widget.isCaregiverMode
               ? 'Where are they in their journey?'
               : 'Where are you in your journey?',
+          required: true,
           hint: 'Shapes tracking and reminders. You can change this any time.',
           child: ProfileChipGroup<TreatmentStage>(
             columns: 1,

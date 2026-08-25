@@ -79,6 +79,7 @@ class _StepCareState extends State<StepCare> {
       children: [
         ProfileField(
           label: 'Do you currently wear a brace?',
+          required: true,
           child: ProfileChipGroup<bool>(
             columns: 2,
             selectedValue: _wears,
