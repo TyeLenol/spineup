@@ -7,10 +7,12 @@ import '../../data/database_helper.dart';
 import '../../main.dart';
 import '../../models/event.dart';
 import '../../models/profile_data.dart';
+import '../../models/user_profile.dart';
 import '../../services/gamification_service.dart';
 import '../../services/profile_mapper.dart';
 import '../../services/profile_store.dart';
 import '../../services/session_service.dart';
+import '../../theme/app_theme.dart';
 import 'profile_shell.dart';
 import 'steps/step_basics.dart';
 import 'steps/step_care.dart';
@@ -21,8 +23,13 @@ import 'steps/step_ownership.dart';
 
 class ProfileSetupScreen extends StatefulWidget {
   final bool createNewWard;
+  final bool editExisting;
 
-  const ProfileSetupScreen({super.key, this.createNewWard = false});
+  const ProfileSetupScreen({
+    super.key,
+    this.createNewWard = false,
+    this.editExisting = false,
+  });
 
   @override
   State<ProfileSetupScreen> createState() => _ProfileSetupScreenState();
@@ -33,6 +40,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
   ProfileData _data = const ProfileData();
   bool _stepValid = true;
   bool _finishing = false;
+  bool _initialDataReady = false;
 
   @override
   void initState() {
@@ -50,7 +58,10 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
             careSubjectId: SessionService.currentCareSubjectId,
           );
     if (mounted) {
-      setState(() => _data = data);
+      setState(() {
+        _data = data;
+        _initialDataReady = true;
+      });
     }
   }
 
@@ -105,7 +116,20 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
         data: _data,
         existing: existingSubject,
       );
-      final runtimeProfile = ProfileMapper.toRuntimeProfile(_data);
+      final gamification = GamificationService();
+      final existingRuntime = widget.editExisting
+          ? (await gamification.getSnapshot(careSubjectId)).userProfile
+          : const UserProfile(
+              presetId: 'preset_sun',
+              name: 'You',
+              diagnosis: 'Not added',
+              braceStatus: 'Not added',
+              ageRange: 'Not added',
+            );
+      final runtimeProfile = ProfileMapper.toRuntimeProfile(
+        _data,
+        fallback: existingRuntime,
+      );
 
       await DatabaseHelper().upsertCareSubject(careSubject);
       await ProfileStore.saveProfile(
@@ -114,7 +138,6 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
         data: _data,
       );
 
-      final gamification = GamificationService();
       await gamification.updateProfile(
         userId: careSubject.id,
         presetId: runtimeProfile.presetId,
@@ -143,7 +166,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
       SessionService.setActiveCareSubject(careSubject);
 
       if (!mounted) return;
-      if (widget.createNewWard) {
+      if (widget.createNewWard || widget.editExisting) {
         Navigator.of(context).pop(true);
       } else {
         Navigator.of(
@@ -166,17 +189,31 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
     VoidCallback? onSecondaryTap;
     final isWard = _data.ownership.isWard;
 
+    if (widget.editExisting && !_initialDataReady) {
+      return const Scaffold(
+        backgroundColor: AppTheme.profileCanvas,
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
     switch (_step) {
       case 1:
-        title = widget.createNewWard
+        title = widget.editExisting
+            ? 'Update this care space.'
+            : widget.createNewWard
             ? 'A private space for them.'
             : 'Start with a private space.';
-        explainer = widget.createNewWard
+        explainer = widget.editExisting
+            ? 'Review the details saved for this care space. The person and ownership stay the same.'
+            : widget.createNewWard
             ? 'Create a separate local workspace for another person. Your own profile will not be changed.'
             : 'First, choose whose information you are setting up. Each person’s records stay in their own private workspace.';
         child = StepOwnership(
           initialData: _data,
           allowSelf: !widget.createNewWard,
+          lockedSubjectType: widget.editExisting
+              ? _data.ownership.subjectType
+              : null,
           onSave: _saveOwnership,
           onValidityChanged: (valid) {
             WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -260,6 +297,8 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
             : 'Choose what would be helpful to track. These shape reminders and app activities, not a treatment plan.';
         primaryLabel = _finishing
             ? 'Saving profile…'
+            : widget.editExisting
+            ? 'Save changes'
             : 'Finish setting up your profile';
         child = StepGoals(
           initialData: _data,
@@ -289,7 +328,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
       onSecondaryTap: _finishing ? null : onSecondaryTap,
       onBack: _finishing ? null : _prevStep,
       onClose: () {
-        if (widget.createNewWard) {
+        if (widget.createNewWard || widget.editExisting) {
           Navigator.of(context).pop(false);
         } else {
           Navigator.of(

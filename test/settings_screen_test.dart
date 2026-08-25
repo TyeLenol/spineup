@@ -1,0 +1,45 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:spineup/screens/settings_screen.dart';
+import 'package:spineup/services/reminder_service.dart';
+
+void main() {
+  setUp(() {
+    SharedPreferences.setMockInitialValues({});
+  });
+
+  testWidgets(
+    'renders grouped settings without Android reminder on other platforms',
+    (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(home: SettingsScreen(onReplayQuickTour: () {})),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Settings'), findsOneWidget);
+      expect(find.text('Preferences'), findsOneWidget);
+      expect(find.text('Help & guidance'), findsOneWidget);
+      if (ReminderService.isSupported) {
+        expect(find.text('Daily reminder'), findsOneWidget);
+      } else {
+        expect(find.text('Daily reminder'), findsNothing);
+      }
+
+      await tester.scrollUntilVisible(
+        find.text('Privacy & portability'),
+        400,
+        scrollable: find.byType(Scrollable),
+      );
+      expect(find.text('Privacy & portability'), findsOneWidget);
+
+      await tester.scrollUntilVisible(
+        find.text('Danger zone'),
+        400,
+        scrollable: find.byType(Scrollable),
+      );
+      expect(find.text('Danger zone'), findsOneWidget);
+      expect(find.text('Delete all local data'), findsOneWidget);
+    },
+  );
+}

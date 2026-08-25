@@ -43,9 +43,7 @@ class _HandmadeStarPainter extends CustomPainter {
     final path = Path();
     for (int i = 0; i < points * 2; i++) {
       final angle = (math.pi / points) * i - math.pi / 2;
-      final r = i.isEven
-          ? outerR[i ~/ 2] * size.width
-          : innerR * size.width;
+      final r = i.isEven ? outerR[i ~/ 2] * size.width : innerR * size.width;
       final x = cx + r * math.cos(angle);
       final y = cy + r * math.sin(angle);
       if (i == 0) {
@@ -231,7 +229,7 @@ class ProfileChipGroup<T> extends StatelessWidget {
   final List<T> selectedValues;
   final bool multi;
   final List<ChipOption<T>> options;
-  final ValueChanged<T> onChanged;
+  final ValueChanged<T>? onChanged;
   final int columns;
 
   const ProfileChipGroup({
@@ -263,7 +261,7 @@ class ProfileChipGroup<T> extends StatelessWidget {
           children: options.map((opt) {
             final on = _isSelected(opt.value);
             return GestureDetector(
-              onTap: () => onChanged(opt.value),
+              onTap: onChanged == null ? null : () => onChanged!(opt.value),
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 200),
                 width: width,
