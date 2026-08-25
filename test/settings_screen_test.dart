@@ -19,8 +19,14 @@ void main() {
       expect(find.text('Settings'), findsOneWidget);
       expect(find.text('Preferences'), findsOneWidget);
       expect(find.text('Help & guidance'), findsOneWidget);
-      expect(find.text('Privacy & portability'), findsOneWidget);
       expect(find.text('Daily reminder'), findsNothing);
+
+      await tester.scrollUntilVisible(
+        find.text('Privacy & portability'),
+        400,
+        scrollable: find.byType(Scrollable),
+      );
+      expect(find.text('Privacy & portability'), findsOneWidget);
 
       await tester.scrollUntilVisible(
         find.text('Danger zone'),
