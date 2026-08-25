@@ -16,12 +16,15 @@ import '../theme/app_theme.dart';
 import '../widgets/avatar_display.dart';
 import '../widgets/badge_icon.dart';
 import '../widgets/portable_archive_dialogs.dart';
+import '../widgets/quick_tour.dart';
 import 'care_subject_manager.dart';
 import 'profile_setup/profile_fields.dart';
 import 'profile_setup/profile_setup_screen.dart';
 
 class MeScreen extends StatefulWidget {
-  const MeScreen({super.key});
+  final VoidCallback? onReplayQuickTour;
+
+  const MeScreen({super.key, this.onReplayQuickTour});
 
   @override
   State<MeScreen> createState() => _MeScreenState();
@@ -162,6 +165,7 @@ class _MeScreenState extends State<MeScreen>
                     userId: SessionService.currentUserId,
                     gamificationService: _gs,
                     onDataChanged: _loadAll,
+                    onReplayQuickTour: widget.onReplayQuickTour,
                   ),
                   const SizedBox(height: 24),
                 ],
@@ -944,11 +948,13 @@ class _SettingsSection extends StatefulWidget {
   final String userId;
   final GamificationService gamificationService;
   final VoidCallback? onDataChanged;
+  final VoidCallback? onReplayQuickTour;
 
   const _SettingsSection({
     required this.userId,
     required this.gamificationService,
     this.onDataChanged,
+    this.onReplayQuickTour,
   });
 
   @override
@@ -1038,6 +1044,11 @@ class _SettingsSectionState extends State<_SettingsSection> {
     } finally {
       if (mounted) setState(() => _archiveBusy = false);
     }
+  }
+
+  Future<void> _replayQuickTour() async {
+    await QuickTourService.reset();
+    if (mounted) widget.onReplayQuickTour?.call();
   }
 
   Future<void> _importArchive() async {
@@ -1233,6 +1244,16 @@ class _SettingsSectionState extends State<_SettingsSection> {
               trailing: const Icon(Icons.chevron_right_rounded),
               onTap: _showAppearanceDialog,
             ),
+            if (widget.onReplayQuickTour != null) ...[
+              const Divider(height: 1),
+              ListTile(
+                leading: const Icon(Icons.explore_outlined),
+                title: const Text('Replay quick tour'),
+                subtitle: const Text('A short guide to the main areas'),
+                trailing: const Icon(Icons.chevron_right_rounded),
+                onTap: _replayQuickTour,
+              ),
+            ],
             const Divider(height: 1),
             SwitchListTile(
               secondary: const Icon(Icons.notifications_none_rounded),

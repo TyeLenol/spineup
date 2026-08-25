@@ -8,6 +8,7 @@ import '../services/external_content_service.dart';
 import '../services/session_service.dart';
 import '../theme/app_transitions.dart';
 import '../widgets/glass_nav_bar.dart';
+import '../widgets/quick_tour.dart';
 import 'external_content_screen.dart';
 import 'learn_screen.dart';
 import 'me_screen.dart';
@@ -51,7 +52,10 @@ class _NavigationShellState extends State<NavigationShell> {
       0 => TodayScreen(key: ValueKey('today-$subjectId')),
       1 => MyJourneyScreen(key: ValueKey('journey-$subjectId')),
       2 => LearnScreen(key: ValueKey('learn-$subjectId')),
-      3 => MeScreen(key: ValueKey('me-$subjectId')),
+      3 => MeScreen(
+        key: ValueKey('me-$subjectId'),
+        onReplayQuickTour: _replayQuickTour,
+      ),
       _ => TodayScreen(key: ValueKey('today-$subjectId')),
     };
   }
@@ -59,6 +63,14 @@ class _NavigationShellState extends State<NavigationShell> {
   void _onItemTapped(int index) {
     if (index == _selectedIndex) return;
     setState(() => _selectedIndex = index);
+  }
+
+  void _replayQuickTour() {
+    if (!mounted) return;
+    setState(() => _selectedIndex = 0);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) showQuickTour(context);
+    });
   }
 
   @override

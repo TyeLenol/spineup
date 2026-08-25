@@ -7,19 +7,31 @@ import '../profile_fields.dart';
 class StepCurve extends StatefulWidget {
   final ProfileData initialData;
   final ValueChanged<ProfileData> onSave;
+  final ValueChanged<bool>? onValidityChanged;
 
-  const StepCurve({super.key, required this.initialData, required this.onSave});
+  const StepCurve({
+    super.key,
+    required this.initialData,
+    required this.onSave,
+    this.onValidityChanged,
+  });
 
   @override
   State<StepCurve> createState() => _StepCurveState();
 }
 
 class _StepCurveState extends State<StepCurve> {
+  static const double _minAngle = 0;
+  static const double _maxAngle = 180;
+
   late TextEditingController _primaryController;
   late TextEditingController _secondaryController;
   late TextEditingController _risserController;
   CurveType? _curveType;
+  String? _primaryError;
+  String? _secondaryError;
   bool _advanced = false;
+  bool _lastValidity = true;
 
   @override
   void initState() {
@@ -34,6 +46,12 @@ class _StepCurveState extends State<StepCurve> {
       text: widget.initialData.curve.risser?.toString() ?? '',
     );
     _curveType = widget.initialData.curve.curveType;
+    _primaryError = _angleError(_primaryController.text);
+    _secondaryError = _angleError(_secondaryController.text);
+    _lastValidity = _primaryError == null && _secondaryError == null;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) widget.onValidityChanged?.call(_lastValidity);
+    });
 
     _primaryController.addListener(_save);
     _secondaryController.addListener(_save);
@@ -48,10 +66,39 @@ class _StepCurveState extends State<StepCurve> {
     super.dispose();
   }
 
+  String? _angleError(String text) {
+    final trimmed = text.trim();
+    if (trimmed.isEmpty) return null;
+    final value = double.tryParse(trimmed);
+    if (value == null || value < _minAngle || value > _maxAngle) {
+      return 'Enter a number from 0 to 180°.';
+    }
+    return null;
+  }
+
   void _save() {
-    final p = double.tryParse(_primaryController.text.trim());
-    final s = double.tryParse(_secondaryController.text.trim());
+    final primaryText = _primaryController.text.trim();
+    final secondaryText = _secondaryController.text.trim();
+    final primaryError = _angleError(primaryText);
+    final secondaryError = _angleError(secondaryText);
+    final p = primaryError == null ? double.tryParse(primaryText) : null;
+    final s = secondaryError == null ? double.tryParse(secondaryText) : null;
     final r = int.tryParse(_risserController.text.trim());
+    final valid = primaryError == null && secondaryError == null;
+
+    if (mounted &&
+        (_primaryError != primaryError || _secondaryError != secondaryError)) {
+      setState(() {
+        _primaryError = primaryError;
+        _secondaryError = secondaryError;
+      });
+    }
+    if (valid != _lastValidity) {
+      _lastValidity = valid;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) widget.onValidityChanged?.call(valid);
+      });
+    }
 
     widget.onSave(
       widget.initialData.copyWith(
@@ -79,12 +126,14 @@ class _StepCurveState extends State<StepCurve> {
         ProfileField(
           label: 'Primary Cobb angle (°)',
           helpTopicId: 'cobb-angle',
-          hint: 'The main curve angle from your X-ray.',
+          hint:
+              'Use the number from a clinic report if you have one. SpineUp stores it without interpreting it.',
           child: ProfileTextInput(
             controller: _primaryController,
-            labelText: 'Cobb Angle',
+            labelText: 'Cobb angle',
             hintText: 'e.g. 28',
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            errorText: _primaryError,
           ),
         ),
         const SizedBox(height: 24),
@@ -161,6 +210,7 @@ class _StepCurveState extends State<StepCurve> {
                         keyboardType: const TextInputType.numberWithOptions(
                           decimal: true,
                         ),
+                        errorText: _secondaryError,
                       ),
                     ),
                     const SizedBox(height: 24),

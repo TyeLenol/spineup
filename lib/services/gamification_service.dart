@@ -279,6 +279,11 @@ class GamificationService {
     return result;
   }
 
+  static String _storedProfileValue(Object? raw, String fallback) {
+    final value = raw as String?;
+    return value == null || value.trim().isEmpty ? fallback : value;
+  }
+
   // ── Snapshot ────────────────────────────────────────────────────────────────
 
   /// Compute a full [GamificationSnapshot] for [userId] by reading all events.
@@ -290,10 +295,16 @@ class GamificationService {
       _userProfile = UserProfile(
         presetId: userProfileMap['preset_id'] as String? ?? 'preset_sun',
         customPhotoPath: userProfileMap['custom_photo_path'] as String?,
-        name: userProfileMap['name'] as String? ?? 'Alex',
-        diagnosis: userProfileMap['diagnosis'] as String? ?? 'Thoracic Curve',
-        braceStatus: userProfileMap['brace_status'] as String? ?? 'Yes',
-        ageRange: userProfileMap['age_range'] as String? ?? '13-17',
+        name: _storedProfileValue(userProfileMap['name'], 'You'),
+        diagnosis: _storedProfileValue(
+          userProfileMap['diagnosis'],
+          'Not added',
+        ),
+        braceStatus: _storedProfileValue(
+          userProfileMap['brace_status'],
+          'Not added',
+        ),
+        ageRange: _storedProfileValue(userProfileMap['age_range'], 'Not added'),
       );
     }
 

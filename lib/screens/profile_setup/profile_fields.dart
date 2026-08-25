@@ -66,6 +66,7 @@ class ProfileTextInput extends StatelessWidget {
   final String? hintText;
   final TextInputType keyboardType;
   final ValueChanged<String>? onChanged;
+  final String? errorText;
 
   const ProfileTextInput({
     super.key,
@@ -74,6 +75,7 @@ class ProfileTextInput extends StatelessWidget {
     this.hintText,
     this.keyboardType = TextInputType.text,
     this.onChanged,
+    this.errorText,
   });
 
   @override
@@ -101,6 +103,7 @@ class ProfileTextInput extends StatelessWidget {
           color: AppTheme.profileSage,
         ),
         hintText: hintText,
+        errorText: errorText,
         hintStyle: GoogleFonts.outfit(
           fontSize: 15,
           fontWeight: FontWeight.w400,

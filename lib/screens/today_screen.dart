@@ -13,6 +13,7 @@ import '../services/session_service.dart';
 import '../services/routine_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/action_reward_feedback.dart';
+import '../widgets/quick_tour.dart';
 import 'appointment_logger_modal.dart';
 import 'daily_check_in_screen.dart';
 import 'routine_library_screen.dart';
@@ -40,6 +41,7 @@ class _TodayScreenState extends State<TodayScreen>
   List<RoutineExercise> _routineExercises = [];
   final Set<String> _completedToday = {};
   bool _loadingSnap = true;
+  bool _showQuickTourEntry = false;
 
   @override
   void initState() {
@@ -61,6 +63,7 @@ class _TodayScreenState extends State<TodayScreen>
     final routineExercises = RoutineService.exercisesForIds(
       activeRoutine.exerciseIds,
     );
+    final quickTourSeen = await QuickTourService.hasSeen();
     final routineIds = routineExercises.map((exercise) => exercise.id).toSet();
 
     final completedIds = todayEvents
@@ -81,12 +84,25 @@ class _TodayScreenState extends State<TodayScreen>
         _completedToday
           ..clear()
           ..addAll(completedIds);
+        _showQuickTourEntry = !quickTourSeen;
         _loadingSnap = false;
       });
     }
   }
 
   int get _todayXp => _todayEvents.fold(0, (sum, e) => sum + e.xpValue);
+
+  Future<void> _startQuickTour() async {
+    await QuickTourService.markSeen();
+    if (!mounted) return;
+    setState(() => _showQuickTourEntry = false);
+    await showQuickTour(context);
+  }
+
+  Future<void> _dismissQuickTour() async {
+    await QuickTourService.markSeen();
+    if (mounted) setState(() => _showQuickTourEntry = false);
+  }
 
   Appointment? get _nextAppointment {
     final scheduled = _appointments.where((a) => a.isScheduled).toList();
@@ -226,6 +242,13 @@ class _TodayScreenState extends State<TodayScreen>
                 padding: const EdgeInsets.fromLTRB(16, 0, 16, 120),
                 sliver: SliverList(
                   delegate: SliverChildListDelegate([
+                    if (_showQuickTourEntry) ...[
+                      QuickTourEntryCard(
+                        onStart: _startQuickTour,
+                        onLater: _dismissQuickTour,
+                      ),
+                      const SizedBox(height: 14),
+                    ],
                     // ── Primary daily action ───────────────────────────────
                     _DailyCheckInSummaryCard(
                       latestLog: _latestJournalLogToday,
