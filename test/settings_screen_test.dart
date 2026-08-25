@@ -26,8 +26,14 @@ void main() {
       expect(find.text('Preferences'), findsOneWidget);
       expect(find.text('Help & guidance'), findsOneWidget);
       expect(find.text('Privacy & portability'), findsOneWidget);
-      expect(find.text('Danger zone'), findsOneWidget);
       expect(find.text('Daily reminder'), findsNothing);
+
+      await tester.scrollUntilVisible(
+        find.text('Danger zone'),
+        400,
+        scrollable: find.byType(Scrollable),
+      );
+      expect(find.text('Danger zone'), findsOneWidget);
       expect(find.text('Delete all local data'), findsOneWidget);
     },
   );
