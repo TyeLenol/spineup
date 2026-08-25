@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:spineup/screens/settings_screen.dart';
+import 'package:spineup/services/reminder_service.dart';
 
 void main() {
   setUp(() {
@@ -19,7 +20,11 @@ void main() {
       expect(find.text('Settings'), findsOneWidget);
       expect(find.text('Preferences'), findsOneWidget);
       expect(find.text('Help & guidance'), findsOneWidget);
-      expect(find.text('Daily reminder'), findsNothing);
+      if (ReminderService.isSupported) {
+        expect(find.text('Daily reminder'), findsOneWidget);
+      } else {
+        expect(find.text('Daily reminder'), findsNothing);
+      }
 
       await tester.scrollUntilVisible(
         find.text('Privacy & portability'),
