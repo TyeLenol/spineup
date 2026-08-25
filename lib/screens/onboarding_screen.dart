@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../main.dart';
+import '../services/session_service.dart';
 import '../widgets/onboarding/keycap_cta.dart';
 import '../widgets/onboarding/onboarding_chrome.dart';
 
@@ -103,7 +104,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   void _complete() {
-    Navigator.of(context).pushReplacement(localFirstWelcomeRoute());
+    SessionService.startMockSession();
+    Navigator.of(context).pushReplacement(profileSetupRoute());
   }
 
   void _handleKeyEvent(KeyEvent event) {
