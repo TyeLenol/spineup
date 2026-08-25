@@ -7,7 +7,7 @@ import '../services/session_service.dart';
 import '../widgets/onboarding/keycap_cta.dart';
 import '../widgets/onboarding/onboarding_chrome.dart';
 
-const Color _onboardingCanvas = Color(0xFFFFF7EE);
+const Color _onboardingCanvas = Color(0xFFFFF0E5);
 
 class OnboardingScreenData {
   final Color bg;
