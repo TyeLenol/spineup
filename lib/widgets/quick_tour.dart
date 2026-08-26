@@ -291,15 +291,14 @@ class _PageTourOverlayState extends State<_PageTourOverlay> {
     await Future<void>.delayed(Duration.zero);
     if (!mounted) return;
     final targetContext = widget.registry.contextFor(widget.page, nextStep.id);
-    if (targetContext != null) {
-      await Scrollable.ensureVisible(
-        targetContext,
-        duration: const Duration(milliseconds: 280),
-        curve: Curves.easeOutCubic,
-        alignment: 0.32,
-      );
-      if (mounted) setState(() {});
-    }
+    if (targetContext == null || !targetContext.mounted) return;
+    await Scrollable.ensureVisible(
+      targetContext,
+      duration: const Duration(milliseconds: 280),
+      curve: Curves.easeOutCubic,
+      alignment: 0.32,
+    );
+    if (mounted) setState(() {});
   }
 
   @override
