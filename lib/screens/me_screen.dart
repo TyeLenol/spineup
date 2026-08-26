@@ -1,4 +1,6 @@
 import 'dart:io';
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
@@ -15,11 +17,13 @@ import '../widgets/badge_icon.dart';
 import 'care_subject_manager.dart';
 import 'profile_setup/profile_setup_screen.dart';
 import 'settings_screen.dart';
+import '../widgets/quick_tour.dart';
 
 class MeScreen extends StatefulWidget {
   final VoidCallback? onReplayQuickTour;
+  final QuickTourTargetRegistry? tutorialRegistry;
 
-  const MeScreen({super.key, this.onReplayQuickTour});
+  const MeScreen({super.key, this.onReplayQuickTour, this.tutorialRegistry});
 
   @override
   State<MeScreen> createState() => _MeScreenState();
@@ -35,6 +39,7 @@ class _MeScreenState extends State<MeScreen>
   ProfileData _profileData = const ProfileData();
   List<Event> _allEvents = [];
   bool _loading = true;
+  bool _tutorialScheduled = false;
 
   @override
   void initState() {
@@ -59,6 +64,22 @@ class _MeScreenState extends State<MeScreen>
         _loading = false;
       });
     }
+    _scheduleTutorial();
+  }
+
+  void _scheduleTutorial() {
+    if (_tutorialScheduled || widget.tutorialRegistry == null) return;
+    _tutorialScheduled = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      unawaited(
+        showPageQuickTourIfNeeded(
+          context,
+          page: QuickTourPage.me,
+          registry: widget.tutorialRegistry!,
+        ),
+      );
+    });
   }
 
   Future<void> _openAddWardSetup() async {
@@ -85,6 +106,7 @@ class _MeScreenState extends State<MeScreen>
         builder: (_) => SettingsScreen(
           onReplayQuickTour: widget.onReplayQuickTour,
           onDataChanged: () => _loadAll(),
+          tutorialRegistry: widget.tutorialRegistry,
         ),
       ),
     );
@@ -121,11 +143,16 @@ class _MeScreenState extends State<MeScreen>
                   Row(
                     children: [
                       Expanded(child: Text('Me', style: tt.titleLarge)),
-                      IconButton(
-                        tooltip: 'Settings',
-                        onPressed: _openSettings,
-                        icon: const Icon(Icons.settings_outlined),
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      quickTourTarget(
+                        registry: widget.tutorialRegistry,
+                        page: QuickTourPage.me,
+                        id: 'settings',
+                        child: IconButton(
+                          tooltip: 'Settings',
+                          onPressed: _openSettings,
+                          icon: const Icon(Icons.settings_outlined),
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
                       ),
                     ],
                   ),
@@ -133,63 +160,85 @@ class _MeScreenState extends State<MeScreen>
                   // Progression Title + Level
                   _IdentitySummary(snap: _snap),
                   const SizedBox(height: 16),
-                  _ActiveProfileCard(onManageProfiles: _openSubjectManager),
+                  quickTourTarget(
+                    registry: widget.tutorialRegistry,
+                    page: QuickTourPage.me,
+                    id: 'active-profile',
+                    child: _ActiveProfileCard(
+                      onManageProfiles: _openSubjectManager,
+                    ),
+                  ),
                   const SizedBox(height: 28),
 
                   _SectionHeader(title: 'Care profile'),
                   const SizedBox(height: 12),
-                  _CareProfileSection(
-                    data: _profileData,
-                    isWard: SessionService.activeCareSubject?.isWard == true,
-                    onEdit: _openProfileEdit,
+                  quickTourTarget(
+                    registry: widget.tutorialRegistry,
+                    page: QuickTourPage.me,
+                    id: 'care-profile',
+                    child: _CareProfileSection(
+                      data: _profileData,
+                      isWard: SessionService.activeCareSubject?.isWard == true,
+                      onEdit: _openProfileEdit,
+                    ),
                   ),
                   const SizedBox(height: 28),
 
-                  Card(
-                    elevation: 0,
-                    margin: EdgeInsets.zero,
-                    color: Theme.of(context).colorScheme.surfaceContainer,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Theme(
-                      data: Theme.of(
-                        context,
-                      ).copyWith(dividerColor: Colors.transparent),
-                      child: ExpansionTile(
-                        tilePadding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 4,
-                        ),
-                        childrenPadding: const EdgeInsets.fromLTRB(
-                          16,
-                          0,
-                          16,
-                          16,
-                        ),
-                        leading: AvatarDisplay(
-                          profile: _snap.userProfile,
-                          size: 42,
-                        ),
-                        title: const Text(
-                          'Personalize your avatar',
-                          style: TextStyle(fontWeight: FontWeight.w800),
-                        ),
-                        subtitle: const Text('Choose an icon or local photo'),
-                        children: [
-                          _AvatarSettings(
-                            userId: SessionService.currentCareSubjectId,
-                            snap: _snap,
-                            gamificationService: _gs,
-                            onProfileUpdated: _loadAll,
+                  quickTourTarget(
+                    registry: widget.tutorialRegistry,
+                    page: QuickTourPage.me,
+                    id: 'personalize',
+                    child: Card(
+                      elevation: 0,
+                      margin: EdgeInsets.zero,
+                      color: Theme.of(context).colorScheme.surfaceContainer,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Theme(
+                        data: Theme.of(
+                          context,
+                        ).copyWith(dividerColor: Colors.transparent),
+                        child: ExpansionTile(
+                          tilePadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 4,
                           ),
-                        ],
+                          childrenPadding: const EdgeInsets.fromLTRB(
+                            16,
+                            0,
+                            16,
+                            16,
+                          ),
+                          leading: AvatarDisplay(
+                            profile: _snap.userProfile,
+                            size: 42,
+                          ),
+                          title: const Text(
+                            'Personalize your avatar',
+                            style: TextStyle(fontWeight: FontWeight.w800),
+                          ),
+                          subtitle: const Text('Choose an icon or local photo'),
+                          children: [
+                            _AvatarSettings(
+                              userId: SessionService.currentCareSubjectId,
+                              snap: _snap,
+                              gamificationService: _gs,
+                              onProfileUpdated: _loadAll,
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
                   const SizedBox(height: 28),
 
-                  _ProgressSection(snap: _snap, allEvents: _allEvents),
+                  quickTourTarget(
+                    registry: widget.tutorialRegistry,
+                    page: QuickTourPage.me,
+                    id: 'progress',
+                    child: _ProgressSection(snap: _snap, allEvents: _allEvents),
+                  ),
                   const SizedBox(height: 28),
 
                   const SizedBox(height: 24),

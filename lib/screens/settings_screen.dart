@@ -1,4 +1,6 @@
 import 'package:file_picker/file_picker.dart';
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
@@ -15,8 +17,14 @@ import '../widgets/quick_tour.dart';
 class SettingsScreen extends StatefulWidget {
   final VoidCallback? onReplayQuickTour;
   final VoidCallback? onDataChanged;
+  final QuickTourTargetRegistry? tutorialRegistry;
 
-  const SettingsScreen({super.key, this.onReplayQuickTour, this.onDataChanged});
+  const SettingsScreen({
+    super.key,
+    this.onReplayQuickTour,
+    this.onDataChanged,
+    this.tutorialRegistry,
+  });
 
   @override
   State<SettingsScreen> createState() => _SettingsScreenState();
@@ -33,7 +41,24 @@ class _SettingsScreenState extends State<SettingsScreen> {
   void initState() {
     super.initState();
     _loadReminderSettings();
+    _scheduleTutorial();
   }
+
+  void _scheduleTutorial() {
+    if (tutorialRegistry == null) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      unawaited(
+        showPageQuickTourIfNeeded(
+          context,
+          page: QuickTourPage.settings,
+          registry: tutorialRegistry!,
+        ),
+      );
+    });
+  }
+
+  QuickTourTargetRegistry? get tutorialRegistry => widget.tutorialRegistry;
 
   Future<void> _loadReminderSettings() async {
     try {
@@ -248,8 +273,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Future<void> _replayQuickTour() async {
-    await QuickTourService.reset();
-    if (mounted) widget.onReplayQuickTour?.call();
+    await QuickTourService.resetAll();
+    if (!mounted) return;
+    if (tutorialRegistry != null) {
+      await showPageQuickTourIfNeeded(
+        context,
+        page: QuickTourPage.settings,
+        registry: tutorialRegistry!,
+        force: true,
+      );
+    } else {
+      widget.onReplayQuickTour?.call();
+    }
   }
 
   void _showAboutDialog() {
@@ -503,35 +538,45 @@ class _SettingsScreenState extends State<SettingsScreen> {
           const SizedBox(height: 9),
           _SettingsCard(
             children: [
-              _SettingsRow(
-                icon: Icons.palette_outlined,
-                title: 'Appearance',
-                subtitle: _themeName,
-                onTap: _showAppearanceSheet,
+              quickTourTarget(
+                registry: tutorialRegistry,
+                page: QuickTourPage.settings,
+                id: 'appearance',
+                child: _SettingsRow(
+                  icon: Icons.palette_outlined,
+                  title: 'Appearance',
+                  subtitle: _themeName,
+                  onTap: _showAppearanceSheet,
+                ),
               ),
               if (ReminderService.isSupported) ...[
                 const _RowDivider(),
-                _SettingsRow(
-                  icon: Icons.notifications_none_rounded,
-                  title: 'Daily reminder',
-                  subtitle: _reminderLoading
-                      ? 'Loading…'
-                      : _reminderSettings.enabled
-                      ? 'Every day at ${_formatReminderTime()}'
-                      : 'Off',
-                  trailing: _reminderLoading || _reminderBusy
-                      ? const SizedBox(
-                          width: 22,
-                          height: 22,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : Switch.adaptive(
-                          value: _reminderSettings.enabled,
-                          onChanged: _toggleReminder,
-                        ),
-                  onTap: _reminderSettings.enabled
-                      ? _changeReminderTime
-                      : () => _toggleReminder(true),
+                quickTourTarget(
+                  registry: tutorialRegistry,
+                  page: QuickTourPage.settings,
+                  id: 'reminder',
+                  child: _SettingsRow(
+                    icon: Icons.notifications_none_rounded,
+                    title: 'Daily reminder',
+                    subtitle: _reminderLoading
+                        ? 'Loading…'
+                        : _reminderSettings.enabled
+                        ? 'Every day at ${_formatReminderTime()}'
+                        : 'Off',
+                    trailing: _reminderLoading || _reminderBusy
+                        ? const SizedBox(
+                            width: 22,
+                            height: 22,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : Switch.adaptive(
+                            value: _reminderSettings.enabled,
+                            onChanged: _toggleReminder,
+                          ),
+                    onTap: _reminderSettings.enabled
+                        ? _changeReminderTime
+                        : () => _toggleReminder(true),
+                  ),
                 ),
               ],
             ],
@@ -541,14 +586,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
           const SizedBox(height: 9),
           _SettingsCard(
             children: [
-              if (widget.onReplayQuickTour != null)
+              if (tutorialRegistry != null || widget.onReplayQuickTour != null)
                 _SettingsRow(
                   icon: Icons.explore_outlined,
-                  title: 'Quick tour',
-                  subtitle: 'Replay the guide to the main areas',
+                  title: 'Replay page guides',
+                  subtitle: 'See each guide again as you visit a page',
                   onTap: _replayQuickTour,
                 ),
-              if (widget.onReplayQuickTour != null) const _RowDivider(),
+              if (tutorialRegistry != null || widget.onReplayQuickTour != null)
+                const _RowDivider(),
               _SettingsRow(
                 icon: Icons.info_outline_rounded,
                 title: 'About SpineUp',
@@ -560,43 +606,48 @@ class _SettingsScreenState extends State<SettingsScreen> {
           const SizedBox(height: 22),
           const _SettingsGroupLabel(label: 'Privacy & portability'),
           const SizedBox(height: 9),
-          _SettingsCard(
-            children: [
-              _SettingsRow(
-                icon: Icons.shield_outlined,
-                title: 'How privacy works',
-                subtitle: 'Stored on this device by default',
-                onTap: _showPrivacyDialog,
-              ),
-              const _RowDivider(),
-              _SettingsRow(
-                icon: Icons.file_upload_outlined,
-                title: 'Export protected archive',
-                subtitle: 'Move your local profiles to another device',
-                trailing: _archiveBusy
-                    ? const SizedBox(
-                        width: 22,
-                        height: 22,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Icon(Icons.chevron_right_rounded),
-                onTap: _archiveBusy ? null : _exportArchive,
-              ),
-              const _RowDivider(),
-              _SettingsRow(
-                icon: Icons.file_download_outlined,
-                title: 'Import protected archive',
-                subtitle: 'Review before adding or replacing profiles',
-                trailing: _archiveBusy
-                    ? const SizedBox(
-                        width: 22,
-                        height: 22,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Icon(Icons.chevron_right_rounded),
-                onTap: _archiveBusy ? null : _importArchive,
-              ),
-            ],
+          quickTourTarget(
+            registry: tutorialRegistry,
+            page: QuickTourPage.settings,
+            id: 'privacy',
+            child: _SettingsCard(
+              children: [
+                _SettingsRow(
+                  icon: Icons.shield_outlined,
+                  title: 'How privacy works',
+                  subtitle: 'Stored on this device by default',
+                  onTap: _showPrivacyDialog,
+                ),
+                const _RowDivider(),
+                _SettingsRow(
+                  icon: Icons.file_upload_outlined,
+                  title: 'Export protected archive',
+                  subtitle: 'Move your local profiles to another device',
+                  trailing: _archiveBusy
+                      ? const SizedBox(
+                          width: 22,
+                          height: 22,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.chevron_right_rounded),
+                  onTap: _archiveBusy ? null : _exportArchive,
+                ),
+                const _RowDivider(),
+                _SettingsRow(
+                  icon: Icons.file_download_outlined,
+                  title: 'Import protected archive',
+                  subtitle: 'Review before adding or replacing profiles',
+                  trailing: _archiveBusy
+                      ? const SizedBox(
+                          width: 22,
+                          height: 22,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.chevron_right_rounded),
+                  onTap: _archiveBusy ? null : _importArchive,
+                ),
+              ],
+            ),
           ),
           const SizedBox(height: 22),
           const _SettingsGroupLabel(label: 'Danger zone'),

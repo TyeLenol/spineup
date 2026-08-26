@@ -1,4 +1,5 @@
 import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
@@ -20,7 +21,9 @@ import 'routine_library_screen.dart';
 import 'external_content_screen.dart';
 
 class TodayScreen extends StatefulWidget {
-  const TodayScreen({super.key});
+  final QuickTourTargetRegistry? tutorialRegistry;
+
+  const TodayScreen({super.key, this.tutorialRegistry});
 
   @override
   State<TodayScreen> createState() => _TodayScreenState();
@@ -41,7 +44,7 @@ class _TodayScreenState extends State<TodayScreen>
   List<RoutineExercise> _routineExercises = [];
   final Set<String> _completedToday = {};
   bool _loadingSnap = true;
-  bool _showQuickTourEntry = false;
+  bool _tutorialScheduled = false;
 
   @override
   void initState() {
@@ -63,7 +66,6 @@ class _TodayScreenState extends State<TodayScreen>
     final routineExercises = RoutineService.exercisesForIds(
       activeRoutine.exerciseIds,
     );
-    final quickTourSeen = await QuickTourService.hasSeen();
     final routineIds = routineExercises.map((exercise) => exercise.id).toSet();
 
     final completedIds = todayEvents
@@ -84,25 +86,28 @@ class _TodayScreenState extends State<TodayScreen>
         _completedToday
           ..clear()
           ..addAll(completedIds);
-        _showQuickTourEntry = !quickTourSeen;
         _loadingSnap = false;
       });
     }
+    _scheduleTutorial();
+  }
+
+  void _scheduleTutorial() {
+    if (_tutorialScheduled || widget.tutorialRegistry == null) return;
+    _tutorialScheduled = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      unawaited(
+        showPageQuickTourIfNeeded(
+          context,
+          page: QuickTourPage.today,
+          registry: widget.tutorialRegistry!,
+        ),
+      );
+    });
   }
 
   int get _todayXp => _todayEvents.fold(0, (sum, e) => sum + e.xpValue);
-
-  Future<void> _startQuickTour() async {
-    await QuickTourService.markSeen();
-    if (!mounted) return;
-    setState(() => _showQuickTourEntry = false);
-    await showQuickTour(context);
-  }
-
-  Future<void> _dismissQuickTour() async {
-    await QuickTourService.markSeen();
-    if (mounted) setState(() => _showQuickTourEntry = false);
-  }
 
   Appointment? get _nextAppointment {
     final scheduled = _appointments.where((a) => a.isScheduled).toList();
@@ -242,55 +247,63 @@ class _TodayScreenState extends State<TodayScreen>
                 padding: const EdgeInsets.fromLTRB(16, 0, 16, 120),
                 sliver: SliverList(
                   delegate: SliverChildListDelegate([
-                    if (_showQuickTourEntry) ...[
-                      QuickTourEntryCard(
-                        onStart: _startQuickTour,
-                        onLater: _dismissQuickTour,
-                      ),
-                      const SizedBox(height: 14),
-                    ],
                     // ── Primary daily action ───────────────────────────────
-                    _DailyCheckInSummaryCard(
-                      latestLog: _latestJournalLogToday,
-                      onTap: () async {
-                        final result = await Navigator.push<LogEventResult>(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => DailyCheckInScreen(
-                              userId: SessionService.currentCareSubjectId,
-                              userProfile: _snap.userProfile,
-                              existingLogToday: _latestJournalLogToday,
-                            ),
-                          ),
-                        );
-                        if (result != null) {
-                          await _loadSnapshot();
-                          if (!context.mounted) return;
-                          showActionRewardFeedback(
+                    quickTourTarget(
+                      registry: widget.tutorialRegistry,
+                      page: QuickTourPage.today,
+                      id: 'check-in',
+                      child: _DailyCheckInSummaryCard(
+                        latestLog: _latestJournalLogToday,
+                        onTap: () async {
+                          final result = await Navigator.push<LogEventResult>(
                             context,
-                            title: 'Check-in saved',
-                            xpAwarded: result.xpAwarded,
-                            dailyBonusAwarded: result.dailyBonusAwarded,
+                            MaterialPageRoute(
+                              builder: (_) => DailyCheckInScreen(
+                                userId: SessionService.currentCareSubjectId,
+                                userProfile: _snap.userProfile,
+                                existingLogToday: _latestJournalLogToday,
+                              ),
+                            ),
                           );
-                        }
-                      },
+                          if (result != null) {
+                            await _loadSnapshot();
+                            if (!context.mounted) return;
+                            showActionRewardFeedback(
+                              context,
+                              title: 'Check-in saved',
+                              xpAwarded: result.xpAwarded,
+                              dailyBonusAwarded: result.dailyBonusAwarded,
+                            );
+                          }
+                        },
+                      ),
                     ),
                     const SizedBox(height: 12),
-                    _RoutineEntryCard(
-                      routineName: _activeRoutine?.name ?? 'My Routine',
-                      completed: _completedToday.length,
-                      total: _routineExercises.length,
-                      savedVideoCount: _savedRoutineVideos.length,
-                      onTap: _showRoutineSheet,
+                    quickTourTarget(
+                      registry: widget.tutorialRegistry,
+                      page: QuickTourPage.today,
+                      id: 'routine',
+                      child: _RoutineEntryCard(
+                        routineName: _activeRoutine?.name ?? 'My Routine',
+                        completed: _completedToday.length,
+                        total: _routineExercises.length,
+                        savedVideoCount: _savedRoutineVideos.length,
+                        onTap: _showRoutineSheet,
+                      ),
                     ),
                     const SizedBox(height: 16),
 
                     // ── Supporting motivation ──────────────────────────────
-                    _StatPairSection(
-                      streakDays: _snap.streakDays,
-                      todayXp: _todayXp,
-                      targetXp: kDailyXpTarget,
-                      loading: _loadingSnap,
+                    quickTourTarget(
+                      registry: widget.tutorialRegistry,
+                      page: QuickTourPage.today,
+                      id: 'today-progress',
+                      child: _StatPairSection(
+                        streakDays: _snap.streakDays,
+                        todayXp: _todayXp,
+                        targetXp: kDailyXpTarget,
+                        loading: _loadingSnap,
+                      ),
                     ),
                     const SizedBox(height: 12),
                     _LevelXpCard(snap: _snap, loading: _loadingSnap),
