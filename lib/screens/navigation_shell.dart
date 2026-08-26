@@ -25,6 +25,14 @@ class NavigationShell extends StatefulWidget {
 
 class _NavigationShellState extends State<NavigationShell> {
   int _selectedIndex = 0;
+  final _tutorialRegistries = <String, QuickTourTargetRegistry>{};
+
+  QuickTourTargetRegistry _tutorialRegistryFor(String subjectId) {
+    return _tutorialRegistries.putIfAbsent(
+      subjectId,
+      QuickTourTargetRegistry.new,
+    );
+  }
 
   @override
   void initState() {
@@ -48,15 +56,29 @@ class _NavigationShellState extends State<NavigationShell> {
   }
 
   Widget _screenFor(int index, String subjectId) {
+    final tutorialRegistry = _tutorialRegistryFor(subjectId);
     return switch (index) {
-      0 => TodayScreen(key: ValueKey('today-$subjectId')),
-      1 => MyJourneyScreen(key: ValueKey('journey-$subjectId')),
-      2 => LearnScreen(key: ValueKey('learn-$subjectId')),
+      0 => TodayScreen(
+        key: ValueKey('today-$subjectId'),
+        tutorialRegistry: tutorialRegistry,
+      ),
+      1 => MyJourneyScreen(
+        key: ValueKey('journey-$subjectId'),
+        tutorialRegistry: tutorialRegistry,
+      ),
+      2 => LearnScreen(
+        key: ValueKey('learn-$subjectId'),
+        tutorialRegistry: tutorialRegistry,
+      ),
       3 => MeScreen(
         key: ValueKey('me-$subjectId'),
+        tutorialRegistry: tutorialRegistry,
         onReplayQuickTour: _replayQuickTour,
       ),
-      _ => TodayScreen(key: ValueKey('today-$subjectId')),
+      _ => TodayScreen(
+        key: ValueKey('today-$subjectId'),
+        tutorialRegistry: tutorialRegistry,
+      ),
     };
   }
 
@@ -69,7 +91,13 @@ class _NavigationShellState extends State<NavigationShell> {
     if (!mounted) return;
     setState(() => _selectedIndex = 0);
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) showQuickTour(context);
+      if (!mounted) return;
+      showPageQuickTourIfNeeded(
+        context,
+        page: QuickTourPage.today,
+        registry: _tutorialRegistryFor(SessionService.currentCareSubjectId),
+        force: true,
+      );
     });
   }
 

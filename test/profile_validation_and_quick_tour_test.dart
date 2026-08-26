@@ -46,65 +46,76 @@ void main() {
     expect(latestValidity, isTrue);
   });
 
-  testWidgets('quick tour entry exposes an optional start and later action', (
+  testWidgets('page guide focuses real targets and teaches a usable flow', (
     tester,
   ) async {
-    var started = false;
-    var deferred = false;
-    await tester.pumpWidget(
-      MaterialApp(
-        home: Scaffold(
-          body: QuickTourEntryCard(
-            onStart: () => started = true,
-            onLater: () => deferred = true,
-          ),
-        ),
-      ),
-    );
-
-    expect(find.text('Want a quick look around?'), findsOneWidget);
-    await tester.tap(find.text('Show me around'));
-    await tester.pump();
-    expect(started, isTrue);
-
-    await tester.tap(find.text('Maybe later'));
-    await tester.pump();
-    expect(deferred, isTrue);
-  });
-
-  testWidgets('quick tour advances through four pointers and can finish', (
-    tester,
-  ) async {
+    final registry = QuickTourTargetRegistry();
     await tester.pumpWidget(
       MaterialApp(
         home: Builder(
-          builder: (context) => TextButton(
-            onPressed: () => showQuickTour(context),
-            child: const Text('Open tour'),
+          builder: (context) => Scaffold(
+            body: Column(
+              children: [
+                TextButton(
+                  onPressed: () => showPageQuickTourIfNeeded(
+                    context,
+                    page: QuickTourPage.today,
+                    registry: registry,
+                    force: true,
+                  ),
+                  child: const Text('Open guide'),
+                ),
+                quickTourTarget(
+                  registry: registry,
+                  page: QuickTourPage.today,
+                  id: 'check-in',
+                  child: const Text('Check-in area'),
+                ),
+                quickTourTarget(
+                  registry: registry,
+                  page: QuickTourPage.today,
+                  id: 'routine',
+                  child: const Text('Routine area'),
+                ),
+                quickTourTarget(
+                  registry: registry,
+                  page: QuickTourPage.today,
+                  id: 'today-progress',
+                  child: const Text('Progress area'),
+                ),
+              ],
+            ),
           ),
         ),
       ),
     );
 
-    await tester.tap(find.text('Open tour'));
+    await tester.tap(find.text('Open guide'));
     await tester.pumpAndSettle();
-    expect(find.text('Start with today'), findsOneWidget);
-    expect(find.text('1 of 4'), findsOneWidget);
+    expect(find.text('Start with a check-in'), findsOneWidget);
+    expect(find.text('1 of 3'), findsOneWidget);
+    expect(find.text('Skip guide'), findsOneWidget);
 
-    for (final expected in [
-      ('Capture what matters', '2 of 4'),
-      ('Look back on your journey', '3 of 4'),
-      ('Learn at your pace', '4 of 4'),
-    ]) {
-      await tester.tap(find.text('Next'));
-      await tester.pumpAndSettle();
-      expect(find.text(expected.$1), findsOneWidget);
-      expect(find.text(expected.$2), findsOneWidget);
-    }
-
-    await tester.tap(find.text('Done'));
+    await tester.tap(find.text('Next'));
     await tester.pumpAndSettle();
-    expect(find.text('Learn at your pace'), findsNothing);
-    expect(await QuickTourService.hasSeen(), isTrue);
+    expect(find.text('Keep movement close'), findsOneWidget);
+    expect(find.text('2 of 3'), findsOneWidget);
+
+    await tester.tap(find.text('Next'));
+    await tester.pumpAndSettle();
+    expect(find.text('Notice your momentum'), findsOneWidget);
+    expect(find.text('3 of 3'), findsOneWidget);
+
+    await tester.tap(find.text('Finish guide'));
+    await tester.pumpAndSettle();
+    expect(find.text('Notice your momentum'), findsNothing);
+    expect(await QuickTourService.hasSeen(QuickTourPage.today), isTrue);
+  });
+
+  test('tutorial completion is independent per page', () async {
+    await QuickTourService.markSeen(QuickTourPage.today);
+
+    expect(await QuickTourService.hasSeen(QuickTourPage.today), isTrue);
+    expect(await QuickTourService.hasSeen(QuickTourPage.journey), isFalse);
   });
 }

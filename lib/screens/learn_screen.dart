@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'dart:async';
+
 import 'package:flutter/services.dart';
 
 import '../models/learn_topic.dart';
@@ -6,9 +8,12 @@ import '../models/external_content.dart';
 import '../services/routine_service.dart';
 import 'external_content_screen.dart';
 import 'routine_library_screen.dart';
+import '../widgets/quick_tour.dart';
 
 class LearnScreen extends StatefulWidget {
-  const LearnScreen({super.key});
+  final QuickTourTargetRegistry? tutorialRegistry;
+
+  const LearnScreen({super.key, this.tutorialRegistry});
 
   @override
   State<LearnScreen> createState() => _LearnScreenState();
@@ -19,12 +24,29 @@ class _LearnScreenState extends State<LearnScreen> {
   String _query = '';
   String _category = 'All';
   String _section = 'Topics';
+  bool _tutorialScheduled = false;
 
   @override
   void initState() {
     super.initState();
     _searchController.addListener(() {
       if (mounted) setState(() => _query = _searchController.text.trim());
+    });
+    _scheduleTutorial();
+  }
+
+  void _scheduleTutorial() {
+    if (_tutorialScheduled || widget.tutorialRegistry == null) return;
+    _tutorialScheduled = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      unawaited(
+        showPageQuickTourIfNeeded(
+          context,
+          page: QuickTourPage.learn,
+          registry: widget.tutorialRegistry!,
+        ),
+      );
     });
   }
 
@@ -85,96 +107,115 @@ class _LearnScreenState extends State<LearnScreen> {
                     topicCount: spineUpLearnTopics.length,
                   ),
                   const SizedBox(height: 18),
-                  Card(
-                    elevation: 0,
-                    color: theme.colorScheme.surfaceContainer,
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(18),
-                      onTap: _openRoutineLibrary,
-                      child: Padding(
-                        padding: const EdgeInsets.all(14),
-                        child: Row(
-                          children: [
-                            CircleAvatar(
-                              backgroundColor: theme.colorScheme.primary
-                                  .withValues(alpha: 0.12),
-                              foregroundColor: theme.colorScheme.primary,
-                              child: const Icon(Icons.playlist_play_rounded),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Movement library and My Routine',
-                                    style: theme.textTheme.titleSmall?.copyWith(
-                                      fontWeight: FontWeight.w800,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 3),
-                                  Text(
-                                    'Browse movements, preview guidance, and choose what belongs in your routine.',
-                                    style: theme.textTheme.bodySmall?.copyWith(
-                                      color: theme.colorScheme.onSurfaceVariant,
-                                    ),
-                                  ),
-                                ],
+                  quickTourTarget(
+                    registry: widget.tutorialRegistry,
+                    page: QuickTourPage.learn,
+                    id: 'movement-library',
+                    child: Card(
+                      elevation: 0,
+                      color: theme.colorScheme.surfaceContainer,
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(18),
+                        onTap: _openRoutineLibrary,
+                        child: Padding(
+                          padding: const EdgeInsets.all(14),
+                          child: Row(
+                            children: [
+                              CircleAvatar(
+                                backgroundColor: theme.colorScheme.primary
+                                    .withValues(alpha: 0.12),
+                                foregroundColor: theme.colorScheme.primary,
+                                child: const Icon(Icons.playlist_play_rounded),
                               ),
-                            ),
-                            const Icon(Icons.chevron_right_rounded),
-                          ],
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Movement library and My Routine',
+                                      style: theme.textTheme.titleSmall
+                                          ?.copyWith(
+                                            fontWeight: FontWeight.w800,
+                                          ),
+                                    ),
+                                    const SizedBox(height: 3),
+                                    Text(
+                                      'Browse movements, preview guidance, and choose what belongs in your routine.',
+                                      style: theme.textTheme.bodySmall
+                                          ?.copyWith(
+                                            color: theme
+                                                .colorScheme
+                                                .onSurfaceVariant,
+                                          ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const Icon(Icons.chevron_right_rounded),
+                            ],
+                          ),
                         ),
                       ),
                     ),
                   ),
                   const SizedBox(height: 18),
-                  TextField(
-                    controller: _searchController,
-                    decoration: InputDecoration(
-                      prefixIcon: const Icon(Icons.search_rounded),
-                      suffixIcon: _query.isEmpty
-                          ? null
-                          : IconButton(
-                              tooltip: 'Clear search',
-                              onPressed: _searchController.clear,
-                              icon: const Icon(Icons.close_rounded),
-                            ),
-                      hintText: _section == 'Topics'
-                          ? 'Search topics'
-                          : 'Search external content',
-                      filled: true,
-                      fillColor: theme.colorScheme.surfaceContainerHighest,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(18),
-                        borderSide: BorderSide.none,
+                  quickTourTarget(
+                    registry: widget.tutorialRegistry,
+                    page: QuickTourPage.learn,
+                    id: 'search',
+                    child: TextField(
+                      controller: _searchController,
+                      decoration: InputDecoration(
+                        prefixIcon: const Icon(Icons.search_rounded),
+                        suffixIcon: _query.isEmpty
+                            ? null
+                            : IconButton(
+                                tooltip: 'Clear search',
+                                onPressed: _searchController.clear,
+                                icon: const Icon(Icons.close_rounded),
+                              ),
+                        hintText: _section == 'Topics'
+                            ? 'Search topics'
+                            : 'Search external content',
+                        filled: true,
+                        fillColor: theme.colorScheme.surfaceContainerHighest,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(18),
+                          borderSide: BorderSide.none,
+                        ),
                       ),
                     ),
                   ),
                   const SizedBox(height: 12),
-                  SizedBox(
-                    height: 40,
-                    child: ListView.separated(
-                      padding: const EdgeInsets.symmetric(horizontal: 2),
-                      scrollDirection: Axis.horizontal,
-                      itemCount: 4,
-                      separatorBuilder: (_, _) => const SizedBox(width: 8),
-                      itemBuilder: (context, index) {
-                        final section = switch (index) {
-                          0 => 'Topics',
-                          1 => 'Articles',
-                          2 => 'Videos',
-                          _ => 'Saved',
-                        };
-                        return ChoiceChip(
-                          label: Text(section),
-                          selected: _section == section,
-                          onSelected: (_) => setState(() {
-                            _section = section;
-                            _category = 'All';
-                          }),
-                        );
-                      },
+                  quickTourTarget(
+                    registry: widget.tutorialRegistry,
+                    page: QuickTourPage.learn,
+                    id: 'sections',
+                    child: SizedBox(
+                      height: 40,
+                      child: ListView.separated(
+                        padding: const EdgeInsets.symmetric(horizontal: 2),
+                        scrollDirection: Axis.horizontal,
+                        itemCount: 4,
+                        separatorBuilder: (_, _) => const SizedBox(width: 8),
+                        itemBuilder: (context, index) {
+                          final section = switch (index) {
+                            0 => 'Topics',
+                            1 => 'Articles',
+                            2 => 'Videos',
+                            _ => 'Saved',
+                          };
+                          return ChoiceChip(
+                            label: Text(section),
+                            selected: _section == section,
+                            onSelected: (_) => setState(() {
+                              _section = section;
+                              _category = 'All';
+                            }),
+                          );
+                        },
+                      ),
                     ),
                   ),
                   if (_section == 'Topics') ...[
@@ -199,13 +240,18 @@ class _LearnScreenState extends State<LearnScreen> {
                     ),
                   ],
                   const SizedBox(height: 18),
-                  _LearnSectionHeader(
-                    label: _section == 'Topics'
-                        ? 'Topic guides'
-                        : '$_section library',
-                    detail: _section == 'Topics'
-                        ? '${topics.length} clear, source-linked answers'
-                        : 'Curated to keep browsing focused',
+                  quickTourTarget(
+                    registry: widget.tutorialRegistry,
+                    page: QuickTourPage.learn,
+                    id: 'topic-list',
+                    child: _LearnSectionHeader(
+                      label: _section == 'Topics'
+                          ? 'Topic guides'
+                          : '$_section library',
+                      detail: _section == 'Topics'
+                          ? '${topics.length} clear, source-linked answers'
+                          : 'Curated to keep browsing focused',
+                    ),
                   ),
                   const SizedBox(height: 8),
                 ],

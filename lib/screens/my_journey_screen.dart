@@ -1,4 +1,6 @@
 import 'dart:math' as math;
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
@@ -9,13 +11,20 @@ import '../services/gamification_service.dart';
 import '../services/session_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/action_reward_feedback.dart';
+import '../widgets/quick_tour.dart';
 import 'activity_history_screen.dart';
 import 'cobb_angle_logger_modal.dart';
 import 'appointment_logger_modal.dart';
 
 class MyJourneyScreen extends StatefulWidget {
   final EventType? initialEventFilter;
-  const MyJourneyScreen({super.key, this.initialEventFilter});
+  final QuickTourTargetRegistry? tutorialRegistry;
+
+  const MyJourneyScreen({
+    super.key,
+    this.initialEventFilter,
+    this.tutorialRegistry,
+  });
 
   @override
   State<MyJourneyScreen> createState() => _MyJourneyScreenState();
@@ -30,6 +39,7 @@ class _MyJourneyScreenState extends State<MyJourneyScreen>
   List<({DateTime date, double degrees})> _cobbHistory = [];
   List<Event> _allEvents = [];
   bool _loading = true;
+  bool _tutorialScheduled = false;
 
   // Chart Filters
   String _chartTimeRange = 'Month'; // 'Week', 'Month', 'Year', 'All'
@@ -54,6 +64,22 @@ class _MyJourneyScreenState extends State<MyJourneyScreen>
         _loading = false;
       });
     }
+    _scheduleTutorial();
+  }
+
+  void _scheduleTutorial() {
+    if (_tutorialScheduled || widget.tutorialRegistry == null) return;
+    _tutorialScheduled = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      unawaited(
+        showPageQuickTourIfNeeded(
+          context,
+          page: QuickTourPage.journey,
+          registry: widget.tutorialRegistry!,
+        ),
+      );
+    });
   }
 
   void _handleLogged(LogEventResult result) async {
@@ -170,95 +196,105 @@ class _MyJourneyScreenState extends State<MyJourneyScreen>
                         const SizedBox(height: 12),
 
                         // Time Range & Overlay Filter Bar (Scrollable to prevent edge clipping)
-                        SingleChildScrollView(
-                          scrollDirection: Axis.horizontal,
-                          child: Row(
-                            children: [
-                              SegmentedButton<String>(
-                                segments: const [
-                                  ButtonSegment(
-                                    value: 'Week',
-                                    label: Text(
-                                      'Week',
-                                      style: TextStyle(fontSize: 11),
+                        quickTourTarget(
+                          registry: widget.tutorialRegistry,
+                          page: QuickTourPage.journey,
+                          id: 'filters',
+                          child: SingleChildScrollView(
+                            scrollDirection: Axis.horizontal,
+                            child: Row(
+                              children: [
+                                SegmentedButton<String>(
+                                  segments: const [
+                                    ButtonSegment(
+                                      value: 'Week',
+                                      label: Text(
+                                        'Week',
+                                        style: TextStyle(fontSize: 11),
+                                      ),
                                     ),
-                                  ),
-                                  ButtonSegment(
-                                    value: 'Month',
-                                    label: Text(
-                                      'Month',
-                                      style: TextStyle(fontSize: 11),
+                                    ButtonSegment(
+                                      value: 'Month',
+                                      label: Text(
+                                        'Month',
+                                        style: TextStyle(fontSize: 11),
+                                      ),
                                     ),
-                                  ),
-                                  ButtonSegment(
-                                    value: 'Year',
-                                    label: Text(
-                                      'Year',
-                                      style: TextStyle(fontSize: 11),
+                                    ButtonSegment(
+                                      value: 'Year',
+                                      label: Text(
+                                        'Year',
+                                        style: TextStyle(fontSize: 11),
+                                      ),
                                     ),
-                                  ),
-                                  ButtonSegment(
-                                    value: 'All',
-                                    label: Text(
-                                      'All',
-                                      style: TextStyle(fontSize: 11),
+                                    ButtonSegment(
+                                      value: 'All',
+                                      label: Text(
+                                        'All',
+                                        style: TextStyle(fontSize: 11),
+                                      ),
                                     ),
+                                  ],
+                                  selected: {_chartTimeRange},
+                                  onSelectionChanged: (set) {
+                                    setState(() => _chartTimeRange = set.first);
+                                  },
+                                  style: const ButtonStyle(
+                                    visualDensity: VisualDensity.compact,
+                                    tapTargetSize:
+                                        MaterialTapTargetSize.shrinkWrap,
                                   ),
-                                ],
-                                selected: {_chartTimeRange},
-                                onSelectionChanged: (set) {
-                                  setState(() => _chartTimeRange = set.first);
-                                },
-                                style: const ButtonStyle(
-                                  visualDensity: VisualDensity.compact,
-                                  tapTargetSize:
-                                      MaterialTapTargetSize.shrinkWrap,
                                 ),
-                              ),
-                              const SizedBox(width: 16),
-                              DropdownButton<String>(
-                                value: _overlayOption,
-                                isDense: true,
-                                underline: const SizedBox.shrink(),
-                                icon: const Icon(
-                                  Icons.layers_outlined,
-                                  size: 18,
-                                  color: AppTheme.primarySage,
+                                const SizedBox(width: 16),
+                                DropdownButton<String>(
+                                  value: _overlayOption,
+                                  isDense: true,
+                                  underline: const SizedBox.shrink(),
+                                  icon: const Icon(
+                                    Icons.layers_outlined,
+                                    size: 18,
+                                    color: AppTheme.primarySage,
+                                  ),
+                                  style: tt.labelSmall?.copyWith(
+                                    color: AppTheme.primarySage,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                  items: const [
+                                    DropdownMenuItem(
+                                      value: 'None',
+                                      child: Text('No Overlay'),
+                                    ),
+                                    DropdownMenuItem(
+                                      value: 'Pain Level',
+                                      child: Text('+ Pain Level'),
+                                    ),
+                                    DropdownMenuItem(
+                                      value: 'Stretches',
+                                      child: Text('+ Stretches'),
+                                    ),
+                                  ],
+                                  onChanged: (v) {
+                                    if (v != null) {
+                                      setState(() => _overlayOption = v);
+                                    }
+                                  },
                                 ),
-                                style: tt.labelSmall?.copyWith(
-                                  color: AppTheme.primarySage,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                                items: const [
-                                  DropdownMenuItem(
-                                    value: 'None',
-                                    child: Text('No Overlay'),
-                                  ),
-                                  DropdownMenuItem(
-                                    value: 'Pain Level',
-                                    child: Text('+ Pain Level'),
-                                  ),
-                                  DropdownMenuItem(
-                                    value: 'Stretches',
-                                    child: Text('+ Stretches'),
-                                  ),
-                                ],
-                                onChanged: (v) {
-                                  if (v != null) {
-                                    setState(() => _overlayOption = v);
-                                  }
-                                },
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
                         ),
                         const SizedBox(height: 12),
 
-                        _CobbChart(
-                          history: _filteredCobbHistory,
-                          overlayData: _overlayData,
-                          overlayOption: _overlayOption,
-                          timeRange: _chartTimeRange,
+                        quickTourTarget(
+                          registry: widget.tutorialRegistry,
+                          page: QuickTourPage.journey,
+                          id: 'chart',
+                          child: _CobbChart(
+                            history: _filteredCobbHistory,
+                            overlayData: _overlayData,
+                            overlayOption: _overlayOption,
+                            timeRange: _chartTimeRange,
+                          ),
                         ),
                         const SizedBox(height: 8),
                         Text(
@@ -320,51 +356,60 @@ class _MyJourneyScreenState extends State<MyJourneyScreen>
       floatingActionButtonLocation: ExpandableFab.location,
       floatingActionButton: Padding(
         padding: const EdgeInsets.only(bottom: 96),
-        child: ExpandableFab(
-          type: ExpandableFabType.up,
-          distance: 70,
-          openButtonBuilder: RotateFloatingActionButtonBuilder(
-            child: const Icon(Icons.add_rounded, color: Colors.white, size: 28),
-            fabSize: ExpandableFabSize.regular,
-            shape: const CircleBorder(),
-          ),
-          closeButtonBuilder: DefaultFloatingActionButtonBuilder(
-            child: const Icon(
-              Icons.close_rounded,
-              color: Colors.white,
-              size: 24,
-            ),
-            fabSize: ExpandableFabSize.regular,
-            shape: const CircleBorder(),
-          ),
-          children: [
-            FloatingActionButton.extended(
-              heroTag: 'fab_cobb',
-              onPressed: () => showCobbAngleLogger(
-                context: context,
-                userId: SessionService.currentCareSubjectId,
-                gamificationService: _gs,
-                onLogged: _handleLogged,
+        child: quickTourTarget(
+          registry: widget.tutorialRegistry,
+          page: QuickTourPage.journey,
+          id: 'add-record',
+          child: ExpandableFab(
+            type: ExpandableFabType.up,
+            distance: 70,
+            openButtonBuilder: RotateFloatingActionButtonBuilder(
+              child: const Icon(
+                Icons.add_rounded,
+                color: Colors.white,
+                size: 28,
               ),
-              icon: const Icon(Icons.architecture_rounded),
-              label: const Text('Log Cobb Angle'),
-              backgroundColor: cs.surfaceContainerHigh,
-              foregroundColor: cs.onSurface,
+              fabSize: ExpandableFabSize.regular,
+              shape: const CircleBorder(),
             ),
-            FloatingActionButton.extended(
-              heroTag: 'fab_appointment',
-              onPressed: () => showAppointmentLogger(
-                context: context,
-                userId: SessionService.currentCareSubjectId,
-                gamificationService: _gs,
-                onLogged: _handleLogged,
+            closeButtonBuilder: DefaultFloatingActionButtonBuilder(
+              child: const Icon(
+                Icons.close_rounded,
+                color: Colors.white,
+                size: 24,
               ),
-              icon: const Icon(Icons.medical_services_outlined),
-              label: const Text('Schedule Visit'),
-              backgroundColor: cs.surfaceContainerHigh,
-              foregroundColor: cs.onSurface,
+              fabSize: ExpandableFabSize.regular,
+              shape: const CircleBorder(),
             ),
-          ],
+            children: [
+              FloatingActionButton.extended(
+                heroTag: 'fab_cobb',
+                onPressed: () => showCobbAngleLogger(
+                  context: context,
+                  userId: SessionService.currentCareSubjectId,
+                  gamificationService: _gs,
+                  onLogged: _handleLogged,
+                ),
+                icon: const Icon(Icons.architecture_rounded),
+                label: const Text('Log Cobb Angle'),
+                backgroundColor: cs.surfaceContainerHigh,
+                foregroundColor: cs.onSurface,
+              ),
+              FloatingActionButton.extended(
+                heroTag: 'fab_appointment',
+                onPressed: () => showAppointmentLogger(
+                  context: context,
+                  userId: SessionService.currentCareSubjectId,
+                  gamificationService: _gs,
+                  onLogged: _handleLogged,
+                ),
+                icon: const Icon(Icons.medical_services_outlined),
+                label: const Text('Schedule Visit'),
+                backgroundColor: cs.surfaceContainerHigh,
+                foregroundColor: cs.onSurface,
+              ),
+            ],
+          ),
         ),
       ),
     );
