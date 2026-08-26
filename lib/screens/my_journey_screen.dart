@@ -478,36 +478,53 @@ class _CobbChart extends StatelessWidget {
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
+    final sortedHistory = List<({DateTime date, double degrees})>.from(history)
+      ..sort((a, b) => a.date.compareTo(b.date));
 
-    if (history.isEmpty) {
+    if (sortedHistory.isEmpty) {
       return Container(
-        height: 200,
-        padding: const EdgeInsets.all(24),
+        height: 232,
+        padding: const EdgeInsets.fromLTRB(24, 20, 24, 20),
         decoration: BoxDecoration(
-          color: cs.surfaceContainer,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppTheme.borderCream),
+          gradient: LinearGradient(
+            colors: [cs.surfaceContainerHigh, cs.surfaceContainer],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.5)),
         ),
         child: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(
-                Icons.show_chart_rounded,
-                size: 36,
-                color: AppTheme.accentLavender,
+              Container(
+                width: 52,
+                height: 52,
+                decoration: BoxDecoration(
+                  color: AppTheme.accentLavender.withValues(alpha: 0.12),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.show_chart_rounded,
+                  size: 28,
+                  color: AppTheme.accentLavender,
+                ),
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 12),
               Text(
-                'No data yet — log your first angle to see your trend',
+                'Your trend will appear here',
                 textAlign: TextAlign.center,
-                style: tt.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+                style: tt.titleSmall?.copyWith(fontWeight: FontWeight.w800),
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: 5),
               Text(
-                'Log a measurement from your clinic record using the + button. SpineUp shows what you recorded and does not interpret clinical change.',
+                'Log a measurement from your clinic record to start a visual record of what you entered.',
                 textAlign: TextAlign.center,
-                style: tt.bodySmall?.copyWith(color: AppTheme.mutedForeground),
+                style: tt.bodySmall?.copyWith(
+                  color: AppTheme.mutedForeground,
+                  height: 1.35,
+                ),
               ),
             ],
           ),
@@ -515,234 +532,334 @@ class _CobbChart extends StatelessWidget {
       );
     }
 
-    final minDeg = math.max(
-      0.0,
-      history.map((e) => e.degrees).reduce(math.min) - 5,
-    );
-    final maxDeg = history.map((e) => e.degrees).reduce(math.max) + 5;
-
     final now = DateTime.now();
-    double minX;
-    double maxX = now.millisecondsSinceEpoch.toDouble();
-    double xInterval;
-    String Function(DateTime) formatX;
-
-    switch (timeRange) {
-      case 'Week':
-      case '7d':
-        minX = now
-            .subtract(const Duration(days: 7))
-            .millisecondsSinceEpoch
-            .toDouble();
-        xInterval = const Duration(days: 1).inMilliseconds.toDouble();
-        formatX = (dt) => DateFormat.E().format(dt);
-        break;
-      case 'Month':
-      case '30d':
-        minX = now
-            .subtract(const Duration(days: 30))
-            .millisecondsSinceEpoch
-            .toDouble();
-        xInterval = const Duration(days: 7).inMilliseconds.toDouble();
-        formatX = (dt) => DateFormat.Md().format(dt);
-        break;
-      case 'Year':
-      case '90d':
-        minX = now
-            .subtract(const Duration(days: 365))
-            .millisecondsSinceEpoch
-            .toDouble();
-        xInterval = const Duration(days: 60).inMilliseconds.toDouble();
-        formatX = (dt) => DateFormat.MMM().format(dt);
-        break;
-      default: // 'All'
-        final firstDate = history.first.date;
-        minX = firstDate.millisecondsSinceEpoch.toDouble();
-        final daysDiff = now.difference(firstDate).inDays;
-        if (daysDiff > 365) {
-          xInterval = const Duration(days: 180).inMilliseconds.toDouble();
-          formatX = (dt) => DateFormat.yMMM().format(dt);
-        } else {
-          xInterval = const Duration(days: 30).inMilliseconds.toDouble();
-          formatX = (dt) => DateFormat.MMM().format(dt);
-        }
+    final firstDate = sortedHistory.first.date;
+    final lastDate = sortedHistory.last.date;
+    final startDate = switch (timeRange) {
+      'Week' || '7d' => now.subtract(const Duration(days: 7)),
+      'Month' || '30d' => now.subtract(const Duration(days: 30)),
+      'Year' || '90d' => now.subtract(const Duration(days: 365)),
+      _ => firstDate,
+    };
+    var endDate = lastDate.isAfter(now) ? lastDate : now;
+    if (!endDate.isAfter(startDate)) {
+      endDate = startDate.add(const Duration(days: 1));
     }
 
-    final cobbSpots = history.map((e) {
-      return FlSpot(e.date.millisecondsSinceEpoch.toDouble(), e.degrees);
-    }).toList();
-
-    List<FlSpot> overlaySpots = [];
-    if (overlayData.isNotEmpty) {
-      overlaySpots = overlayData.map((e) {
-        return FlSpot(e.date.millisecondsSinceEpoch.toDouble(), e.value);
-      }).toList();
-    }
-
+    final minX = startDate.millisecondsSinceEpoch.toDouble();
+    final maxX = endDate.millisecondsSinceEpoch.toDouble();
+    final rawMin = sortedHistory.map((e) => e.degrees).reduce(math.min);
+    final rawMax = sortedHistory.map((e) => e.degrees).reduce(math.max);
+    final spread = math.max(10.0, rawMax - rawMin);
+    final yPadding = math.max(4.0, spread * 0.16);
+    final minY = math.max(0.0, rawMin - yPadding);
+    final maxY = math.min(180.0, math.max(minY + 10.0, rawMax + yPadding));
+    final cobbSpots = sortedHistory
+        .map((e) => FlSpot(e.date.millisecondsSinceEpoch.toDouble(), e.degrees))
+        .toList();
+    final overlaySpots = List<({DateTime date, double value})>.from(overlayData)
+      ..sort((a, b) => a.date.compareTo(b.date));
+    final overlayFlSpots = overlaySpots
+        .map((e) => FlSpot(e.date.millisecondsSinceEpoch.toDouble(), e.value))
+        .toList();
     final overlayColor = overlayOption == 'Pain Level'
         ? AppTheme.secondaryCoral
         : AppTheme.primarySage;
+    final rangeLabel = switch (timeRange) {
+      'Week' || '7d' => 'Last 7 days',
+      'Month' || '30d' => 'Last 30 days',
+      'Year' || '90d' => 'Last year',
+      _ => 'All recorded time',
+    };
 
     return Container(
-      height: 220,
-      padding: const EdgeInsets.fromLTRB(12, 16, 16, 12),
+      height: 292,
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
       decoration: BoxDecoration(
-        color: cs.surfaceContainer,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppTheme.borderCream),
+        gradient: LinearGradient(
+          colors: [cs.surfaceContainerHigh, cs.surfaceContainer],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.5)),
+        boxShadow: [
+          BoxShadow(
+            color: cs.shadow.withValues(alpha: 0.06),
+            blurRadius: 18,
+            offset: const Offset(0, 8),
+          ),
+        ],
       ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'Latest recorded: ${history.last.degrees.toStringAsFixed(1)}°',
-                style: tt.labelSmall?.copyWith(
-                  color: AppTheme.accentLavender,
-                  fontWeight: FontWeight.bold,
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Angle trend',
+                      style: tt.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      '$rangeLabel · ${sortedHistory.length} ${sortedHistory.length == 1 ? 'measurement' : 'measurements'}',
+                      style: tt.bodySmall?.copyWith(
+                        color: AppTheme.mutedForeground,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Tap a point for the exact date',
+                      style: tt.labelSmall?.copyWith(
+                        color: AppTheme.mutedForeground,
+                        fontSize: 10,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              if (overlayData.isNotEmpty)
-                Text(
-                  '${overlayOption == 'Pain Level' ? 'Pain' : 'Stretches'}: ${overlayData.last.value.toStringAsFixed(0)}',
-                  style: tt.labelSmall?.copyWith(
-                    color: overlayColor,
-                    fontWeight: FontWeight.bold,
-                  ),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 11,
+                  vertical: 8,
                 ),
+                decoration: BoxDecoration(
+                  color: AppTheme.accentLavender.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      'LATEST',
+                      style: tt.labelSmall?.copyWith(
+                        color: AppTheme.accentLavender,
+                        fontSize: 9,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 0.8,
+                      ),
+                    ),
+                    const SizedBox(height: 1),
+                    Text(
+                      '${sortedHistory.last.degrees.toStringAsFixed(1)}°',
+                      style: tt.titleMedium?.copyWith(
+                        color: AppTheme.accentLavender,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ],
           ),
-          const SizedBox(height: 12),
+          if (overlaySpots.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            Wrap(
+              spacing: 8,
+              runSpacing: 6,
+              children: [
+                _ChartLegendPill(
+                  label: 'Angle',
+                  color: AppTheme.accentLavender,
+                ),
+                _ChartLegendPill(
+                  label:
+                      '${overlayOption == 'Pain Level' ? 'Pain' : 'Stretches'} overlay',
+                  color: overlayColor,
+                ),
+              ],
+            ),
+          ],
+          const SizedBox(height: 13),
           Expanded(
-            child: LineChart(
-              LineChartData(
-                minX: minX,
-                maxX: maxX,
-                minY: minDeg.clamp(0, 180),
-                maxY: maxDeg.clamp(0, 180),
-                gridData: FlGridData(
-                  show: true,
-                  drawVerticalLine: false,
-                  horizontalInterval: 10,
-                  getDrawingHorizontalLine: (value) => FlLine(
-                    color: AppTheme.borderCream.withValues(alpha: 0.6),
-                    strokeWidth: 1,
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final tickCount = math.max<int>(
+                  3,
+                  math.min<int>(6, (constraints.maxWidth / 70).floor()),
+                );
+                final xInterval = (maxX - minX) / (tickCount - 1);
+                final tickDates = List.generate(
+                  tickCount,
+                  (index) => DateTime.fromMillisecondsSinceEpoch(
+                    (minX + xInterval * index).round(),
                   ),
-                ),
-                titlesData: FlTitlesData(
-                  topTitles: const AxisTitles(
-                    sideTitles: SideTitles(showTitles: false),
+                );
+                final seenAxisLabels = <String>{};
+                final showDots = sortedHistory.length <= 12;
+
+                return DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        cs.surface.withValues(alpha: 0.48),
+                        cs.surface.withValues(alpha: 0.12),
+                      ],
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                    ),
+                    borderRadius: BorderRadius.circular(18),
                   ),
-                  rightTitles: const AxisTitles(
-                    sideTitles: SideTitles(showTitles: false),
-                  ),
-                  leftTitles: AxisTitles(
-                    sideTitles: SideTitles(
-                      showTitles: true,
-                      reservedSize: 40,
-                      interval: 10,
-                      getTitlesWidget: (value, meta) {
-                        return SideTitleWidget(
-                          meta: meta,
-                          fitInside: SideTitleFitInsideData(
-                            enabled: true,
-                            distanceFromEdge: 4,
-                            parentAxisSize: meta.parentAxisSize,
-                            axisPosition: meta.axisPosition,
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(2, 10, 6, 0),
+                    child: LineChart(
+                      LineChartData(
+                        minX: minX,
+                        maxX: maxX,
+                        minY: minY,
+                        maxY: maxY,
+                        gridData: FlGridData(
+                          show: true,
+                          drawVerticalLine: false,
+                          horizontalInterval: 10,
+                          getDrawingHorizontalLine: (value) => FlLine(
+                            color: cs.outlineVariant.withValues(alpha: 0.35),
+                            strokeWidth: 1,
                           ),
-                          child: Text(
-                            '${value.toInt()}°',
-                            style: const TextStyle(
-                              fontSize: 10,
-                              color: AppTheme.mutedForeground,
+                        ),
+                        titlesData: FlTitlesData(
+                          topTitles: const AxisTitles(
+                            sideTitles: SideTitles(showTitles: false),
+                          ),
+                          rightTitles: const AxisTitles(
+                            sideTitles: SideTitles(showTitles: false),
+                          ),
+                          leftTitles: AxisTitles(
+                            sideTitles: SideTitles(
+                              showTitles: true,
+                              reservedSize: 38,
+                              interval: 10,
+                              getTitlesWidget: (value, meta) {
+                                return SideTitleWidget(
+                                  meta: meta,
+                                  fitInside: SideTitleFitInsideData(
+                                    enabled: true,
+                                    distanceFromEdge: 4,
+                                    parentAxisSize: meta.parentAxisSize,
+                                    axisPosition: meta.axisPosition,
+                                  ),
+                                  child: Text(
+                                    '${value.toInt()}°',
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      color: cs.onSurfaceVariant,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                );
+                              },
                             ),
                           ),
-                        );
-                      },
-                    ),
-                  ),
-                  bottomTitles: AxisTitles(
-                    sideTitles: SideTitles(
-                      showTitles: true,
-                      reservedSize: 34,
-                      interval: xInterval,
-                      getTitlesWidget: (value, meta) {
-                        final dt = DateTime.fromMillisecondsSinceEpoch(
-                          value.toInt(),
-                        );
-                        return SideTitleWidget(
-                          meta: meta,
-                          fitInside: SideTitleFitInsideData(
-                            enabled: true,
-                            distanceFromEdge: 4,
-                            parentAxisSize: meta.parentAxisSize,
-                            axisPosition: meta.axisPosition,
-                          ),
-                          child: Text(
-                            formatX(dt),
-                            style: const TextStyle(
-                              fontSize: 10,
-                              color: AppTheme.mutedForeground,
+                          bottomTitles: AxisTitles(
+                            sideTitles: SideTitles(
+                              showTitles: true,
+                              reservedSize: 30,
+                              interval: xInterval,
+                              getTitlesWidget: (value, meta) {
+                                final rawIndex = ((value - minX) / xInterval)
+                                    .round();
+                                final tickIndex = rawIndex < 0
+                                    ? 0
+                                    : rawIndex >= tickCount
+                                    ? tickCount - 1
+                                    : rawIndex;
+                                final label = _formatJourneyChartDate(
+                                  tickDates[tickIndex],
+                                  timeRange,
+                                  startDate,
+                                  endDate,
+                                );
+                                if (!seenAxisLabels.add(label)) {
+                                  return const SizedBox.shrink();
+                                }
+                                return SideTitleWidget(
+                                  meta: meta,
+                                  fitInside: SideTitleFitInsideData(
+                                    enabled: true,
+                                    distanceFromEdge: 6,
+                                    parentAxisSize: meta.parentAxisSize,
+                                    axisPosition: meta.axisPosition,
+                                  ),
+                                  child: Text(
+                                    label,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.clip,
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      color: cs.onSurfaceVariant,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                );
+                              },
                             ),
                           ),
-                        );
-                      },
-                    ),
-                  ),
-                ),
-                borderData: FlBorderData(show: false),
-                lineBarsData: [
-                  LineChartBarData(
-                    spots: cobbSpots,
-                    isCurved: true,
-                    color: AppTheme.accentLavender,
-                    barWidth: 3,
-                    isStrokeCapRound: true,
-                    dotData: const FlDotData(show: true),
-                    belowBarData: BarAreaData(
-                      show: true,
-                      color: AppTheme.accentLavender.withValues(alpha: 0.15),
-                    ),
-                  ),
-                  if (overlaySpots.isNotEmpty)
-                    LineChartBarData(
-                      spots: overlaySpots,
-                      isCurved: true,
-                      color: overlayColor,
-                      barWidth: 2,
-                      isStrokeCapRound: true,
-                      dotData: const FlDotData(show: true),
-                    ),
-                ],
-                lineTouchData: LineTouchData(
-                  enabled: true,
-                  touchTooltipData: LineTouchTooltipData(
-                    getTooltipItems: (touchedSpots) {
-                      return touchedSpots.map((spot) {
-                        final isCobb = spot.barIndex == 0;
-                        final dt = DateTime.fromMillisecondsSinceEpoch(
-                          spot.x.toInt(),
-                        );
-                        final dateStr = DateFormat.MMMd().format(dt);
-                        final label = isCobb
-                            ? '$dateStr: ${spot.y.toStringAsFixed(1)}°'
-                            : '$overlayOption: ${spot.y.toInt()}';
-                        return LineTooltipItem(
-                          label,
-                          TextStyle(
-                            color: isCobb
-                                ? AppTheme.accentLavender
-                                : overlayColor,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 12,
+                        ),
+                        borderData: FlBorderData(show: false),
+                        lineBarsData: [
+                          LineChartBarData(
+                            spots: cobbSpots,
+                            isCurved: false,
+                            color: AppTheme.accentLavender,
+                            barWidth: 3,
+                            isStrokeCapRound: true,
+                            dotData: FlDotData(show: showDots),
+                            belowBarData: BarAreaData(
+                              show: true,
+                              color: AppTheme.accentLavender.withValues(
+                                alpha: 0.10,
+                              ),
+                            ),
                           ),
-                        );
-                      }).toList();
-                    },
+                          if (overlayFlSpots.isNotEmpty)
+                            LineChartBarData(
+                              spots: overlayFlSpots,
+                              isCurved: false,
+                              color: overlayColor,
+                              barWidth: 2,
+                              isStrokeCapRound: true,
+                              dotData: FlDotData(show: showDots),
+                            ),
+                        ],
+                        lineTouchData: LineTouchData(
+                          enabled: true,
+                          touchTooltipData: LineTouchTooltipData(
+                            getTooltipItems: (touchedSpots) {
+                              return touchedSpots.map((spot) {
+                                final isCobb = spot.barIndex == 0;
+                                final dt = DateTime.fromMillisecondsSinceEpoch(
+                                  spot.x.toInt(),
+                                );
+                                final dateStr = DateFormat.yMMMd().format(dt);
+                                final label = isCobb
+                                    ? '$dateStr\n${spot.y.toStringAsFixed(1)}° angle'
+                                    : '$dateStr\n$overlayOption: ${spot.y.toInt()}';
+                                return LineTooltipItem(
+                                  label,
+                                  TextStyle(
+                                    color: isCobb
+                                        ? AppTheme.accentLavender
+                                        : overlayColor,
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 12,
+                                  ),
+                                );
+                              }).toList();
+                            },
+                          ),
+                        ),
+                      ),
+                    ),
                   ),
-                ),
-              ),
+                );
+              },
             ),
           ),
         ],
@@ -751,6 +868,65 @@ class _CobbChart extends StatelessWidget {
   }
 }
 
+class _ChartLegendPill extends StatelessWidget {
+  final String label;
+  final Color color;
+
+  const _ChartLegendPill({required this.label, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.11),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 7,
+            height: 7,
+            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+          ),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: TextStyle(
+              color: color,
+              fontSize: 10,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+String _formatJourneyChartDate(
+  DateTime date,
+  String timeRange,
+  DateTime start,
+  DateTime end,
+) {
+  switch (timeRange) {
+    case 'Week':
+    case '7d':
+      return DateFormat('EEE').format(date);
+    case 'Month':
+    case '30d':
+      return DateFormat('MMM d').format(date);
+    case 'Year':
+    case '90d':
+      return DateFormat('MMM').format(date);
+    default:
+      return DateFormat(
+        end.difference(start).inDays > 365 ? 'MMM yy' : 'MMM d',
+      ).format(date);
+  }
+}
 // ─── Event Tile ───────────────────────────────────────────────────────────────
 
 class _EventTile extends StatelessWidget {
