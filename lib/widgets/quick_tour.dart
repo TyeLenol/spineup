@@ -289,6 +289,7 @@ class _PageTourOverlayState extends State<_PageTourOverlay> {
     final nextStep = _steps[_step + 1];
     setState(() => _step++);
     await Future<void>.delayed(Duration.zero);
+    if (!mounted) return;
     final targetContext = widget.registry.contextFor(widget.page, nextStep.id);
     if (targetContext != null) {
       await Scrollable.ensureVisible(
