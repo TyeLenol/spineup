@@ -559,9 +559,6 @@ class _CobbChart extends StatelessWidget {
         .toList();
     final overlaySpots = List<({DateTime date, double value})>.from(overlayData)
       ..sort((a, b) => a.date.compareTo(b.date));
-    final overlayFlSpots = overlaySpots
-        .map((e) => FlSpot(e.date.millisecondsSinceEpoch.toDouble(), e.value))
-        .toList();
     final overlayColor = overlayOption == 'Pain Level'
         ? AppTheme.secondaryCoral
         : AppTheme.primarySage;
@@ -670,9 +667,30 @@ class _CobbChart extends StatelessWidget {
                   color: AppTheme.accentLavender,
                 ),
                 _ChartLegendPill(
-                  label:
-                      '${overlayOption == 'Pain Level' ? 'Pain' : 'Stretches'} overlay',
+                  label: overlayOption == 'Pain Level'
+                      ? 'Pain context'
+                      : 'Stretch context',
                   color: overlayColor,
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 9,
+                    vertical: 5,
+                  ),
+                  decoration: BoxDecoration(
+                    color: cs.surface.withValues(alpha: 0.62),
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: Text(
+                    overlayOption == 'Pain Level'
+                        ? 'Latest: ${overlaySpots.last.value.toInt()}/10'
+                        : 'In range: ${overlaySpots.fold<double>(0, (sum, item) => sum + item.value).toInt()} stretches',
+                    style: TextStyle(
+                      color: cs.onSurfaceVariant,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -692,7 +710,6 @@ class _CobbChart extends StatelessWidget {
                     (minX + xInterval * index).round(),
                   ),
                 );
-                final seenAxisLabels = <String>{};
                 final showDots = sortedHistory.length <= 12;
 
                 return DecoratedBox(
@@ -776,9 +793,6 @@ class _CobbChart extends StatelessWidget {
                                   startDate,
                                   endDate,
                                 );
-                                if (!seenAxisLabels.add(label)) {
-                                  return const SizedBox.shrink();
-                                }
                                 return SideTitleWidget(
                                   meta: meta,
                                   fitInside: SideTitleFitInsideData(
@@ -818,35 +832,20 @@ class _CobbChart extends StatelessWidget {
                               ),
                             ),
                           ),
-                          if (overlayFlSpots.isNotEmpty)
-                            LineChartBarData(
-                              spots: overlayFlSpots,
-                              isCurved: false,
-                              color: overlayColor,
-                              barWidth: 2,
-                              isStrokeCapRound: true,
-                              dotData: FlDotData(show: showDots),
-                            ),
                         ],
                         lineTouchData: LineTouchData(
                           enabled: true,
                           touchTooltipData: LineTouchTooltipData(
                             getTooltipItems: (touchedSpots) {
                               return touchedSpots.map((spot) {
-                                final isCobb = spot.barIndex == 0;
                                 final dt = DateTime.fromMillisecondsSinceEpoch(
                                   spot.x.toInt(),
                                 );
                                 final dateStr = DateFormat.yMMMd().format(dt);
-                                final label = isCobb
-                                    ? '$dateStr\n${spot.y.toStringAsFixed(1)}° angle'
-                                    : '$dateStr\n$overlayOption: ${spot.y.toInt()}';
                                 return LineTooltipItem(
-                                  label,
-                                  TextStyle(
-                                    color: isCobb
-                                        ? AppTheme.accentLavender
-                                        : overlayColor,
+                                  '$dateStr\n${spot.y.toStringAsFixed(1)}° angle',
+                                  const TextStyle(
+                                    color: AppTheme.accentLavender,
                                     fontWeight: FontWeight.w700,
                                     fontSize: 12,
                                   ),
