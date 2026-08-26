@@ -102,11 +102,17 @@ class _LearnScreenState extends State<LearnScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _LearnHero(
-                    activeSection: _section,
-                    topicCount: spineUpLearnTopics.length,
+                  _LearnHero(activeSection: _section),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Practice',
+                    style: theme.textTheme.labelLarge?.copyWith(
+                      color: theme.colorScheme.primary,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 0.2,
+                    ),
                   ),
-                  const SizedBox(height: 18),
+                  const SizedBox(height: 8),
                   quickTourTarget(
                     registry: widget.tutorialRegistry,
                     page: QuickTourPage.learn,
@@ -206,9 +212,27 @@ class _LearnScreenState extends State<LearnScreen> {
                             2 => 'Videos',
                             _ => 'Saved',
                           };
+                          final selected = _section == section;
                           return ChoiceChip(
                             label: Text(section),
-                            selected: _section == section,
+                            selected: selected,
+                            showCheckmark: false,
+                            side: BorderSide(
+                              color: selected
+                                  ? theme.colorScheme.primary
+                                  : theme.colorScheme.outlineVariant,
+                            ),
+                            backgroundColor:
+                                theme.colorScheme.surfaceContainerHighest,
+                            selectedColor: theme.colorScheme.primary,
+                            labelStyle: theme.textTheme.labelLarge?.copyWith(
+                              color: selected
+                                  ? theme.colorScheme.onPrimary
+                                  : theme.colorScheme.onSurfaceVariant,
+                              fontWeight: selected
+                                  ? FontWeight.w800
+                                  : FontWeight.w600,
+                            ),
                             onSelected: (_) => setState(() {
                               _section = section;
                               _category = 'All';
@@ -218,8 +242,10 @@ class _LearnScreenState extends State<LearnScreen> {
                       ),
                     ),
                   ),
-                  if (_section == 'Topics') ...[
-                    const SizedBox(height: 10),
+                  if (_section == 'Topics' && _categories.length > 1) ...[
+                    const SizedBox(height: 12),
+                    const _LearnFilterDivider(label: 'Filter by topic'),
+                    const SizedBox(height: 8),
                     SizedBox(
                       height: 40,
                       child: ListView.separated(
@@ -307,15 +333,14 @@ class _LearnScreenState extends State<LearnScreen> {
 
 class _LearnHero extends StatelessWidget {
   final String activeSection;
-  final int topicCount;
 
-  const _LearnHero({required this.activeSection, required this.topicCount});
+  const _LearnHero({required this.activeSection});
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
         color: theme.colorScheme.primary.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(24),
@@ -327,8 +352,9 @@ class _LearnHero extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            width: 48,
-            height: 48,
+            width: 42,
+            height: 42,
+
             decoration: BoxDecoration(
               color: theme.colorScheme.surface.withValues(alpha: 0.76),
               shape: BoxShape.circle,
@@ -350,18 +376,16 @@ class _LearnHero extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  activeSection == 'Topics'
-                      ? 'Learn'
-                      : '$activeSection, chosen with care.',
-                  style: theme.textTheme.titleLarge?.copyWith(
+                  activeSection == 'Topics' ? 'Learn' : activeSection,
+                  style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w800,
                   ),
                 ),
                 const SizedBox(height: 5),
                 Text(
                   activeSection == 'Topics'
-                      ? 'At your own pace: $topicCount plain-language guides with sources and clear limits.'
-                      : 'Browse trusted material without turning SpineUp into an endless feed.',
+                      ? 'Clear guides, trusted sources, and room to explore.'
+                      : 'Browse trusted material at your own pace.',
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
                     height: 1.4,
@@ -372,6 +396,44 @@ class _LearnHero extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _LearnFilterDivider extends StatelessWidget {
+  final String label;
+
+  const _LearnFilterDivider({required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Row(
+      children: [
+        Expanded(
+          child: Divider(
+            height: 1,
+            color: theme.colorScheme.outlineVariant.withValues(alpha: 0.75),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 10),
+          child: Text(
+            label,
+            style: theme.textTheme.labelSmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.2,
+            ),
+          ),
+        ),
+        Expanded(
+          child: Divider(
+            height: 1,
+            color: theme.colorScheme.outlineVariant.withValues(alpha: 0.75),
+          ),
+        ),
+      ],
     );
   }
 }

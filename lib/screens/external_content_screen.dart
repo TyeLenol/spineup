@@ -151,23 +151,27 @@ class _ExternalContentSectionState extends State<ExternalContentSection> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         if (_refreshing) const LinearProgressIndicator(minHeight: 2),
-        SizedBox(
-          height: 40,
-          child: ListView.separated(
-            padding: const EdgeInsets.symmetric(horizontal: 2),
-            scrollDirection: Axis.horizontal,
-            itemCount: categories.length,
-            separatorBuilder: (_, _) => const SizedBox(width: 8),
-            itemBuilder: (context, index) {
-              final category = categories[index];
-              return ChoiceChip(
-                label: Text(category),
-                selected: _category == category,
-                onSelected: (_) => setState(() => _category = category),
-              );
-            },
+        if (categories.length > 1) ...[
+          const _ContentFilterDivider(label: 'Filter by topic'),
+          const SizedBox(height: 8),
+          SizedBox(
+            height: 40,
+            child: ListView.separated(
+              padding: const EdgeInsets.symmetric(horizontal: 2),
+              scrollDirection: Axis.horizontal,
+              itemCount: categories.length,
+              separatorBuilder: (_, _) => const SizedBox(width: 8),
+              itemBuilder: (context, index) {
+                final category = categories[index];
+                return ChoiceChip(
+                  label: Text(category),
+                  selected: _category == category,
+                  onSelected: (_) => setState(() => _category = category),
+                );
+              },
+            ),
           ),
-        ),
+        ],
         const SizedBox(height: 12),
         Row(
           children: [
@@ -226,6 +230,44 @@ class _ExternalContentSectionState extends State<ExternalContentSection> {
                   : null,
             ),
           ],
+      ],
+    );
+  }
+}
+
+class _ContentFilterDivider extends StatelessWidget {
+  final String label;
+
+  const _ContentFilterDivider({required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Row(
+      children: [
+        Expanded(
+          child: Divider(
+            height: 1,
+            color: theme.colorScheme.outlineVariant.withValues(alpha: 0.75),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 10),
+          child: Text(
+            label,
+            style: theme.textTheme.labelSmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.2,
+            ),
+          ),
+        ),
+        Expanded(
+          child: Divider(
+            height: 1,
+            color: theme.colorScheme.outlineVariant.withValues(alpha: 0.75),
+          ),
+        ),
       ],
     );
   }
