@@ -97,7 +97,7 @@ GitHub Actions resolves dependencies, checks formatting for changed Dart files, 
 
 There are two different meanings of “release APK.” A release-mode test APK is optimised for performance but, with the current repository configuration, still uses the debug signing configuration. A public distributable build must use a private release keystore and an explicit Gradle signing configuration.
 
-Fraunces and Outfit are bundled under `assets/fonts/`, so the release APK uses the same branded typography as debug even when the device is offline. This adds roughly 528 KB before final APK compression.
+Fraunces and Outfit are bundled under `assets/fonts/`, so the release APK uses the same branded typography as debug even when the device is offline. This adds roughly 600 KB before final APK compression.
 
 For a quick local release-mode test from VS Code’s integrated terminal:
 

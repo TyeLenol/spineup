@@ -34,7 +34,6 @@ dependencies:
   sqflite: ^2.3.0
   path: ^1.9.0
   uuid: ^4.3.3
-  google_fonts: ^6.2.1
   flutter_svg: ^2.3.0
   animations: ^2.0.11
   image_picker: ^1.2.3
@@ -76,13 +75,40 @@ flutter:
   # the material Icons class.
   uses-material-design: true
 
+  fonts:
+    - family: Fraunces
+      fonts:
+        - asset: assets/fonts/Fraunces-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/Fraunces-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Fraunces-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/Fraunces-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/Fraunces-ExtraBold.ttf
+          weight: 800
+    - family: Outfit
+      fonts:
+        - asset: assets/fonts/Outfit-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/Outfit-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Outfit-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/Outfit-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/Outfit-ExtraBold.ttf
+          weight: 800
+
   # To add assets to your application, add an assets section, like this:
   assets:
     - assets/images/
     - assets/images/avatars/
     - assets/images/badges/
     - assets/onboarding/
-    - assets/fonts/
+    - assets/fonts/Fraunces-OFL.txt
+    - assets/fonts/Outfit-OFL.txt
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

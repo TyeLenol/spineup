@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import '../theme/spine_fonts.dart';
 import '../data/database_helper.dart';
 import '../main.dart' show mainAppRoute, onboardingRoute;
 import '../models/care_subject.dart';
@@ -159,7 +159,7 @@ class _SplashScreenState extends State<SplashScreen>
                     opacity: _titleFadeAnimation,
                     child: Text(
                       'SpineUp',
-                      style: GoogleFonts.fraunces(
+                      style: SpineFonts.fraunces(
                         fontSize: 48,
                         fontWeight: FontWeight.w500,
                         color: AppTheme.onPrimaryDark,

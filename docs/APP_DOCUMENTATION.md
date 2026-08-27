@@ -276,7 +276,7 @@ The application includes reduced-motion checks for top-level transitions and use
 
 The Web and Android surfaces share the SpineUp name, metadata, splash identity, favicon, PWA icons, adaptive launcher icon, and native launch background. The wordmark is omitted from tiny launcher/favicon assets because it would not remain legible at those dimensions.
 
-Fraunces and Outfit are bundled in `assets/fonts/` at the static weights used by the app. `GoogleFonts.config.allowRuntimeFetching` is disabled during startup, so release builds do not silently fall back to a platform font when the device is offline or the release manifest does not permit network access. The corresponding SIL Open Font License texts are preserved beside the font files and registered with Flutter’s license registry.
+Fraunces and Outfit are bundled in `assets/fonts/` at the static weights used by the app. `lib/theme/spine_fonts.dart` applies those registered Flutter families directly, so release builds do not silently fall back to a platform font when the device is offline or the release manifest does not permit network access. The `google_fonts` runtime dependency is not needed for the app’s typography. The corresponding SIL Open Font License texts are preserved beside the font files and registered with Flutter’s license registry.
 
 ## 11. Source map for maintainers
 
@@ -295,6 +295,7 @@ Fraunces and Outfit are bundled in `assets/fonts/` at the static weights used by
 | XP and milestones | `lib/services/gamification_service.dart`, `lib/models/milestone.dart`, `lib/widgets/action_reward_feedback.dart` |
 | Reminders | `lib/services/reminder_service.dart`, `android/app/src/main/AndroidManifest.xml` |
 | Theme and motion | `lib/theme/app_theme.dart`, `lib/theme/app_transitions.dart`, `lib/widgets/m3_squiggly_line.dart` |
+| Bundled typography | `lib/theme/spine_fonts.dart`, `assets/fonts/` |
 | Branding | `assets/branding/spineup_mark.svg`, `lib/screens/splash_screen.dart`, `android/app/src/main/res/`, `web/` |
 
 ## 12. Development and validation

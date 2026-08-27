@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:google_fonts/google_fonts.dart';
+import '../theme/spine_fonts.dart';
 
 import '../main.dart';
 import '../services/session_service.dart';
@@ -11,9 +11,9 @@ import '../widgets/onboarding/onboarding_chrome.dart';
 const Color _onboardingCanvas = Color(0xFFFFF0E5);
 
 // Warm accent palette: rich teal primary, mauve italic, deep teal shadow.
-const Color _onboardingTint     = Color(0xFF0D8A7A); // rich saturated teal
+const Color _onboardingTint = Color(0xFF0D8A7A); // rich saturated teal
 const Color _onboardingTintSoft = Color(0xFF7B5A70); // soft mauve italic
-const Color _onboardingDeep     = Color(0xFF065E52); // deep teal shadow
+const Color _onboardingDeep = Color(0xFF065E52); // deep teal shadow
 
 class OnboardingScreenData {
   final Color bg;
@@ -77,7 +77,6 @@ const List<OnboardingScreenData> kOnboardingScreens = [
     imageAsset: 'assets/onboarding/onboarding_keep_your_path_close.png',
   ),
 ];
-
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -250,7 +249,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                             children: [
                               Text(
                                 screen.eyebrow.toUpperCase(),
-                                style: GoogleFonts.outfit(
+                                style: SpineFonts.outfit(
                                   color: screen.tint,
                                   fontSize: 11,
                                   fontWeight: FontWeight.w700,
@@ -260,7 +259,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                               const SizedBox(height: 10),
                               Text(
                                 screen.headline[0],
-                                style: GoogleFonts.fraunces(
+                                style: SpineFonts.fraunces(
                                   color: screen.tint,
                                   fontSize: 39,
                                   fontWeight: FontWeight.w900,
@@ -271,7 +270,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                               const SizedBox(height: 2),
                               Text(
                                 screen.headline[1],
-                                style: GoogleFonts.fraunces(
+                                style: SpineFonts.fraunces(
                                   color: screen.tintSoft,
                                   fontSize: 32,
                                   fontWeight: FontWeight.w700,
@@ -283,7 +282,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                               const SizedBox(height: 12),
                               Text(
                                 screen.subtext,
-                                style: GoogleFonts.outfit(
+                                style: SpineFonts.outfit(
                                   color: const Color(0xFF5C4B45),
                                   fontSize: 15,
                                   height: 1.55,

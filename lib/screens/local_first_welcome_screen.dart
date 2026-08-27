@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import '../theme/spine_fonts.dart';
 
 import '../theme/app_theme.dart';
 import '../theme/edge_to_edge_helper.dart';
@@ -25,7 +25,7 @@ class LocalFirstWelcomeScreen extends StatelessWidget {
               const SizedBox(height: 6),
               Text(
                 'A gentle place to begin',
-                style: GoogleFonts.outfit(
+                style: SpineFonts.outfit(
                   color: AppTheme.profileMuted,
                   fontSize: 13,
                   fontWeight: FontWeight.w700,
@@ -53,7 +53,7 @@ class LocalFirstWelcomeScreen extends StatelessWidget {
                       const SizedBox(height: 18),
                       Text(
                         'Make room for\ncare.',
-                        style: GoogleFonts.fraunces(
+                        style: SpineFonts.fraunces(
                           color: AppTheme.foregroundDark,
                           fontSize: 40,
                           fontWeight: FontWeight.w800,
@@ -64,7 +64,7 @@ class LocalFirstWelcomeScreen extends StatelessWidget {
                       const SizedBox(height: 12),
                       Text(
                         'Set up a space for yourself or someone you care for. Keep the small things together from the start—check-ins, routines, and questions.',
-                        style: GoogleFonts.outfit(
+                        style: SpineFonts.outfit(
                           color: AppTheme.profileMuted,
                           fontSize: 15,
                           height: 1.5,
@@ -84,7 +84,7 @@ class LocalFirstWelcomeScreen extends StatelessWidget {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16),
                   ),
-                  textStyle: GoogleFonts.outfit(
+                  textStyle: SpineFonts.outfit(
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
                   ),
@@ -95,7 +95,7 @@ class LocalFirstWelcomeScreen extends StatelessWidget {
               Text(
                 'Your records stay on this phone unless you choose to export a protected copy.',
                 textAlign: TextAlign.center,
-                style: GoogleFonts.outfit(
+                style: SpineFonts.outfit(
                   color: AppTheme.profileMuted,
                   fontSize: 12,
                   height: 1.4,

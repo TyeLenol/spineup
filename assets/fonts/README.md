@@ -11,4 +11,4 @@ The families were obtained from the official Google Fonts sources:
 - [Google Fonts repository: Fraunces](https://github.com/google/fonts/tree/main/ofl/fraunces)
 - [Google Fonts repository: Outfit](https://github.com/google/fonts/tree/main/ofl/outfit)
 
-Do not rename the weight suffixes without also checking the `google_fonts` package’s asset matching convention. The application config disables runtime font fetching after these assets are loaded, keeping Android release typography deterministic and offline-safe.
+Do not rename the weight suffixes without updating the matching entries in `pubspec.yaml`. `lib/theme/spine_fonts.dart` references the registered `Fraunces` and `Outfit` families directly, keeping Android release typography deterministic and offline-safe without a runtime font-fetching dependency.
