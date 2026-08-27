@@ -12,6 +12,7 @@ import '../../services/gamification_service.dart';
 import '../../services/profile_mapper.dart';
 import '../../services/profile_store.dart';
 import '../../services/session_service.dart';
+import '../avatar_studio_screen.dart';
 import '../../theme/app_theme.dart';
 import 'profile_shell.dart';
 import 'steps/step_basics.dart';
@@ -146,6 +147,10 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
         diagnosis: runtimeProfile.diagnosis,
         braceStatus: runtimeProfile.braceStatus,
         ageRange: runtimeProfile.ageRange,
+        avatarStyleId: runtimeProfile.avatarStyleId,
+        avatarOptions: runtimeProfile.avatarOptions,
+        avatarSeed: runtimeProfile.avatarSeed,
+        avatarMode: runtimeProfile.avatarMode,
       );
 
       final hasCompletionEvent = (await gamification.getAllEvents(
@@ -164,6 +169,39 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
         );
       }
       SessionService.setActiveCareSubject(careSubject);
+
+      if (!widget.editExisting && mounted) {
+        final chooseAvatarNow = await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Make this care space yours'),
+            content: const Text(
+              'Choose a local avatar now, or keep the default and do it later from Me.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: const Text('Do this later'),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                child: const Text('Choose an avatar'),
+              ),
+            ],
+          ),
+        );
+        if (chooseAvatarNow == true && mounted) {
+          await Navigator.of(context).push<bool>(
+            MaterialPageRoute(
+              builder: (_) => AvatarStudioScreen(
+                userId: careSubject.id,
+                profile: runtimeProfile,
+                gamificationService: gamification,
+              ),
+            ),
+          );
+        }
+      }
 
       if (!mounted) return;
       if (widget.createNewWard || widget.editExisting) {

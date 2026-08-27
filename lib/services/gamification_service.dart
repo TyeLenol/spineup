@@ -1,5 +1,7 @@
 import 'package:uuid/uuid.dart';
 
+import 'dart:convert';
+
 import '../data/database_helper.dart';
 import '../models/appointment.dart';
 import '../models/event.dart';
@@ -217,6 +219,11 @@ class GamificationService {
     required String userId,
     String? presetId,
     String? customPhotoPath,
+    bool clearCustomPhotoPath = false,
+    String? avatarStyleId,
+    Map<String, String>? avatarOptions,
+    String? avatarSeed,
+    String? avatarMode,
     String? name,
     String? diagnosis,
     String? braceStatus,
@@ -225,6 +232,11 @@ class GamificationService {
     _userProfile = _userProfile.copyWith(
       presetId: presetId,
       customPhotoPath: customPhotoPath,
+      clearCustomPhotoPath: clearCustomPhotoPath,
+      avatarStyleId: avatarStyleId,
+      avatarOptions: avatarOptions,
+      avatarSeed: avatarSeed,
+      avatarMode: avatarMode,
       name: name,
       diagnosis: diagnosis,
       braceStatus: braceStatus,
@@ -234,6 +246,10 @@ class GamificationService {
       userId: userId,
       presetId: _userProfile.presetId,
       customPhotoPath: _userProfile.customPhotoPath,
+      avatarStyleId: _userProfile.avatarStyleId,
+      avatarOptions: _userProfile.avatarOptions,
+      avatarSeed: _userProfile.avatarSeed,
+      avatarMode: _userProfile.avatarMode,
       name: _userProfile.name,
       diagnosis: _userProfile.diagnosis,
       braceStatus: _userProfile.braceStatus,
@@ -284,6 +300,25 @@ class GamificationService {
     return value == null || value.trim().isEmpty ? fallback : value;
   }
 
+  static Map<String, String> _storedAvatarOptions(Object? raw) {
+    if (raw is! String || raw.trim().isEmpty) {
+      return const <String, String>{};
+    }
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is Map) {
+        return {
+          for (final entry in decoded.entries)
+            if (entry.key is String && entry.value is String)
+              entry.key as String: entry.value as String,
+        };
+      }
+    } catch (_) {
+      // Optional avatar settings are allowed to fall back safely.
+    }
+    return const <String, String>{};
+  }
+
   // ── Snapshot ────────────────────────────────────────────────────────────────
 
   /// Compute a full [GamificationSnapshot] for [userId] by reading all events.
@@ -292,9 +327,26 @@ class GamificationService {
 
     final userProfileMap = await _db.getUserProfile(userId);
     if (userProfileMap != null) {
+      final customPhotoPath = userProfileMap['custom_photo_path'] as String?;
+      final avatarStyleId =
+          userProfileMap['avatar_style_id'] as String? ?? 'preset';
+      final storedMode = userProfileMap['avatar_mode'] as String?;
       _userProfile = UserProfile(
         presetId: userProfileMap['preset_id'] as String? ?? 'preset_sun',
-        customPhotoPath: userProfileMap['custom_photo_path'] as String?,
+        customPhotoPath: customPhotoPath,
+        avatarStyleId: avatarStyleId,
+        avatarOptions: _storedAvatarOptions(userProfileMap['avatar_options']),
+        avatarSeed: _storedProfileValue(
+          userProfileMap['avatar_seed'],
+          'spineup-$userId',
+        ),
+        avatarMode:
+            storedMode ??
+            (customPhotoPath != null
+                ? 'photo'
+                : avatarStyleId == 'preset'
+                ? 'preset'
+                : 'illustrated'),
         name: _storedProfileValue(userProfileMap['name'], 'You'),
         diagnosis: _storedProfileValue(
           userProfileMap['diagnosis'],
