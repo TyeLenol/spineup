@@ -1,6 +1,6 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import '../../theme/spine_fonts.dart';
 import '../../theme/app_theme.dart';
 import '../learn_screen.dart';
 
@@ -91,7 +91,7 @@ class ProfileField extends StatelessWidget {
                   Flexible(
                     child: Text(
                       label,
-                      style: GoogleFonts.outfit(
+                      style: SpineFonts.outfit(
                         fontSize: 13,
                         fontWeight: FontWeight.w700,
                         letterSpacing: 0.1,
@@ -119,7 +119,7 @@ class ProfileField extends StatelessWidget {
           const SizedBox(height: 6),
           Text(
             hint!,
-            style: GoogleFonts.outfit(
+            style: SpineFonts.outfit(
               fontSize: 12,
               fontWeight: FontWeight.w400,
               color: AppTheme.profileMuted,
@@ -155,7 +155,7 @@ class ProfileTextInput extends StatelessWidget {
       controller: controller,
       keyboardType: keyboardType,
       onChanged: onChanged,
-      style: GoogleFonts.outfit(
+      style: SpineFonts.outfit(
         fontSize: 16,
         fontWeight: FontWeight.w500,
         color: AppTheme.foregroundDark,
@@ -163,19 +163,19 @@ class ProfileTextInput extends StatelessWidget {
       decoration: InputDecoration(
         labelText: labelText,
         floatingLabelBehavior: FloatingLabelBehavior.auto,
-        labelStyle: GoogleFonts.outfit(
+        labelStyle: SpineFonts.outfit(
           fontSize: 14,
           fontWeight: FontWeight.w500,
           color: AppTheme.profileMuted,
         ),
-        floatingLabelStyle: GoogleFonts.outfit(
+        floatingLabelStyle: SpineFonts.outfit(
           fontSize: 13,
           fontWeight: FontWeight.w700,
           color: AppTheme.profileAction,
         ),
         hintText: hintText,
         errorText: errorText,
-        hintStyle: GoogleFonts.outfit(
+        hintStyle: SpineFonts.outfit(
           fontSize: 15,
           fontWeight: FontWeight.w400,
           color: AppTheme.profileMuted.withValues(alpha: 0.65),
@@ -287,7 +287,7 @@ class ProfileChipGroup<T> extends StatelessWidget {
                   children: [
                     Text(
                       opt.label,
-                      style: GoogleFonts.outfit(
+                      style: SpineFonts.outfit(
                         fontSize: 14,
                         fontWeight: FontWeight.w700,
                         color: on
@@ -299,7 +299,7 @@ class ProfileChipGroup<T> extends StatelessWidget {
                       const SizedBox(height: 2),
                       Text(
                         opt.hint!,
-                        style: GoogleFonts.outfit(
+                        style: SpineFonts.outfit(
                           fontSize: 11,
                           fontWeight: FontWeight.w400,
                           color: on
@@ -369,7 +369,7 @@ class ProfileSlider extends StatelessWidget {
           alignment: Alignment.center,
           child: Text(
             value.round().toString(),
-            style: GoogleFonts.outfit(
+            style: SpineFonts.outfit(
               fontSize: 16,
               fontWeight: FontWeight.w800,
               color: Colors.white,

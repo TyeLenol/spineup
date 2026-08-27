@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'spine_fonts.dart';
 
 class AppTheme {
   AppTheme._();
@@ -19,15 +19,19 @@ class AppTheme {
 
   // Warm care palette shared by local entry and profile setup. Deep teal keeps
   // actions grounded while ivory, peach, and terracotta soften the form journey.
-  static const Color profileCanvas = Color(0xFFFEEDD8);       // warmer amber-cream
+  static const Color profileCanvas = Color(0xFFFEEDD8); // warmer amber-cream
   static const Color profileSurface = Color(0xFFFFF8EF);
-  static const Color profileSoftSage = Color(0xFFFAD4B8);     // warm peachy blush
-  static const Color profileSage = Color(0xFF0D8A7A);         // rich saturated teal
-  static const Color profileMuted = Color(0xFF765E58);        // original warm brown
+  static const Color profileSoftSage = Color(0xFFFAD4B8); // warm peachy blush
+  static const Color profileSage = Color(0xFF0D8A7A); // rich saturated teal
+  static const Color profileMuted = Color(0xFF765E58); // original warm brown
   static const Color profileBorder = Color(0xFFEAC8A8);
   static const Color profileWarm = Color(0xFFF3A06A);
-  static const Color profileAction = Color(0xFFD94F1E);       // vivid paprika – vibrant CTA
-  static const Color profileActionDeep = Color(0xFFA63511);   // deep mahogany shadow
+  static const Color profileAction = Color(
+    0xFFD94F1E,
+  ); // vivid paprika – vibrant CTA
+  static const Color profileActionDeep = Color(
+    0xFFA63511,
+  ); // deep mahogany shadow
 
   // Brand Colors (Dark Theme)
   static const Color darkBackground = Color(0xFF241E19);
@@ -41,8 +45,8 @@ class AppTheme {
   static const Color darkBorder = Color(0xFF4D453E);
 
   static TextTheme _buildTextTheme(TextTheme base, Color foregroundColor) {
-    final headingFont = GoogleFonts.frauncesTextTheme(base);
-    final bodyFont = GoogleFonts.outfitTextTheme(base);
+    final headingFont = SpineFonts.frauncesTextTheme(base);
+    final bodyFont = SpineFonts.outfitTextTheme(base);
 
     return base.copyWith(
       displayLarge: headingFont.displayLarge?.copyWith(

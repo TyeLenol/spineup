@@ -1,7 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'theme/app_theme.dart';
 import 'theme/app_transitions.dart';
 import 'screens/splash_screen.dart';
@@ -17,7 +16,6 @@ final ValueNotifier<ThemeMode> themeModeNotifier = ValueNotifier<ThemeMode>(
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  GoogleFonts.config.allowRuntimeFetching = false;
   _registerFontLicenses();
   runApp(const SpineUpApp());
 }

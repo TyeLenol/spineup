@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import '../../../theme/spine_fonts.dart';
 
 import '../../../models/profile_data.dart';
 import '../../../theme/app_theme.dart';
@@ -74,7 +74,7 @@ class _StepConsentState extends State<StepConsent> {
         const SizedBox(height: 16),
         Text(
           'Every health question is optional. SpineUp records what you choose to enter and explains terms; it does not diagnose, predict progression, or prescribe treatment.',
-          style: GoogleFonts.outfit(
+          style: SpineFonts.outfit(
             fontSize: 12,
             height: 1.5,
             color: AppTheme.profileMuted,
@@ -130,7 +130,7 @@ class _ConsentRow extends StatelessWidget {
                     Expanded(
                       child: Text(
                         title,
-                        style: GoogleFonts.outfit(
+                        style: SpineFonts.outfit(
                           fontSize: 15,
                           fontWeight: FontWeight.w700,
                           color: AppTheme.foregroundDark,
@@ -147,7 +147,7 @@ class _ConsentRow extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(
                   body,
-                  style: GoogleFonts.outfit(
+                  style: SpineFonts.outfit(
                     fontSize: 13,
                     fontWeight: FontWeight.w400,
                     color: AppTheme.profileMuted,

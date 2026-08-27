@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import '../theme/spine_fonts.dart';
 import '../theme/app_theme.dart';
 
 // ── Back button ─────────────────────────────────────────────────────────────
@@ -36,7 +36,7 @@ class AuthFieldLabel extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       text,
-      style: GoogleFonts.outfit(
+      style: SpineFonts.outfit(
         fontSize: 13,
         fontWeight: FontWeight.w600,
         color: AppTheme.foregroundDark,
@@ -114,7 +114,7 @@ class AuthTextField extends StatelessWidget {
                   textAlign: textAlign,
                   maxLength: maxLength,
                   onChanged: onChanged,
-                  style: GoogleFonts.outfit(
+                  style: SpineFonts.outfit(
                     fontSize: 16,
                     color: AppTheme.foregroundDark,
                     fontWeight: FontWeight.w500,
@@ -123,7 +123,7 @@ class AuthTextField extends StatelessWidget {
                     counterText:
                         "", // Hide character counter if maxLength is set
                     hintText: hintText,
-                    hintStyle: GoogleFonts.outfit(
+                    hintStyle: SpineFonts.outfit(
                       fontSize: 15,
                       color: AppTheme.profileMuted.withValues(alpha: 0.65),
                     ),
@@ -223,7 +223,7 @@ class AuthPrimaryButton extends StatelessWidget {
                   )
                 : Text(
                     label,
-                    style: GoogleFonts.outfit(
+                    style: SpineFonts.outfit(
                       fontSize: 17,
                       fontWeight: FontWeight.bold,
                       color: textColor,

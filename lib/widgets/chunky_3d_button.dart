@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import '../theme/spine_fonts.dart';
 
 /// Reusable 3D Tactile Push-Button with physical depth lip and depression physics.
 class Chunky3DButton extends StatefulWidget {
@@ -91,7 +91,7 @@ class _Chunky3DButtonState extends State<Chunky3DButton>
                 children: [
                   Text(
                     widget.label,
-                    style: GoogleFonts.outfit(
+                    style: SpineFonts.outfit(
                       fontSize: 15,
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
@@ -99,11 +99,7 @@ class _Chunky3DButtonState extends State<Chunky3DButton>
                     ),
                   ),
                   const SizedBox(width: 6),
-                  Icon(
-                    widget.icon,
-                    color: Colors.white,
-                    size: 18,
-                  ),
+                  Icon(widget.icon, color: Colors.white, size: 18),
                 ],
               ),
             ),

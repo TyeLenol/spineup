@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import '../../../theme/spine_fonts.dart';
 import '../../../models/profile_data.dart';
 import '../../../theme/app_theme.dart';
 import '../profile_fields.dart';
@@ -182,7 +182,7 @@ class _StepCurveState extends State<StepCurve> {
                 const SizedBox(width: 4),
                 Text(
                   'Advanced clinical details',
-                  style: GoogleFonts.outfit(
+                  style: SpineFonts.outfit(
                     fontSize: 14,
                     fontWeight: FontWeight.w700,
                     color: AppTheme.profileAction,

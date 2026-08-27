@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import '../../../theme/spine_fonts.dart';
 
 import '../../../models/profile_data.dart';
 import '../../../theme/app_theme.dart';
@@ -166,7 +166,7 @@ class _PrivateSpaceNote extends StatelessWidget {
           Expanded(
             child: Text(
               'Private by default. Your information starts on this phone, and you choose if or when to export a protected copy.',
-              style: GoogleFonts.outfit(
+              style: SpineFonts.outfit(
                 fontSize: 13,
                 height: 1.4,
                 color: AppTheme.profileMuted,

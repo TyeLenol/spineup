@@ -98,7 +98,8 @@ You can also launch directly into release mode while connected to a device:
 flutter run --release
 ```
 
-This path tests the release build mode, tree-shaking, native startup, launcher icon, bundled branded typography, external media, local notifications, and performance more realistically than debug mode. The bundled Fraunces and Outfit files add roughly 528 KB before final APK compression, which is the expected trade-off for keeping the intended typeface consistent offline. It is still debug-signed in the current repository configuration, so it is for testing rather than public distribution.
+This path tests the release build mode, tree-shaking, native startup, launcher icon, bundled branded typography, external media, local notifications, and performance more realistically than debug mode. The bundled Fraunces and Outfit files add roughly 600 KB before final APK compression, which is the expected trade-off for keeping the intended typeface consistent offline.
+It is still debug-signed in the current repository configuration, so it is for testing rather than public distribution.
 
 ## 4. Smaller architecture-specific APKs
 

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import '../../theme/spine_fonts.dart';
 import '../../theme/app_theme.dart';
 import '../../theme/edge_to_edge_helper.dart';
 import 'living_background.dart';
@@ -74,7 +74,7 @@ class ProfileShell extends StatelessWidget {
                             children: [
                               Text(
                                 'STEP $step OF $totalSteps',
-                                style: GoogleFonts.outfit(
+                                style: SpineFonts.outfit(
                                   fontSize: 11,
                                   fontWeight: FontWeight.w700,
                                   color: AppTheme.profileMuted,
@@ -139,7 +139,7 @@ class ProfileShell extends StatelessWidget {
                           delegate: SliverChildListDelegate.fixed([
                             Text(
                               title,
-                              style: GoogleFonts.fraunces(
+                              style: SpineFonts.fraunces(
                                 fontSize: 34,
                                 fontWeight: FontWeight.w800,
                                 height: 1.05,
@@ -150,7 +150,7 @@ class ProfileShell extends StatelessWidget {
                             const SizedBox(height: 12),
                             Text(
                               explainer,
-                              style: GoogleFonts.outfit(
+                              style: SpineFonts.outfit(
                                 fontSize: 15,
                                 fontWeight: FontWeight.w400,
                                 color: AppTheme.profileMuted,
@@ -194,7 +194,7 @@ class ProfileShell extends StatelessWidget {
                                 ),
                                 child: Text(
                                   primaryLabel,
-                                  style: GoogleFonts.outfit(
+                                  style: SpineFonts.outfit(
                                     fontSize: 16,
                                     fontWeight: FontWeight.w700,
                                     letterSpacing: 0.5,
@@ -215,7 +215,7 @@ class ProfileShell extends StatelessWidget {
                                   ),
                                   child: Text(
                                     secondaryLabel!,
-                                    style: GoogleFonts.outfit(
+                                    style: SpineFonts.outfit(
                                       fontSize: 14,
                                       fontWeight: FontWeight.w700,
                                     ),
