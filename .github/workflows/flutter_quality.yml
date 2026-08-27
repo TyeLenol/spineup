@@ -42,7 +42,12 @@ jobs:
           fi
           files="$(git diff --name-only --diff-filter=ACMR "$BASE_SHA" "$GITHUB_SHA" -- 'lib/**/*.dart' 'test/**/*.dart')"
           if [ -n "$files" ]; then
-            dart format --output=none --set-exit-if-changed $files
+            dart format --output=none $files
+            if ! git diff --quiet -- $files; then
+              echo "Formatting changes are required. Run: dart format $files"
+              git diff -- $files
+              exit 1
+            fi
           else
             echo 'No changed Dart files to format.'
           fi
