@@ -60,20 +60,27 @@ class _Ob3IllustrationState extends State<Ob3Illustration>
       curve: const Interval(0.65, 1.0, curve: Curves.easeOutBack),
     );
 
-    _card1Float = Tween<double>(begin: -5, end: 5).animate(
-      CurvedAnimation(parent: _floatCtrl, curve: Curves.easeInOut),
-    );
+    _card1Float = Tween<double>(
+      begin: -5,
+      end: 5,
+    ).animate(CurvedAnimation(parent: _floatCtrl, curve: Curves.easeInOut));
     _card2Float = Tween<double>(begin: 4, end: -5).animate(
-      CurvedAnimation(parent: _floatCtrl,
-          curve: const Interval(0.1, 1.0, curve: Curves.easeInOut)),
+      CurvedAnimation(
+        parent: _floatCtrl,
+        curve: const Interval(0.1, 1.0, curve: Curves.easeInOut),
+      ),
     );
     _card3Float = Tween<double>(begin: -3, end: 6).animate(
-      CurvedAnimation(parent: _floatCtrl,
-          curve: const Interval(0.25, 1.0, curve: Curves.easeInOut)),
+      CurvedAnimation(
+        parent: _floatCtrl,
+        curve: const Interval(0.25, 1.0, curve: Curves.easeInOut),
+      ),
     );
     _pillFloat = Tween<double>(begin: 3, end: -4).animate(
-      CurvedAnimation(parent: _floatCtrl,
-          curve: const Interval(0.15, 0.9, curve: Curves.easeInOut)),
+      CurvedAnimation(
+        parent: _floatCtrl,
+        curve: const Interval(0.15, 0.9, curve: Curves.easeInOut),
+      ),
     );
 
     _entryCtrl.forward();
@@ -305,7 +312,14 @@ class _CommunityCard extends StatelessWidget {
             children: [
               Icon(Icons.favorite_rounded, color: accent, size: 11),
               const SizedBox(width: 3),
-              Text('24', style: TextStyle(fontSize: 9, color: accent, fontWeight: FontWeight.w600)),
+              Text(
+                '24',
+                style: TextStyle(
+                  fontSize: 9,
+                  color: accent,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
             ],
           ),
         ],

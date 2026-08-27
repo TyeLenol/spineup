@@ -57,16 +57,20 @@ class _Ob2IllustrationState extends State<Ob2Illustration>
       curve: const Interval(0.60, 1.0, curve: Curves.easeOutBack),
     );
 
-    _veraFloat = Tween<double>(begin: -5, end: 5).animate(
-      CurvedAnimation(parent: _floatCtrl, curve: Curves.easeInOut),
-    );
+    _veraFloat = Tween<double>(
+      begin: -5,
+      end: 5,
+    ).animate(CurvedAnimation(parent: _floatCtrl, curve: Curves.easeInOut));
     _pillFloat = Tween<double>(begin: 3, end: -4).animate(
-      CurvedAnimation(parent: _floatCtrl,
-          curve: const Interval(0.15, 1.0, curve: Curves.easeInOut)),
+      CurvedAnimation(
+        parent: _floatCtrl,
+        curve: const Interval(0.15, 1.0, curve: Curves.easeInOut),
+      ),
     );
-    _crownPulse = Tween<double>(begin: 1.0, end: 1.20).animate(
-      CurvedAnimation(parent: _pulseCtrl, curve: Curves.easeInOut),
-    );
+    _crownPulse = Tween<double>(
+      begin: 1.0,
+      end: 1.20,
+    ).animate(CurvedAnimation(parent: _pulseCtrl, curve: Curves.easeInOut));
 
     _entryCtrl.forward();
   }

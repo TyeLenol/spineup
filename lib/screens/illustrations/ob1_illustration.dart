@@ -51,13 +51,15 @@ class _Ob1IllustrationState extends State<Ob1Illustration>
       curve: const Interval(0.50, 1.0, curve: Curves.easeOutBack),
     );
 
-    _card1Float = Tween<double>(begin: -5, end: 5).animate(
-      CurvedAnimation(parent: _floatCtrl, curve: Curves.easeInOut),
-    );
+    _card1Float = Tween<double>(
+      begin: -5,
+      end: 5,
+    ).animate(CurvedAnimation(parent: _floatCtrl, curve: Curves.easeInOut));
     _pillFloat = Tween<double>(begin: 3, end: -4).animate(
       CurvedAnimation(
-          parent: _floatCtrl,
-          curve: const Interval(0.1, 0.9, curve: Curves.easeInOut)),
+        parent: _floatCtrl,
+        curve: const Interval(0.1, 0.9, curve: Curves.easeInOut),
+      ),
     );
 
     _entryCtrl.forward();
@@ -112,7 +114,9 @@ class _Ob1IllustrationState extends State<Ob1Illustration>
                   angle: -7 * math.pi / 180,
                   child: Container(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 12, vertical: 9),
+                      horizontal: 12,
+                      vertical: 9,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.92),
                       borderRadius: BorderRadius.circular(16),
@@ -180,7 +184,9 @@ class _Ob1IllustrationState extends State<Ob1Illustration>
                 ),
                 child: Container(
                   padding: const EdgeInsets.symmetric(
-                      horizontal: 14, vertical: 7),
+                    horizontal: 14,
+                    vertical: 7,
+                  ),
                   decoration: BoxDecoration(
                     color: AppTheme.secondaryCoral,
                     borderRadius: BorderRadius.circular(20),

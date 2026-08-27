@@ -344,7 +344,6 @@ class _LearnScreenState extends State<LearnScreen> {
   }
 }
 
-
 class _LearnFilterDivider extends StatelessWidget {
   final String label;
 

@@ -6,17 +6,14 @@ class CountUpWidget extends StatefulWidget {
   final int to;
   final Color color;
 
-  const CountUpWidget({
-    super.key,
-    required this.to,
-    required this.color,
-  });
+  const CountUpWidget({super.key, required this.to, required this.color});
 
   @override
   State<CountUpWidget> createState() => _CountUpWidgetState();
 }
 
-class _CountUpWidgetState extends State<CountUpWidget> with TickerProviderStateMixin {
+class _CountUpWidgetState extends State<CountUpWidget>
+    with TickerProviderStateMixin {
   late AnimationController _countController;
   late AnimationController _scaleController;
 
@@ -83,7 +80,7 @@ class _CountUpWidgetState extends State<CountUpWidget> with TickerProviderStateM
     final simulation = SpringSimulation(
       const SpringDescription(mass: 1.0, stiffness: 320.0, damping: 9.0),
       1.18, // start overshoot target
-      1.0,  // final rest
+      1.0, // final rest
       0.0,
     );
     _scaleController.animateWith(simulation);

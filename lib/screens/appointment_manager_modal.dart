@@ -566,7 +566,9 @@ class _ScheduleFormSheetState extends State<_ScheduleFormSheet> {
               labelText: 'Appointment Title / Type',
               hintText: 'e.g. Orthopedist or physical therapy',
               prefixIcon: const Icon(Icons.badge_outlined),
-              errorText: _titleError ? 'Please enter a title for this appointment' : null,
+              errorText: _titleError
+                  ? 'Please enter a title for this appointment'
+                  : null,
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
               ),

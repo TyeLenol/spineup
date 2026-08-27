@@ -490,108 +490,116 @@ class RoutineExerciseCardState extends State<RoutineExerciseCard> {
           children: [
             Container(
               width: 4,
-              color: widget.done 
-                  ? AppTheme.primarySage.withValues(alpha: 0.2) 
+              color: widget.done
+                  ? AppTheme.primarySage.withValues(alpha: 0.2)
                   : AppTheme.primarySage.withValues(alpha: 0.55),
             ),
             Expanded(
               child: Material(
                 color: Colors.transparent,
                 child: InkWell(
-          borderRadius: BorderRadius.circular(16),
-          onTap: () => setState(() => _expanded = !_expanded),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Row(
-                  children: [
-                    Opacity(
-                      opacity: widget.done ? 0.5 : 1.0,
-                      child: Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: cs.surfaceContainerHighest,
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          widget.exercise.icon,
-                          color: AppTheme.mutedForeground,
-                          size: 20,
-                        ),
-                      ),
+                  borderRadius: BorderRadius.circular(16),
+                  onTap: () => setState(() => _expanded = !_expanded),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
                     ),
-                    const SizedBox(width: 14),
-                    Expanded(
-                      child: Opacity(
-                        opacity: widget.done ? 0.5 : 1.0,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Row(
                           children: [
-                            _AnimatedSquigglyStrikethrough(
-                              isStruck: widget.done,
-                              child: Text(
-                                widget.exercise.name,
-                                style: tt.titleSmall?.copyWith(
-                                  color: widget.done
-                                      ? AppTheme.mutedForeground
-                                      : cs.onSurface,
+                            Opacity(
+                              opacity: widget.done ? 0.5 : 1.0,
+                              child: Container(
+                                padding: const EdgeInsets.all(10),
+                                decoration: BoxDecoration(
+                                  color: cs.surfaceContainerHighest,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Icon(
+                                  widget.exercise.icon,
+                                  color: AppTheme.mutedForeground,
+                                  size: 20,
                                 ),
                               ),
                             ),
-                            const SizedBox(height: 4),
-                            Text(
-                              '${widget.exercise.durationLabel}  ·  ${_expanded ? 'Hide steps' : 'View steps'}',
-                              style: tt.bodySmall?.copyWith(
-                                color: AppTheme.mutedForeground,
-                                fontSize: 11,
+                            const SizedBox(width: 14),
+                            Expanded(
+                              child: Opacity(
+                                opacity: widget.done ? 0.5 : 1.0,
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    _AnimatedSquigglyStrikethrough(
+                                      isStruck: widget.done,
+                                      child: Text(
+                                        widget.exercise.name,
+                                        style: tt.titleSmall?.copyWith(
+                                          color: widget.done
+                                              ? AppTheme.mutedForeground
+                                              : cs.onSurface,
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      '${widget.exercise.durationLabel}  ·  ${_expanded ? 'Hide steps' : 'View steps'}',
+                                      style: tt.bodySmall?.copyWith(
+                                        color: AppTheme.mutedForeground,
+                                        fontSize: 11,
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
+                            ),
+                            Icon(
+                              widget.done
+                                  ? Icons.check_circle_rounded
+                                  : Icons.circle_outlined,
+                              color: widget.done
+                                  ? AppTheme.primarySage
+                                  : _expanded
+                                  ? AppTheme.primarySage
+                                  : AppTheme.mutedForeground.withValues(
+                                      alpha: 0.5,
+                                    ),
+                              size: 28,
                             ),
                           ],
                         ),
-                      ),
-                    ),
-                    Icon(
-                      widget.done
-                          ? Icons.check_circle_rounded
-                          : Icons.circle_outlined,
-                      color: widget.done
-                          ? AppTheme.primarySage
-                          : _expanded
-                          ? AppTheme.primarySage
-                          : AppTheme.mutedForeground.withValues(alpha: 0.5),
-                      size: 28,
-                    ),
-                  ],
-                ),
-                if (_expanded) ...[
-                  const SizedBox(height: 16),
-                  const Divider(),
-                  const SizedBox(height: 12),
-                  Text(widget.exercise.description, style: tt.bodyMedium),
-                  const SizedBox(height: 12),
-                  FilledButton.icon(
-                    onPressed: () => _showExerciseInstructions(
-                      context,
-                      widget.exercise,
-                      onMarkDone: widget.onMarkDone,
-                    ),
-                    icon: const Icon(Icons.play_arrow_rounded),
-                    label: const Text('Start Exercise'),
-                    style: FilledButton.styleFrom(
-                      backgroundColor: AppTheme.primarySage,
+                        if (_expanded) ...[
+                          const SizedBox(height: 16),
+                          const Divider(),
+                          const SizedBox(height: 12),
+                          Text(
+                            widget.exercise.description,
+                            style: tt.bodyMedium,
+                          ),
+                          const SizedBox(height: 12),
+                          FilledButton.icon(
+                            onPressed: () => _showExerciseInstructions(
+                              context,
+                              widget.exercise,
+                              onMarkDone: widget.onMarkDone,
+                            ),
+                            icon: const Icon(Icons.play_arrow_rounded),
+                            label: const Text('Start Exercise'),
+                            style: FilledButton.styleFrom(
+                              backgroundColor: AppTheme.primarySage,
+                            ),
+                          ),
+                        ],
+                      ],
                     ),
                   ),
-                ],
-              ],
+                ),
+              ),
             ),
-          ),
+          ],
         ),
-      ),
-    ),
-  ],
-),
       ),
     );
   }
@@ -824,7 +832,9 @@ class RoutineExerciseGuidedFlowSheetState
                     width: 4,
                     color: _stepCompleted
                         ? AppTheme.primarySage.withValues(alpha: 0.6)
-                        : AppTheme.secondaryCoral.withValues(alpha: 0.6), // Warm coral active state
+                        : AppTheme.secondaryCoral.withValues(
+                            alpha: 0.6,
+                          ), // Warm coral active state
                   ),
                   Expanded(
                     child: Padding(
@@ -874,19 +884,26 @@ class RoutineExerciseGuidedFlowSheetState
                                 color: cs.surfaceContainerLowest,
                                 borderRadius: BorderRadius.circular(14),
                                 border: Border.all(
-                                  color: cs.outlineVariant.withValues(alpha: 0.35),
+                                  color: cs.outlineVariant.withValues(
+                                    alpha: 0.35,
+                                  ),
                                 ),
                               ),
                               clipBehavior: Clip.antiAlias,
                               child: IntrinsicHeight(
                                 child: Row(
-                                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.stretch,
                                   children: [
                                     Container(
                                       width: 4,
                                       color: _stepCompleted
-                                          ? AppTheme.primarySage.withValues(alpha: 0.6)
-                                          : AppTheme.secondaryCoral.withValues(alpha: 0.6),
+                                          ? AppTheme.primarySage.withValues(
+                                              alpha: 0.6,
+                                            )
+                                          : AppTheme.secondaryCoral.withValues(
+                                              alpha: 0.6,
+                                            ),
                                     ),
                                     Expanded(
                                       child: Padding(
@@ -907,7 +924,8 @@ class RoutineExerciseGuidedFlowSheetState
                                             ),
                                             const SizedBox(width: 10),
                                             Column(
-                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
                                               children: [
                                                 Text(
                                                   _stepCompleted
@@ -916,17 +934,20 @@ class RoutineExerciseGuidedFlowSheetState
                                                   style: tt.labelMedium?.copyWith(
                                                     color: _stepCompleted
                                                         ? AppTheme.primarySage
-                                                        : AppTheme.secondaryCoral,
+                                                        : AppTheme
+                                                              .secondaryCoral,
                                                     fontWeight: FontWeight.w600,
                                                   ),
                                                 ),
                                                 if (!_stepCompleted)
                                                   Text(
                                                     'Tap Next when ready',
-                                                    style: tt.bodySmall?.copyWith(
-                                                      fontSize: 10,
-                                                      color: AppTheme.mutedForeground,
-                                                    ),
+                                                    style: tt.bodySmall
+                                                        ?.copyWith(
+                                                          fontSize: 10,
+                                                          color: AppTheme
+                                                              .mutedForeground,
+                                                        ),
                                                   ),
                                               ],
                                             ),
@@ -934,8 +955,10 @@ class RoutineExerciseGuidedFlowSheetState
                                             IconButton(
                                               icon: Icon(
                                                 _timerRunning
-                                                    ? Icons.pause_circle_filled_rounded
-                                                    : Icons.play_circle_fill_rounded,
+                                                    ? Icons
+                                                          .pause_circle_filled_rounded
+                                                    : Icons
+                                                          .play_circle_fill_rounded,
                                               ),
                                               color: _stepCompleted
                                                   ? AppTheme.primarySage
