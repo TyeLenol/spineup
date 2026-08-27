@@ -276,6 +276,8 @@ The application includes reduced-motion checks for top-level transitions and use
 
 The Web and Android surfaces share the SpineUp name, metadata, splash identity, favicon, PWA icons, adaptive launcher icon, and native launch background. The wordmark is omitted from tiny launcher/favicon assets because it would not remain legible at those dimensions.
 
+Fraunces and Outfit are bundled in `assets/fonts/` at the static weights used by the app. `GoogleFonts.config.allowRuntimeFetching` is disabled during startup, so release builds do not silently fall back to a platform font when the device is offline or the release manifest does not permit network access. The corresponding SIL Open Font License texts are preserved beside the font files and registered with Flutter’s license registry.
+
 ## 11. Source map for maintainers
 
 | Concern | Primary implementation files |
