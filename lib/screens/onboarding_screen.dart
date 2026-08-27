@@ -7,7 +7,13 @@ import '../services/session_service.dart';
 import '../widgets/onboarding/keycap_cta.dart';
 import '../widgets/onboarding/onboarding_chrome.dart';
 
+// Warmer amber-cream canvas.
 const Color _onboardingCanvas = Color(0xFFFFF0E5);
+
+// Warm accent palette: rich teal primary, mauve italic, deep teal shadow.
+const Color _onboardingTint     = Color(0xFF0D8A7A); // rich saturated teal
+const Color _onboardingTintSoft = Color(0xFF7B5A70); // soft mauve italic
+const Color _onboardingDeep     = Color(0xFF065E52); // deep teal shadow
 
 class OnboardingScreenData {
   final Color bg;
@@ -36,9 +42,9 @@ class OnboardingScreenData {
 const List<OnboardingScreenData> kOnboardingScreens = [
   OnboardingScreenData(
     bg: _onboardingCanvas,
-    tint: Color(0xFF176B61),
-    tintSoft: Color(0xFF7B5A70),
-    deep: Color(0xFF104C47),
+    tint: _onboardingTint,
+    tintSoft: _onboardingTintSoft,
+    deep: _onboardingDeep,
     eyebrow: 'A gentle place to begin',
     headline: ['Make room', 'for care.'],
     subtext:
@@ -48,21 +54,21 @@ const List<OnboardingScreenData> kOnboardingScreens = [
   ),
   OnboardingScreenData(
     bg: _onboardingCanvas,
-    tint: Color(0xFF176B61),
-    tintSoft: Color(0xFF7B5A70),
-    deep: Color(0xFF104C47),
+    tint: _onboardingTint,
+    tintSoft: _onboardingTintSoft,
+    deep: _onboardingDeep,
     eyebrow: 'For you or someone you care for',
     headline: ['Care can', 'be shared.'],
     subtext:
-        'Create a space for yourself or someone you care for, with each person’s records kept separate.',
+        'Create a space for yourself or someone you care for, with each person\u2019s records kept separate.',
     cta: 'Next',
     imageAsset: 'assets/onboarding/onboarding_care_can_be_shared.png',
   ),
   OnboardingScreenData(
     bg: _onboardingCanvas,
-    tint: Color(0xFF176B61),
-    tintSoft: Color(0xFF7B5A70),
-    deep: Color(0xFF104C47),
+    tint: _onboardingTint,
+    tintSoft: _onboardingTintSoft,
+    deep: _onboardingDeep,
     eyebrow: 'Yours to carry',
     headline: ['Keep your path', 'close.'],
     subtext:
@@ -71,6 +77,7 @@ const List<OnboardingScreenData> kOnboardingScreens = [
     imageAsset: 'assets/onboarding/onboarding_keep_your_path_close.png',
   ),
 ];
+
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});

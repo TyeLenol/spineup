@@ -55,13 +55,6 @@ class _ActivityHistoryScreenState extends State<ActivityHistoryScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Activity history'),
-        actions: [
-          IconButton(
-            tooltip: 'Refresh history',
-            onPressed: _loadEvents,
-            icon: const Icon(Icons.refresh_rounded),
-          ),
-        ],
       ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
@@ -201,10 +194,11 @@ class _HistoryEventTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
-    final (icon, label, color) = switch (event.type) {
+
+    final (icon, label, accentColor) = switch (event.type) {
       EventType.stretchCompleted => (
         Icons.self_improvement_rounded,
-        'Routine: ${event.payload['exercise_name'] ?? 'Session'}',
+        'Routine · ${event.payload['exercise_name'] ?? 'Session'}',
         AppTheme.primarySage,
       ),
       EventType.journalEntry => (
@@ -214,7 +208,7 @@ class _HistoryEventTile extends StatelessWidget {
       ),
       EventType.angleLogged => (
         Icons.architecture_rounded,
-        'Recorded measurement',
+        'Measurement recorded',
         AppTheme.accentLavender,
       ),
       EventType.appointmentAttended => (
@@ -230,47 +224,73 @@ class _HistoryEventTile extends StatelessWidget {
     };
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(14),
+      margin: const EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
-        color: cs.surfaceContainer,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppTheme.borderCream),
+        color: cs.surfaceContainerLowest,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.40)),
       ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(9),
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.12),
-              shape: BoxShape.circle,
+      clipBehavior: Clip.antiAlias,
+      child: IntrinsicHeight(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Container(
+              width: 4,
+              color: accentColor.withValues(alpha: 0.55),
             ),
-            child: Icon(icon, color: color, size: 20),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(label, style: tt.bodyMedium),
-                const SizedBox(height: 3),
-                Text(
-                  DateFormat.yMMMd().add_jm().format(event.timestamp),
-                  style: tt.bodySmall?.copyWith(
-                    color: AppTheme.mutedForeground,
-                  ),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                child: Row(
+                  children: [
+                    Icon(icon, color: accentColor, size: 19),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            label,
+                            style: tt.bodyMedium?.copyWith(
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            DateFormat.yMMMd().add_jm().format(event.timestamp),
+                            style: tt.labelSmall?.copyWith(
+                              color: cs.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: cs.outlineVariant,
+                        ),
+                      ),
+                      child: Text(
+                        '+${event.xpValue} XP',
+                        style: tt.labelSmall?.copyWith(
+                          color: cs.onSurfaceVariant,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 0.2,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
-          ),
-          Text(
-            '+${event.xpValue} XP',
-            style: tt.labelSmall?.copyWith(
-              color: color.withValues(alpha: 0.72),
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

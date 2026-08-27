@@ -1,30 +1,27 @@
-import 'dart:io';
-import 'package:file_picker/file_picker.dart';
-import 'package:flutter/foundation.dart';
+import 'dart:async';
+
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
-import '../main.dart';
 import '../models/event.dart';
 import '../models/milestone.dart';
-import '../models/user_profile.dart';
+import '../models/profile_data.dart';
 import '../services/gamification_service.dart';
-import '../services/portable_archive_service.dart';
 import '../services/profile_store.dart';
 import '../services/session_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/avatar_display.dart';
 import '../widgets/badge_icon.dart';
-import '../widgets/portable_archive_dialogs.dart';
-import '../widgets/quick_tour.dart';
+import 'avatar_studio_screen.dart';
 import 'care_subject_manager.dart';
-import 'profile_setup/profile_fields.dart';
 import 'profile_setup/profile_setup_screen.dart';
+import 'settings_screen.dart';
+import '../widgets/quick_tour.dart';
 
 class MeScreen extends StatefulWidget {
   final VoidCallback? onReplayQuickTour;
+  final QuickTourTargetRegistry? tutorialRegistry;
 
-  const MeScreen({super.key, this.onReplayQuickTour});
+  const MeScreen({super.key, this.onReplayQuickTour, this.tutorialRegistry});
 
   @override
   State<MeScreen> createState() => _MeScreenState();
@@ -37,8 +34,10 @@ class _MeScreenState extends State<MeScreen>
 
   final _gs = GamificationService();
   GamificationSnapshot _snap = GamificationSnapshot.empty;
+  ProfileData _profileData = const ProfileData();
   List<Event> _allEvents = [];
   bool _loading = true;
+  bool _tutorialScheduled = false;
 
   @override
   void initState() {
@@ -48,21 +47,78 @@ class _MeScreenState extends State<MeScreen>
 
   Future<void> _loadAll() async {
     setState(() => _loading = true);
-    final snap = await _gs.getSnapshot(SessionService.currentCareSubjectId);
-    final events = await _gs.getAllEvents(SessionService.currentCareSubjectId);
+    final careSubjectId = SessionService.currentCareSubjectId;
+    final snap = await _gs.getSnapshot(careSubjectId);
+    final profileData = await ProfileStore.loadProfile(
+      userId: SessionService.currentUserId,
+      careSubjectId: careSubjectId,
+    );
+    final events = await _gs.getAllEvents(careSubjectId);
     if (mounted) {
       setState(() {
         _snap = snap;
+        _profileData = profileData;
         _allEvents = events;
         _loading = false;
       });
     }
+    _scheduleTutorial();
+  }
+
+  void _scheduleTutorial() {
+    if (_tutorialScheduled || widget.tutorialRegistry == null) return;
+    _tutorialScheduled = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      unawaited(
+        showPageQuickTourIfNeeded(
+          context,
+          page: QuickTourPage.me,
+          registry: widget.tutorialRegistry!,
+        ),
+      );
+    });
   }
 
   Future<void> _openAddWardSetup() async {
     await Navigator.of(context).push<bool>(
       MaterialPageRoute(
         builder: (_) => const ProfileSetupScreen(createNewWard: true),
+      ),
+    );
+    await _loadAll();
+  }
+
+  Future<void> _openProfileEdit() async {
+    await Navigator.of(context).push<bool>(
+      MaterialPageRoute(
+        builder: (_) => const ProfileSetupScreen(editExisting: true),
+      ),
+    );
+    await _loadAll();
+  }
+
+  Future<void> _openAvatarStudio() async {
+    await Navigator.of(context).push<bool>(
+      MaterialPageRoute(
+        builder: (_) => AvatarStudioScreen(
+          userId: SessionService.currentCareSubjectId,
+          profile: _snap.userProfile,
+          gamificationService: _gs,
+        ),
+      ),
+    );
+    await _loadAll();
+  }
+
+  Future<void> _openSettings() async {
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute(
+        builder: (_) => SettingsScreen(
+          onReplayQuickTour: widget.onReplayQuickTour,
+          onDataChanged: () => _loadAll(),
+          tutorialRegistry: widget.tutorialRegistry,
+        ),
       ),
     );
     await _loadAll();
@@ -95,78 +151,107 @@ class _MeScreenState extends State<MeScreen>
               child: ListView(
                 padding: const EdgeInsets.fromLTRB(16, 48, 16, 120),
                 children: [
-                  // App Bar replacement
-                  Text('Me', style: tt.titleLarge),
+                  Row(
+                    children: [
+                      Expanded(child: Text('Me', style: tt.titleLarge)),
+                      quickTourTarget(
+                        registry: widget.tutorialRegistry,
+                        page: QuickTourPage.me,
+                        id: 'settings',
+                        child: IconButton(
+                          tooltip: 'Settings',
+                          onPressed: _openSettings,
+                          icon: const Icon(Icons.settings_outlined),
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
                   const SizedBox(height: 24),
                   // Progression Title + Level
                   _IdentitySummary(snap: _snap),
                   const SizedBox(height: 16),
-                  _ActiveProfileCard(onManageProfiles: _openSubjectManager),
-                  const SizedBox(height: 28),
-
-                  _SectionHeader(title: 'Profile Info'),
-                  const SizedBox(height: 12),
-                  _ProfileInfoSection(
-                    userId: SessionService.currentCareSubjectId,
-                    snap: _snap,
-                    gamificationService: _gs,
-                    onProfileUpdated: _loadAll,
+                  quickTourTarget(
+                    registry: widget.tutorialRegistry,
+                    page: QuickTourPage.me,
+                    id: 'active-profile',
+                    child: _ActiveProfileCard(
+                      onManageProfiles: _openSubjectManager,
+                    ),
                   ),
                   const SizedBox(height: 28),
 
-                  Card(
-                    elevation: 0,
-                    margin: EdgeInsets.zero,
-                    color: Theme.of(context).colorScheme.surfaceContainer,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
+                  _SectionHeader(title: 'Care profile'),
+                  const SizedBox(height: 12),
+                  quickTourTarget(
+                    registry: widget.tutorialRegistry,
+                    page: QuickTourPage.me,
+                    id: 'care-profile',
+                    child: _CareProfileSection(
+                      data: _profileData,
+                      isWard: SessionService.activeCareSubject?.isWard == true,
+                      onEdit: _openProfileEdit,
                     ),
-                    child: Theme(
-                      data: Theme.of(
-                        context,
-                      ).copyWith(dividerColor: Colors.transparent),
-                      child: ExpansionTile(
-                        tilePadding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 4,
-                        ),
-                        childrenPadding: const EdgeInsets.fromLTRB(
-                          16,
-                          0,
-                          16,
-                          16,
-                        ),
-                        leading: AvatarDisplay(
-                          profile: _snap.userProfile,
-                          size: 42,
-                        ),
-                        title: const Text(
-                          'Personalize your avatar',
-                          style: TextStyle(fontWeight: FontWeight.w800),
-                        ),
-                        subtitle: const Text('Choose an icon or local photo'),
-                        children: [
-                          _AvatarSettings(
-                            userId: SessionService.currentCareSubjectId,
-                            snap: _snap,
-                            gamificationService: _gs,
-                            onProfileUpdated: _loadAll,
+                  ),
+                  const SizedBox(height: 28),
+
+                  quickTourTarget(
+                    registry: widget.tutorialRegistry,
+                    page: QuickTourPage.me,
+                    id: 'personalize',
+                    child: Card(
+                      elevation: 0,
+                      margin: EdgeInsets.zero,
+                      color: Theme.of(context).colorScheme.surfaceContainer,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: InkWell(
+                        onTap: _openAvatarStudio,
+                        borderRadius: BorderRadius.circular(20),
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Row(
+                            children: [
+                              AvatarDisplay(
+                                profile: _snap.userProfile,
+                                size: 56,
+                              ),
+                              const SizedBox(width: 14),
+                              const Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Personalize your avatar',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.w800,
+                                      ),
+                                    ),
+                                    SizedBox(height: 4),
+                                    Text(
+                                      'Choose a style, make it yours, or use a local photo.',
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const Icon(Icons.chevron_right_rounded),
+                            ],
                           ),
-                        ],
+                        ),
                       ),
                     ),
                   ),
                   const SizedBox(height: 28),
 
-                  _ProgressSection(snap: _snap, allEvents: _allEvents),
+                  quickTourTarget(
+                    registry: widget.tutorialRegistry,
+                    page: QuickTourPage.me,
+                    id: 'progress',
+                    child: _ProgressSection(snap: _snap, allEvents: _allEvents),
+                  ),
                   const SizedBox(height: 28),
 
-                  _SettingsSection(
-                    userId: SessionService.currentUserId,
-                    gamificationService: _gs,
-                    onDataChanged: _loadAll,
-                    onReplayQuickTour: widget.onReplayQuickTour,
-                  ),
                   const SizedBox(height: 24),
                 ],
               ),
@@ -529,354 +614,121 @@ class _AchievementsSection extends StatelessWidget {
   }
 }
 
-// ─── Avatar & Profile Settings ────────────────────────────────────────────────
+// ─── Avatar Studio entry ───────────────────────────────────────────────────────
 
-class _AvatarSettings extends StatefulWidget {
-  final String userId;
-  final GamificationSnapshot snap;
-  final GamificationService gamificationService;
-  final VoidCallback onProfileUpdated;
+// ─── Structured Care Profile ────────────────────────────────────────────────────
 
-  const _AvatarSettings({
-    required this.userId,
-    required this.snap,
-    required this.gamificationService,
-    required this.onProfileUpdated,
+class _CareProfileSection extends StatelessWidget {
+  final ProfileData data;
+  final bool isWard;
+  final VoidCallback onEdit;
+
+  const _CareProfileSection({
+    required this.data,
+    required this.isWard,
+    required this.onEdit,
   });
 
-  @override
-  State<_AvatarSettings> createState() => _AvatarSettingsState();
-}
+  String _name() {
+    final name = data.basics.displayName.trim();
+    if (name.isNotEmpty) return name;
+    return isWard ? 'Care profile' : 'Your profile';
+  }
 
-class _AvatarSettingsState extends State<_AvatarSettings> {
-  Future<void> _pickImage() async {
-    final picker = ImagePicker();
-    final pickedFile = await picker.pickImage(
-      source: ImageSource.gallery,
-      imageQuality: 50,
-      maxWidth: 800,
-    );
-    if (pickedFile != null) {
-      final file = File(pickedFile.path);
-      final sizeBytes = await file.length();
-      if (sizeBytes > 5 * 1024 * 1024) {
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Image is too large (cap is ~5MB).')),
-        );
-        return;
-      }
+  String _curveSummary() {
+    final type = switch (data.curve.curveType) {
+      CurveType.thoracic => 'Thoracic curve',
+      CurveType.lumbar => 'Lumbar curve',
+      CurveType.thoracolumbar => 'Thoracolumbar curve',
+      CurveType.doubleS => 'Double major curve',
+      CurveType.unsure || null => 'Not added',
+    };
+    final angle = data.curve.cobbPrimary;
+    if (angle == null) return type;
+    return '$type · ${angle.toStringAsFixed(0)}° recorded';
+  }
 
-      await widget.gamificationService.updateProfile(
-        userId: widget.userId,
-        presetId: widget.snap.userProfile.presetId,
-        customPhotoPath: pickedFile.path,
-      );
-      widget.onProfileUpdated();
-    }
+  String _stageSummary() {
+    return switch (data.story.treatmentStage) {
+      TreatmentStage.observation => 'Observation',
+      TreatmentStage.bracing => 'Bracing',
+      TreatmentStage.preOp => 'Preparing for surgery',
+      TreatmentStage.postOp => 'After surgery',
+      TreatmentStage.adult => 'Adult care',
+      TreatmentStage.unsure || null => 'Not added',
+    };
+  }
+
+  String _braceSummary() {
+    return switch (data.brace.wears) {
+      true => 'Yes',
+      false => 'No',
+      null => 'Not added',
+    };
   }
 
   @override
   Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-    final cs = Theme.of(context).colorScheme;
-    final currentPresetId = widget.snap.userProfile.presetId;
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
+    return Card(
+      margin: EdgeInsets.zero,
+      elevation: 0,
+      color: colorScheme.surfaceContainerHigh,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(22),
+        side: const BorderSide(color: AppTheme.borderCream),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 15, 16, 14),
+        child: Column(
           children: [
-            AvatarDisplay(profile: widget.snap.userProfile, size: 64),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  OutlinedButton.icon(
-                    onPressed: _pickImage,
-                    icon: const Icon(Icons.photo_camera),
-                    label: const Text('Upload Custom Photo'),
-                  ),
-                  if (widget.snap.userProfile.customPhotoPath != null)
-                    TextButton(
-                      onPressed: () async {
-                        await widget.gamificationService.updateProfile(
-                          userId: widget.userId,
-                          presetId: currentPresetId,
-                          customPhotoPath: null,
-                        );
-                        widget.onProfileUpdated();
-                      },
-                      child: const Text('Remove Photo'),
-                    ),
-                ],
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 24),
-        Text('Choose Preset', style: tt.labelLarge),
-        const SizedBox(height: 8),
-        SizedBox(
-          height: 90,
-          child: ListView(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.only(left: 2, right: 16),
-            children: presetAvatars.map((preset) {
-              final isSelected = currentPresetId == preset.id;
-              return GestureDetector(
-                onTap: () async {
-                  await widget.gamificationService.updateProfile(
-                    userId: widget.userId,
-                    presetId: preset.id,
-                    customPhotoPath: widget.snap.userProfile.customPhotoPath,
-                  );
-                  widget.onProfileUpdated();
-                },
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 250),
-                  margin: const EdgeInsets.only(right: 12),
-                  width: 80,
-                  decoration: BoxDecoration(
-                    color: isSelected
-                        ? AppTheme.accentLavender.withValues(alpha: 0.15)
-                        : cs.surfaceContainer,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(
-                      color: isSelected
-                          ? AppTheme.accentLavender
-                          : AppTheme.borderCream,
-                      width: isSelected ? 2 : 1.5,
-                    ),
-                  ),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
                   child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      AvatarDisplay.buildPresetGraphic(preset, size: 40),
-                      const SizedBox(height: 6),
                       Text(
-                        preset.name,
-                        style: tt.labelSmall?.copyWith(
-                          fontSize: 10,
-                          color: isSelected
-                              ? AppTheme.accentLavender
-                              : AppTheme.mutedForeground,
+                        _name(),
+                        style: textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w800,
                         ),
-                        textAlign: TextAlign.center,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        isWard ? 'Someone I care for' : 'My private profile',
+                        style: textTheme.bodySmall?.copyWith(
+                          color: colorScheme.onSurfaceVariant,
+                        ),
                       ),
                     ],
                   ),
                 ),
-              );
-            }).toList(),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-// ─── Profile Info Section ──────────────────────────────────────────────────────
-
-class _ProfileInfoSection extends StatelessWidget {
-  final String userId;
-  final GamificationSnapshot snap;
-  final GamificationService gamificationService;
-  final VoidCallback onProfileUpdated;
-
-  const _ProfileInfoSection({
-    required this.userId,
-    required this.snap,
-    required this.gamificationService,
-    required this.onProfileUpdated,
-  });
-
-  void _showEditSheet(BuildContext context) {
-    final profile = snap.userProfile;
-    final nameCtrl = TextEditingController(text: profile.name);
-    String selectedDiagnosis = profile.diagnosis;
-    String selectedBraceStatus = profile.braceStatus;
-    String selectedAgeRange = profile.ageRange;
-
-    final diagnoses = [
-      'Thoracic Curve',
-      'Lumbar Curve',
-      'Double Major',
-      'Kyphosis',
-      'Other',
-    ];
-    if (!diagnoses.contains(selectedDiagnosis)) {
-      diagnoses.add(selectedDiagnosis);
-    }
-
-    final braceStatuses = ['Yes', 'No', 'Sometimes'];
-    if (!braceStatuses.contains(selectedBraceStatus)) {
-      braceStatuses.add(selectedBraceStatus);
-    }
-
-    final ageRanges = ['Under 13', '13-17', '18-25', '26-40', '41+'];
-    if (!ageRanges.contains(selectedAgeRange)) {
-      ageRanges.add(selectedAgeRange);
-    }
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Theme.of(context).colorScheme.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-      ),
-      builder: (ctx) {
-        return StatefulBuilder(
-          builder: (context, setSheetState) {
-            return Padding(
-              padding: EdgeInsets.only(
-                left: 24,
-                right: 24,
-                top: 24,
-                bottom: MediaQuery.of(context).viewInsets.bottom + 24,
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Edit Profile Info',
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
-                  const SizedBox(height: 16),
-                  ProfileTextInput(
-                    controller: nameCtrl,
-                    labelText: 'Name',
-                    hintText: 'Your name',
-                  ),
-                  const SizedBox(height: 24),
-                  ProfileField(
-                    label: 'Recorded curve type',
-                    child: ProfileChipGroup<String>(
-                      columns: 2,
-                      selectedValue: selectedDiagnosis,
-                      onChanged: (val) {
-                        setSheetState(() => selectedDiagnosis = val);
-                      },
-                      options: diagnoses
-                          .map((d) => ChipOption(value: d, label: d))
-                          .toList(),
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  ProfileField(
-                    label: 'Brace Status',
-                    child: ProfileChipGroup<String>(
-                      columns: 3,
-                      selectedValue: selectedBraceStatus,
-                      onChanged: (val) {
-                        setSheetState(() => selectedBraceStatus = val);
-                      },
-                      options: braceStatuses
-                          .map((b) => ChipOption(value: b, label: b))
-                          .toList(),
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  ProfileField(
-                    label: 'Age Range',
-                    child: ProfileChipGroup<String>(
-                      columns: 3,
-                      selectedValue: selectedAgeRange,
-                      onChanged: (val) {
-                        setSheetState(() => selectedAgeRange = val);
-                      },
-                      options: ageRanges
-                          .map((a) => ChipOption(value: a, label: a))
-                          .toList(),
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: () async {
-                        await gamificationService.updateProfile(
-                          userId: userId,
-                          name: nameCtrl.text.trim(),
-                          diagnosis: selectedDiagnosis,
-                          braceStatus: selectedBraceStatus,
-                          ageRange: selectedAgeRange,
-                        );
-                        if (context.mounted) Navigator.of(context).pop();
-                        onProfileUpdated();
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppTheme.primarySage,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      child: const Text('Save Changes'),
-                    ),
-                  ),
-                ],
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final profile = snap.userProfile;
-    final tt = Theme.of(context).textTheme;
-
-    return Card(
-      elevation: 0,
-      color: Theme.of(context).colorScheme.surfaceContainerHigh,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'User Details',
-                  style: tt.titleSmall?.copyWith(fontWeight: FontWeight.bold),
-                ),
                 TextButton.icon(
-                  onPressed: () => _showEditSheet(context),
-                  icon: const Icon(Icons.edit_rounded, size: 16),
+                  onPressed: onEdit,
+                  icon: const Icon(Icons.edit_outlined, size: 17),
                   label: const Text('Edit'),
                 ),
               ],
             ),
-            const SizedBox(height: 16),
-            _ProfileDetailRow(
-              label: 'Name',
-              value: profile.name,
-              icon: Icons.person_outline,
+            const SizedBox(height: 10),
+            _CareProfileDetailRow(
+              label: 'Curve details',
+              value: _curveSummary(),
+              icon: Icons.straighten_rounded,
             ),
-            _ProfileDetailRow(
-              label: 'Recorded curve type',
-              value: profile.diagnosis,
-              icon: Icons.medical_services_outlined,
+            _CareProfileDetailRow(
+              label: 'Care stage',
+              value: _stageSummary(),
+              icon: Icons.route_outlined,
             ),
-            _ProfileDetailRow(
-              label: 'Brace information',
-              value: profile.braceStatus,
+            _CareProfileDetailRow(
+              label: 'Brace',
+              value: _braceSummary(),
               icon: Icons.shield_outlined,
-            ),
-            _ProfileDetailRow(
-              label: 'Age band',
-              value: profile.ageRange,
-              icon: Icons.calendar_today_outlined,
             ),
           ],
         ),
@@ -885,12 +737,12 @@ class _ProfileInfoSection extends StatelessWidget {
   }
 }
 
-class _ProfileDetailRow extends StatelessWidget {
+class _CareProfileDetailRow extends StatelessWidget {
   final String label;
   final String value;
   final IconData icon;
 
-  const _ProfileDetailRow({
+  const _CareProfileDetailRow({
     required this.label,
     required this.value,
     required this.icon,
@@ -898,23 +750,21 @@ class _ProfileDetailRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
+      padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
         children: [
           Container(
-            padding: const EdgeInsets.all(8),
+            width: 32,
+            height: 32,
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.primaryContainer,
-              borderRadius: BorderRadius.circular(12),
+              color: colorScheme.primary.withValues(alpha: 0.10),
+              borderRadius: BorderRadius.circular(10),
             ),
-            child: Icon(
-              icon,
-              size: 20,
-              color: Theme.of(context).colorScheme.onPrimaryContainer,
-            ),
+            child: Icon(icon, size: 17, color: colorScheme.primary),
           ),
-          const SizedBox(width: 16),
+          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -922,405 +772,21 @@ class _ProfileDetailRow extends StatelessWidget {
                 Text(
                   label,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    color: colorScheme.onSurfaceVariant,
                   ),
                 ),
-                const SizedBox(height: 2),
+                const SizedBox(height: 1),
                 Text(
                   value,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: Theme.of(context).colorScheme.onSurface,
-                  ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
                 ),
               ],
             ),
           ),
         ],
       ),
-    );
-  }
-}
-
-// ─── Settings Section ──────────────────────────────────────────────────────────
-
-class _SettingsSection extends StatefulWidget {
-  final String userId;
-  final GamificationService gamificationService;
-  final VoidCallback? onDataChanged;
-  final VoidCallback? onReplayQuickTour;
-
-  const _SettingsSection({
-    required this.userId,
-    required this.gamificationService,
-    this.onDataChanged,
-    this.onReplayQuickTour,
-  });
-
-  @override
-  State<_SettingsSection> createState() => _SettingsSectionState();
-}
-
-class _SettingsSectionState extends State<_SettingsSection> {
-  bool _notificationsEnabled = true;
-  bool _archiveBusy = false;
-  final _archiveService = PortableArchiveService();
-
-  void _showAppearanceDialog() {
-    showDialog(
-      context: context,
-      builder: (ctx) {
-        return AlertDialog(
-          title: const Text('Appearance'),
-          content: RadioGroup<ThemeMode>(
-            groupValue: themeModeNotifier.value,
-            onChanged: (val) {
-              if (val != null) {
-                themeModeNotifier.value = val;
-                Navigator.pop(ctx);
-                setState(() {});
-              }
-            },
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: const [
-                RadioListTile<ThemeMode>(
-                  title: Text('System Default'),
-                  value: ThemeMode.system,
-                ),
-                RadioListTile<ThemeMode>(
-                  title: Text('Light'),
-                  value: ThemeMode.light,
-                ),
-                RadioListTile<ThemeMode>(
-                  title: Text('Dark'),
-                  value: ThemeMode.dark,
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  Future<void> _exportArchive() async {
-    if (_archiveBusy) return;
-    final passphrase = await showArchivePassphraseDialog(
-      context,
-      confirm: true,
-    );
-    if (passphrase == null) return;
-
-    setState(() => _archiveBusy = true);
-    try {
-      final bytes = await _archiveService.exportOwner(
-        ownerUserId: SessionService.currentUserId,
-        passphrase: passphrase,
-      );
-      final stamp = DateTime.now().toIso8601String().split('T').first;
-      final savedPath = await FilePicker.saveFile(
-        dialogTitle: 'Save protected SpineUp export',
-        fileName: 'spineup-export-$stamp.spineup',
-        allowedExtensions: const ['spineup'],
-        bytes: bytes,
-      );
-      if (!mounted || (savedPath == null && !kIsWeb)) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Protected archive exported successfully.'),
-        ),
-      );
-    } on PortableArchiveException catch (error) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(error.message)));
-    } catch (error) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Export failed: $error')));
-    } finally {
-      if (mounted) setState(() => _archiveBusy = false);
-    }
-  }
-
-  Future<void> _replayQuickTour() async {
-    await QuickTourService.reset();
-    if (mounted) widget.onReplayQuickTour?.call();
-  }
-
-  Future<void> _importArchive() async {
-    if (_archiveBusy) return;
-    final picked = await FilePicker.pickFiles(
-      dialogTitle: 'Choose a SpineUp archive',
-      type: FileType.custom,
-      allowedExtensions: const ['spineup'],
-      withData: true,
-    );
-    if (picked == null || picked.files.isEmpty) return;
-    final bytes = picked.files.single.bytes;
-    if (bytes == null) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('SpineUp could not read that archive.')),
-        );
-      }
-      return;
-    }
-    if (!mounted) return;
-
-    final passphrase = await showArchivePassphraseDialog(
-      context,
-      confirm: false,
-    );
-    if (passphrase == null) return;
-
-    setState(() => _archiveBusy = true);
-    try {
-      final preview = await _archiveService.inspect(
-        archiveBytes: bytes,
-        passphrase: passphrase,
-      );
-      if (!mounted) return;
-      final mode = await showArchiveImportPreviewDialog(context, preview);
-      if (!mounted || mode == null) return;
-
-      if (mode == ArchiveImportMode.replaceSelectedSubject) {
-        final confirmed = await _confirmReplaceImport();
-        if (!mounted || !confirmed) return;
-      }
-
-      final result = await _archiveService.importArchive(
-        ownerUserId: SessionService.currentUserId,
-        archiveBytes: bytes,
-        passphrase: passphrase,
-        mode: mode,
-        replaceSubjectId: mode == ArchiveImportMode.replaceSelectedSubject
-            ? SessionService.currentCareSubjectId
-            : null,
-      );
-      widget.onDataChanged?.call();
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Imported ${result.importedSubjectIds.length} profile(s), ${result.importedEventCount} events, and ${result.importedAppointmentCount} appointments.',
-          ),
-        ),
-      );
-    } on PortableArchiveException catch (error) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(error.message)));
-    } catch (error) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Import failed: $error')));
-    } finally {
-      if (mounted) setState(() => _archiveBusy = false);
-    }
-  }
-
-  Future<bool> _confirmReplaceImport() async {
-    final target = SessionService.displayName;
-    return await showDialog<bool>(
-          context: context,
-          builder: (dialogContext) => AlertDialog(
-            title: const Text('Replace this profile?'),
-            content: Text(
-              'This will delete the current records for "$target" and replace them with the one archived profile shown in the preview. This cannot be undone unless you have another export.',
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(dialogContext).pop(false),
-                child: const Text('Cancel'),
-              ),
-              FilledButton(
-                onPressed: () => Navigator.of(dialogContext).pop(true),
-                style: FilledButton.styleFrom(backgroundColor: Colors.red),
-                child: const Text('Replace profile'),
-              ),
-            ],
-          ),
-        ) ??
-        false;
-  }
-
-  void _showPrivacyDialog() {
-    showDialog(
-      context: context,
-      builder: (ctx) {
-        return AlertDialog(
-          title: const Text('Privacy & Data'),
-          content: const Text(
-            'SpineUp keeps health data local to this device by default. '
-            'This prototype does not send analytics or enable cloud backup. Protected export/import is available from Me and requires a passphrase; database encryption and cloud backup are not claimed features.',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: const Text('Close'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  void _confirmDeleteAccount() {
-    showDialog(
-      context: context,
-      builder: (ctx) {
-        return AlertDialog(
-          title: const Text('Delete Account & Data?'),
-          content: const Text(
-            'This action is irreversible. It permanently removes all local health history, measurements, appointments, progress, and settings for every profile owned by this app session.',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: const Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () async {
-                Navigator.pop(ctx);
-                final userId = SessionService.currentUserId;
-                await widget.gamificationService.clearUserData(userId: userId);
-                await ProfileStore.clearProfilesForOwner(userId: userId);
-                SessionService.signOut();
-                if (!mounted) return;
-                Navigator.of(context).pushAndRemoveUntil(
-                  localFirstWelcomeRoute(),
-                  (route) => false,
-                );
-              },
-              style: TextButton.styleFrom(foregroundColor: Colors.red),
-              child: const Text('Delete Everything'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final themeName = switch (themeModeNotifier.value) {
-      ThemeMode.light => 'Light',
-      ThemeMode.dark => 'Dark',
-      ThemeMode.system => 'System Default',
-    };
-
-    final cardColor = Theme.of(context).colorScheme.surfaceContainer;
-
-    Widget groupedCard({required List<Widget> children}) {
-      return Card(
-        elevation: 0,
-        margin: EdgeInsets.zero,
-        color: cardColor,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(18),
-          side: const BorderSide(color: AppTheme.borderCream),
-        ),
-        child: Column(children: children),
-      );
-    }
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const _SectionHeader(title: 'Preferences'),
-        const SizedBox(height: 10),
-        groupedCard(
-          children: [
-            ListTile(
-              leading: const Icon(Icons.palette_outlined),
-              title: const Text('Appearance'),
-              subtitle: Text(themeName),
-              trailing: const Icon(Icons.chevron_right_rounded),
-              onTap: _showAppearanceDialog,
-            ),
-            if (widget.onReplayQuickTour != null) ...[
-              const Divider(height: 1),
-              ListTile(
-                leading: const Icon(Icons.explore_outlined),
-                title: const Text('Replay quick tour'),
-                subtitle: const Text('A short guide to the main areas'),
-                trailing: const Icon(Icons.chevron_right_rounded),
-                onTap: _replayQuickTour,
-              ),
-            ],
-            const Divider(height: 1),
-            SwitchListTile(
-              secondary: const Icon(Icons.notifications_none_rounded),
-              title: const Text('Notifications'),
-              subtitle: const Text('Daily stretch & logging reminders'),
-              value: _notificationsEnabled,
-              onChanged: (val) => setState(() => _notificationsEnabled = val),
-            ),
-          ],
-        ),
-        const SizedBox(height: 24),
-        const _SectionHeader(title: 'Privacy & Data'),
-        const SizedBox(height: 10),
-        groupedCard(
-          children: [
-            ListTile(
-              leading: const Icon(Icons.file_upload_outlined),
-              title: const Text('Export protected archive'),
-              subtitle: const Text(
-                'Move your local profiles to another device',
-              ),
-              trailing: const Icon(Icons.chevron_right_rounded),
-              onTap: _archiveBusy ? null : _exportArchive,
-            ),
-            const Divider(height: 1),
-            ListTile(
-              leading: const Icon(Icons.file_download_outlined),
-              title: const Text('Import protected archive'),
-              subtitle: const Text(
-                'Review before adding or replacing profiles',
-              ),
-              trailing: const Icon(Icons.chevron_right_rounded),
-              onTap: _archiveBusy ? null : _importArchive,
-            ),
-            const Divider(height: 1),
-            ListTile(
-              leading: const Icon(Icons.shield_outlined),
-              title: const Text('Privacy & Data'),
-              subtitle: const Text('How SpineUp stores and protects records'),
-              trailing: const Icon(Icons.chevron_right_rounded),
-              onTap: _showPrivacyDialog,
-            ),
-          ],
-        ),
-        const SizedBox(height: 24),
-        const _SectionHeader(title: 'Danger Zone'),
-        const SizedBox(height: 10),
-        groupedCard(
-          children: [
-            ListTile(
-              leading: const Icon(
-                Icons.delete_forever_outlined,
-                color: Colors.red,
-              ),
-              title: const Text(
-                'Delete Account & Data',
-                style: TextStyle(
-                  color: Colors.red,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              subtitle: const Text('Wipe all local health & event data'),
-              onTap: _confirmDeleteAccount,
-            ),
-          ],
-        ),
-      ],
     );
   }
 }

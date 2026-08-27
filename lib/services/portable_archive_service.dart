@@ -244,6 +244,13 @@ class PortableArchiveService {
 
       final runtimeProfile = _mapOrNull(subject['runtimeProfile']);
       if (runtimeProfile != null && runtimeProfile.isNotEmpty) {
+        final importedStyleId =
+            runtimeProfile['avatar_style_id'] as String? ?? 'preset';
+        final importedMode = runtimeProfile['avatar_mode'] as String?;
+        final safeMode = importedMode == 'photo'
+            ? (importedStyleId == 'preset' ? 'preset' : 'illustrated')
+            : importedMode ??
+                  (importedStyleId == 'preset' ? 'preset' : 'illustrated');
         await database.updateUserProfile(
           userId: targetId,
           presetId: runtimeProfile['preset_id'] as String? ?? 'sage',
@@ -251,6 +258,10 @@ class PortableArchiveService {
           diagnosis: runtimeProfile['diagnosis'] as String?,
           braceStatus: runtimeProfile['brace_status'] as String?,
           ageRange: runtimeProfile['age_range'] as String?,
+          avatarStyleId: importedStyleId,
+          avatarOptions: _avatarOptions(runtimeProfile['avatar_options']),
+          avatarSeed: runtimeProfile['avatar_seed'] as String?,
+          avatarMode: safeMode,
         );
       }
 
@@ -490,6 +501,25 @@ class PortableArchiveService {
     if (value == null) return null;
     if (value is! Map) return null;
     return Map<String, dynamic>.from(value);
+  }
+
+  Map<String, String> _avatarOptions(dynamic value) {
+    if (value is! String || value.trim().isEmpty) {
+      return const <String, String>{};
+    }
+    try {
+      final decoded = jsonDecode(value);
+      if (decoded is Map) {
+        return {
+          for (final entry in decoded.entries)
+            if (entry.key is String && entry.value is String)
+              entry.key as String: entry.value as String,
+        };
+      }
+    } catch (_) {
+      // Optional avatar settings can safely fall back to the style defaults.
+    }
+    return const <String, String>{};
   }
 
   List<String> _stringList(dynamic value) {

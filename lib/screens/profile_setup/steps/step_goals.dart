@@ -65,6 +65,7 @@ class _StepGoalsState extends State<StepGoals> {
       children: [
         ProfileField(
           label: 'Your goals (choose one or more)',
+          required: true,
           child: ProfileChipGroup<Goal>(
             multi: true,
             columns: 1,

@@ -1,4 +1,5 @@
 import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
@@ -14,13 +15,17 @@ import '../services/routine_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/action_reward_feedback.dart';
 import '../widgets/quick_tour.dart';
+import '../widgets/avatar_display.dart';
 import 'appointment_logger_modal.dart';
 import 'daily_check_in_screen.dart';
 import 'routine_library_screen.dart';
 import 'external_content_screen.dart';
 
 class TodayScreen extends StatefulWidget {
-  const TodayScreen({super.key});
+  final QuickTourTargetRegistry? tutorialRegistry;
+  final VoidCallback? onGoToMe;
+
+  const TodayScreen({super.key, this.tutorialRegistry, this.onGoToMe});
 
   @override
   State<TodayScreen> createState() => _TodayScreenState();
@@ -41,7 +46,7 @@ class _TodayScreenState extends State<TodayScreen>
   List<RoutineExercise> _routineExercises = [];
   final Set<String> _completedToday = {};
   bool _loadingSnap = true;
-  bool _showQuickTourEntry = false;
+  bool _tutorialScheduled = false;
 
   @override
   void initState() {
@@ -63,7 +68,6 @@ class _TodayScreenState extends State<TodayScreen>
     final routineExercises = RoutineService.exercisesForIds(
       activeRoutine.exerciseIds,
     );
-    final quickTourSeen = await QuickTourService.hasSeen();
     final routineIds = routineExercises.map((exercise) => exercise.id).toSet();
 
     final completedIds = todayEvents
@@ -84,25 +88,28 @@ class _TodayScreenState extends State<TodayScreen>
         _completedToday
           ..clear()
           ..addAll(completedIds);
-        _showQuickTourEntry = !quickTourSeen;
         _loadingSnap = false;
       });
     }
+    _scheduleTutorial();
+  }
+
+  void _scheduleTutorial() {
+    if (_tutorialScheduled || widget.tutorialRegistry == null) return;
+    _tutorialScheduled = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      unawaited(
+        showPageQuickTourIfNeeded(
+          context,
+          page: QuickTourPage.today,
+          registry: widget.tutorialRegistry!,
+        ),
+      );
+    });
   }
 
   int get _todayXp => _todayEvents.fold(0, (sum, e) => sum + e.xpValue);
-
-  Future<void> _startQuickTour() async {
-    await QuickTourService.markSeen();
-    if (!mounted) return;
-    setState(() => _showQuickTourEntry = false);
-    await showQuickTour(context);
-  }
-
-  Future<void> _dismissQuickTour() async {
-    await QuickTourService.markSeen();
-    if (mounted) setState(() => _showQuickTourEntry = false);
-  }
 
   Appointment? get _nextAppointment {
     final scheduled = _appointments.where((a) => a.isScheduled).toList();
@@ -230,10 +237,41 @@ class _TodayScreenState extends State<TodayScreen>
                   ],
                 ),
                 actions: [
-                  IconButton(
-                    tooltip: 'Refresh',
-                    icon: const Icon(Icons.refresh_rounded),
-                    onPressed: _loadSnapshot,
+                  Padding(
+                    padding: const EdgeInsets.only(right: 12),
+                    child: GestureDetector(
+                      onTap: widget.onGoToMe,
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        width: 42,
+                        height: 42,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: AppTheme.borderCream,
+                            width: 2,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.08),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: ClipOval(
+                          child: _loadingSnap
+                              ? const ColoredBox(
+                                  color: Color(0xFFFFF1E5),
+                                  child: SizedBox.expand(),
+                                )
+                              : AvatarDisplay(
+                                  profile: _snap.userProfile,
+                                  size: 42,
+                                ),
+                        ),
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -242,55 +280,63 @@ class _TodayScreenState extends State<TodayScreen>
                 padding: const EdgeInsets.fromLTRB(16, 0, 16, 120),
                 sliver: SliverList(
                   delegate: SliverChildListDelegate([
-                    if (_showQuickTourEntry) ...[
-                      QuickTourEntryCard(
-                        onStart: _startQuickTour,
-                        onLater: _dismissQuickTour,
-                      ),
-                      const SizedBox(height: 14),
-                    ],
                     // ── Primary daily action ───────────────────────────────
-                    _DailyCheckInSummaryCard(
-                      latestLog: _latestJournalLogToday,
-                      onTap: () async {
-                        final result = await Navigator.push<LogEventResult>(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => DailyCheckInScreen(
-                              userId: SessionService.currentCareSubjectId,
-                              userProfile: _snap.userProfile,
-                              existingLogToday: _latestJournalLogToday,
-                            ),
-                          ),
-                        );
-                        if (result != null) {
-                          await _loadSnapshot();
-                          if (!context.mounted) return;
-                          showActionRewardFeedback(
+                    quickTourTarget(
+                      registry: widget.tutorialRegistry,
+                      page: QuickTourPage.today,
+                      id: 'check-in',
+                      child: _DailyCheckInSummaryCard(
+                        latestLog: _latestJournalLogToday,
+                        onTap: () async {
+                          final result = await Navigator.push<LogEventResult>(
                             context,
-                            title: 'Check-in saved',
-                            xpAwarded: result.xpAwarded,
-                            dailyBonusAwarded: result.dailyBonusAwarded,
+                            MaterialPageRoute(
+                              builder: (_) => DailyCheckInScreen(
+                                userId: SessionService.currentCareSubjectId,
+                                userProfile: _snap.userProfile,
+                                existingLogToday: _latestJournalLogToday,
+                              ),
+                            ),
                           );
-                        }
-                      },
+                          if (result != null) {
+                            await _loadSnapshot();
+                            if (!context.mounted) return;
+                            showActionRewardFeedback(
+                              context,
+                              title: 'Check-in saved',
+                              xpAwarded: result.xpAwarded,
+                              dailyBonusAwarded: result.dailyBonusAwarded,
+                            );
+                          }
+                        },
+                      ),
                     ),
                     const SizedBox(height: 12),
-                    _RoutineEntryCard(
-                      routineName: _activeRoutine?.name ?? 'My Routine',
-                      completed: _completedToday.length,
-                      total: _routineExercises.length,
-                      savedVideoCount: _savedRoutineVideos.length,
-                      onTap: _showRoutineSheet,
+                    quickTourTarget(
+                      registry: widget.tutorialRegistry,
+                      page: QuickTourPage.today,
+                      id: 'routine',
+                      child: _RoutineEntryCard(
+                        routineName: _activeRoutine?.name ?? 'My Routine',
+                        completed: _completedToday.length,
+                        total: _routineExercises.length,
+                        savedVideoCount: _savedRoutineVideos.length,
+                        onTap: _showRoutineSheet,
+                      ),
                     ),
                     const SizedBox(height: 16),
 
                     // ── Supporting motivation ──────────────────────────────
-                    _StatPairSection(
-                      streakDays: _snap.streakDays,
-                      todayXp: _todayXp,
-                      targetXp: kDailyXpTarget,
-                      loading: _loadingSnap,
+                    quickTourTarget(
+                      registry: widget.tutorialRegistry,
+                      page: QuickTourPage.today,
+                      id: 'today-progress',
+                      child: _StatPairSection(
+                        streakDays: _snap.streakDays,
+                        todayXp: _todayXp,
+                        targetXp: kDailyXpTarget,
+                        loading: _loadingSnap,
+                      ),
                     ),
                     const SizedBox(height: 12),
                     _LevelXpCard(snap: _snap, loading: _loadingSnap),
@@ -428,19 +474,30 @@ class RoutineExerciseCardState extends State<RoutineExerciseCard> {
       duration: const Duration(milliseconds: 300),
       margin: const EdgeInsets.only(bottom: 10),
       decoration: BoxDecoration(
-        color: widget.done ? cs.surface : cs.surfaceContainer,
-        borderRadius: BorderRadius.circular(16),
+        color: widget.done ? cs.surface : cs.surfaceContainerLowest,
+        borderRadius: BorderRadius.circular(20),
         border: (!widget.done && _expanded)
             ? Border.all(color: AppTheme.primarySage, width: 1.5)
             : Border.all(
-                color: cs.onSurface.withValues(alpha: 0.1),
+                color: cs.outlineVariant.withValues(alpha: 0.35),
                 width: 1.0,
               ),
       ),
-      child: Material(
-        color: Colors.transparent,
-        borderRadius: BorderRadius.circular(16),
-        child: InkWell(
+      clipBehavior: Clip.antiAlias,
+      child: IntrinsicHeight(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Container(
+              width: 4,
+              color: widget.done 
+                  ? AppTheme.primarySage.withValues(alpha: 0.2) 
+                  : AppTheme.primarySage.withValues(alpha: 0.55),
+            ),
+            Expanded(
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
           borderRadius: BorderRadius.circular(16),
           onTap: () => setState(() => _expanded = !_expanded),
           child: Padding(
@@ -531,6 +588,10 @@ class RoutineExerciseCardState extends State<RoutineExerciseCard> {
             ),
           ),
         ),
+      ),
+    ),
+  ],
+),
       ),
     );
   }
@@ -746,121 +807,156 @@ class RoutineExerciseGuidedFlowSheetState
 
           // Step Details Card
           Container(
-            padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: cs.surfaceContainer,
-              borderRadius: BorderRadius.circular(16),
+              color: AppTheme.backgroundCream, // Warm backdrop
+              borderRadius: BorderRadius.circular(20),
               border: Border.all(
-                color: _stepCompleted
-                    ? AppTheme.primarySage.withValues(alpha: 0.5)
-                    : AppTheme.borderCream,
-                width: _stepCompleted ? 1.5 : 1.0,
+                color: cs.outlineVariant.withValues(alpha: 0.35),
+                width: 1.0,
               ),
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  step.stepText,
-                  style: tt.bodyMedium?.copyWith(height: 1.4),
-                ),
-                if (step.cueTags.isNotEmpty) ...[
-                  const SizedBox(height: 12),
-                  Wrap(
-                    spacing: 6,
-                    runSpacing: 6,
-                    children: step.cueTags.map((tag) {
-                      return Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppTheme.accentLavender.withValues(
-                            alpha: 0.15,
-                          ),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          tag,
-                          style: tt.labelSmall?.copyWith(
-                            color: AppTheme.accentLavender,
-                            fontSize: 11,
-                          ),
-                        ),
-                      );
-                    }).toList(),
-                  ),
-                ],
-
-                // Timer display if set
-                if (step.durationSeconds != null &&
-                    step.durationSeconds! > 0) ...[
-                  const SizedBox(height: 16),
+            clipBehavior: Clip.antiAlias,
+            child: IntrinsicHeight(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
                   Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 14,
-                      vertical: 10,
-                    ),
-                    decoration: BoxDecoration(
-                      color: _stepCompleted
-                          ? AppTheme.primarySage.withValues(alpha: 0.15)
-                          : AppTheme.accentLavender.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(
-                          _stepCompleted
-                              ? Icons.check_circle_rounded
-                              : Icons.timer_rounded,
-                          color: _stepCompleted
-                              ? AppTheme.primarySage
-                              : AppTheme.accentLavender,
-                          size: 22,
-                        ),
-                        const SizedBox(width: 10),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              _stepCompleted
-                                  ? 'Step Timer Completed! ✓'
-                                  : '${_secondsRemaining.toString().padLeft(2, '0')}s remaining',
-                              style: tt.labelMedium?.copyWith(
-                                color: _stepCompleted
-                                    ? AppTheme.primarySage
-                                    : AppTheme.accentLavender,
-                                fontWeight: FontWeight.bold,
-                              ),
+                    width: 4,
+                    color: _stepCompleted
+                        ? AppTheme.primarySage.withValues(alpha: 0.6)
+                        : AppTheme.secondaryCoral.withValues(alpha: 0.6), // Warm coral active state
+                  ),
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            step.stepText,
+                            style: tt.bodyMedium?.copyWith(height: 1.4),
+                          ),
+                          if (step.cueTags.isNotEmpty) ...[
+                            const SizedBox(height: 12),
+                            Wrap(
+                              spacing: 6,
+                              runSpacing: 6,
+                              children: step.cueTags.map((tag) {
+                                return Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 10,
+                                    vertical: 4,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: AppTheme.accentLavender.withValues(
+                                      alpha: 0.15,
+                                    ),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Text(
+                                    tag,
+                                    style: tt.labelSmall?.copyWith(
+                                      color: AppTheme.accentLavender,
+                                      fontSize: 11,
+                                    ),
+                                  ),
+                                );
+                              }).toList(),
                             ),
-                            if (!_stepCompleted)
-                              Text(
-                                'Tap Next when ready',
-                                style: tt.bodySmall?.copyWith(
-                                  fontSize: 10,
-                                  color: AppTheme.mutedForeground,
+                          ],
+
+                          // Timer display if set
+                          if (step.durationSeconds != null &&
+                              step.durationSeconds! > 0) ...[
+                            const SizedBox(height: 16),
+                            Container(
+                              decoration: BoxDecoration(
+                                color: cs.surfaceContainerLowest,
+                                borderRadius: BorderRadius.circular(14),
+                                border: Border.all(
+                                  color: cs.outlineVariant.withValues(alpha: 0.35),
                                 ),
                               ),
+                              clipBehavior: Clip.antiAlias,
+                              child: IntrinsicHeight(
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                                  children: [
+                                    Container(
+                                      width: 4,
+                                      color: _stepCompleted
+                                          ? AppTheme.primarySage.withValues(alpha: 0.6)
+                                          : AppTheme.secondaryCoral.withValues(alpha: 0.6),
+                                    ),
+                                    Expanded(
+                                      child: Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 14,
+                                          vertical: 10,
+                                        ),
+                                        child: Row(
+                                          children: [
+                                            Icon(
+                                              _stepCompleted
+                                                  ? Icons.check_circle_rounded
+                                                  : Icons.timer_rounded,
+                                              color: _stepCompleted
+                                                  ? AppTheme.primarySage
+                                                  : AppTheme.secondaryCoral,
+                                              size: 22,
+                                            ),
+                                            const SizedBox(width: 10),
+                                            Column(
+                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              children: [
+                                                Text(
+                                                  _stepCompleted
+                                                      ? 'Step Timer Completed! ✓'
+                                                      : '${_secondsRemaining.toString().padLeft(2, '0')}s remaining',
+                                                  style: tt.labelMedium?.copyWith(
+                                                    color: _stepCompleted
+                                                        ? AppTheme.primarySage
+                                                        : AppTheme.secondaryCoral,
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                                ),
+                                                if (!_stepCompleted)
+                                                  Text(
+                                                    'Tap Next when ready',
+                                                    style: tt.bodySmall?.copyWith(
+                                                      fontSize: 10,
+                                                      color: AppTheme.mutedForeground,
+                                                    ),
+                                                  ),
+                                              ],
+                                            ),
+                                            const Spacer(),
+                                            IconButton(
+                                              icon: Icon(
+                                                _timerRunning
+                                                    ? Icons.pause_circle_filled_rounded
+                                                    : Icons.play_circle_fill_rounded,
+                                              ),
+                                              color: _stepCompleted
+                                                  ? AppTheme.primarySage
+                                                  : AppTheme.secondaryCoral,
+                                              onPressed: _toggleTimer,
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
                           ],
-                        ),
-                        const Spacer(),
-                        IconButton(
-                          icon: Icon(
-                            _timerRunning
-                                ? Icons.pause_circle_filled_rounded
-                                : Icons.play_circle_fill_rounded,
-                          ),
-                          color: _stepCompleted
-                              ? AppTheme.primarySage
-                              : AppTheme.accentLavender,
-                          onPressed: _toggleTimer,
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ],
-              ],
+              ),
             ),
           ),
           const SizedBox(height: 20),

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'dart:async';
+
 import 'package:flutter/services.dart';
 
 import '../models/learn_topic.dart';
@@ -6,9 +8,12 @@ import '../models/external_content.dart';
 import '../services/routine_service.dart';
 import 'external_content_screen.dart';
 import 'routine_library_screen.dart';
+import '../widgets/quick_tour.dart';
 
 class LearnScreen extends StatefulWidget {
-  const LearnScreen({super.key});
+  final QuickTourTargetRegistry? tutorialRegistry;
+
+  const LearnScreen({super.key, this.tutorialRegistry});
 
   @override
   State<LearnScreen> createState() => _LearnScreenState();
@@ -19,12 +24,29 @@ class _LearnScreenState extends State<LearnScreen> {
   String _query = '';
   String _category = 'All';
   String _section = 'Topics';
+  bool _tutorialScheduled = false;
 
   @override
   void initState() {
     super.initState();
     _searchController.addListener(() {
       if (mounted) setState(() => _query = _searchController.text.trim());
+    });
+    _scheduleTutorial();
+  }
+
+  void _scheduleTutorial() {
+    if (_tutorialScheduled || widget.tutorialRegistry == null) return;
+    _tutorialScheduled = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      unawaited(
+        showPageQuickTourIfNeeded(
+          context,
+          page: QuickTourPage.learn,
+          registry: widget.tutorialRegistry!,
+        ),
+      );
     });
   }
 
@@ -74,111 +96,169 @@ class _LearnScreenState extends State<LearnScreen> {
       bottom: false,
       child: CustomScrollView(
         slivers: [
+          SliverAppBar(
+            floating: true,
+            pinned: true,
+            backgroundColor: Colors.transparent,
+            surfaceTintColor: Colors.transparent,
+            title: Text('Learn', style: theme.textTheme.titleLarge),
+          ),
           SliverPadding(
-            padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
             sliver: SliverToBoxAdapter(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _LearnHero(
-                    activeSection: _section,
-                    topicCount: spineUpLearnTopics.length,
+                  Text(
+                    'Clear guides, trusted sources, and room to explore.',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                      height: 1.4,
+                    ),
                   ),
-                  const SizedBox(height: 18),
-                  Card(
-                    elevation: 0,
-                    color: theme.colorScheme.surfaceContainer,
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(18),
-                      onTap: _openRoutineLibrary,
-                      child: Padding(
-                        padding: const EdgeInsets.all(14),
-                        child: Row(
-                          children: [
-                            CircleAvatar(
-                              backgroundColor: theme.colorScheme.primary
-                                  .withValues(alpha: 0.12),
-                              foregroundColor: theme.colorScheme.primary,
-                              child: const Icon(Icons.playlist_play_rounded),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Movement library and My Routine',
-                                    style: theme.textTheme.titleSmall?.copyWith(
-                                      fontWeight: FontWeight.w800,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 3),
-                                  Text(
-                                    'Browse movements, preview guidance, and choose what belongs in your routine.',
-                                    style: theme.textTheme.bodySmall?.copyWith(
-                                      color: theme.colorScheme.onSurfaceVariant,
-                                    ),
-                                  ),
-                                ],
+                  const SizedBox(height: 16),
+                  Text(
+                    'Practice',
+                    style: theme.textTheme.labelLarge?.copyWith(
+                      color: theme.colorScheme.primary,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 0.2,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  quickTourTarget(
+                    registry: widget.tutorialRegistry,
+                    page: QuickTourPage.learn,
+                    id: 'movement-library',
+                    child: Card(
+                      elevation: 0,
+                      color: theme.colorScheme.surfaceContainer,
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(18),
+                        onTap: _openRoutineLibrary,
+                        child: Padding(
+                          padding: const EdgeInsets.all(14),
+                          child: Row(
+                            children: [
+                              CircleAvatar(
+                                backgroundColor: theme.colorScheme.primary
+                                    .withValues(alpha: 0.12),
+                                foregroundColor: theme.colorScheme.primary,
+                                child: const Icon(Icons.playlist_play_rounded),
                               ),
-                            ),
-                            const Icon(Icons.chevron_right_rounded),
-                          ],
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Movement library and My Routine',
+                                      style: theme.textTheme.titleSmall
+                                          ?.copyWith(
+                                            fontWeight: FontWeight.w800,
+                                          ),
+                                    ),
+                                    const SizedBox(height: 3),
+                                    Text(
+                                      'Browse movements, preview guidance, and choose what belongs in your routine.',
+                                      style: theme.textTheme.bodySmall
+                                          ?.copyWith(
+                                            color: theme
+                                                .colorScheme
+                                                .onSurfaceVariant,
+                                          ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const Icon(Icons.chevron_right_rounded),
+                            ],
+                          ),
                         ),
                       ),
                     ),
                   ),
                   const SizedBox(height: 18),
-                  TextField(
-                    controller: _searchController,
-                    decoration: InputDecoration(
-                      prefixIcon: const Icon(Icons.search_rounded),
-                      suffixIcon: _query.isEmpty
-                          ? null
-                          : IconButton(
-                              tooltip: 'Clear search',
-                              onPressed: _searchController.clear,
-                              icon: const Icon(Icons.close_rounded),
-                            ),
-                      hintText: _section == 'Topics'
-                          ? 'Search topics'
-                          : 'Search external content',
-                      filled: true,
-                      fillColor: theme.colorScheme.surfaceContainerHighest,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(18),
-                        borderSide: BorderSide.none,
+                  quickTourTarget(
+                    registry: widget.tutorialRegistry,
+                    page: QuickTourPage.learn,
+                    id: 'search',
+                    child: TextField(
+                      controller: _searchController,
+                      decoration: InputDecoration(
+                        prefixIcon: const Icon(Icons.search_rounded),
+                        suffixIcon: _query.isEmpty
+                            ? null
+                            : IconButton(
+                                tooltip: 'Clear search',
+                                onPressed: _searchController.clear,
+                                icon: const Icon(Icons.close_rounded),
+                              ),
+                        hintText: _section == 'Topics'
+                            ? 'Search topics'
+                            : 'Search external content',
+                        filled: true,
+                        fillColor: theme.colorScheme.surfaceContainerHighest,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(18),
+                          borderSide: BorderSide.none,
+                        ),
                       ),
                     ),
                   ),
                   const SizedBox(height: 12),
-                  SizedBox(
-                    height: 40,
-                    child: ListView.separated(
-                      padding: const EdgeInsets.symmetric(horizontal: 2),
-                      scrollDirection: Axis.horizontal,
-                      itemCount: 4,
-                      separatorBuilder: (_, _) => const SizedBox(width: 8),
-                      itemBuilder: (context, index) {
-                        final section = switch (index) {
-                          0 => 'Topics',
-                          1 => 'Articles',
-                          2 => 'Videos',
-                          _ => 'Saved',
-                        };
-                        return ChoiceChip(
-                          label: Text(section),
-                          selected: _section == section,
-                          onSelected: (_) => setState(() {
-                            _section = section;
-                            _category = 'All';
-                          }),
-                        );
-                      },
+                  quickTourTarget(
+                    registry: widget.tutorialRegistry,
+                    page: QuickTourPage.learn,
+                    id: 'sections',
+                    child: SizedBox(
+                      height: 40,
+                      child: ListView.separated(
+                        padding: const EdgeInsets.symmetric(horizontal: 2),
+                        scrollDirection: Axis.horizontal,
+                        itemCount: 4,
+                        separatorBuilder: (_, _) => const SizedBox(width: 8),
+                        itemBuilder: (context, index) {
+                          final section = switch (index) {
+                            0 => 'Topics',
+                            1 => 'Articles',
+                            2 => 'Videos',
+                            _ => 'Saved',
+                          };
+                          final selected = _section == section;
+                          return ChoiceChip(
+                            label: Text(section),
+                            selected: selected,
+                            showCheckmark: false,
+                            side: BorderSide(
+                              color: selected
+                                  ? theme.colorScheme.primary
+                                  : theme.colorScheme.outlineVariant,
+                            ),
+                            backgroundColor:
+                                theme.colorScheme.surfaceContainerHighest,
+                            selectedColor: theme.colorScheme.primary,
+                            labelStyle: theme.textTheme.labelLarge?.copyWith(
+                              color: selected
+                                  ? theme.colorScheme.onPrimary
+                                  : theme.colorScheme.onSurfaceVariant,
+                              fontWeight: selected
+                                  ? FontWeight.w800
+                                  : FontWeight.w600,
+                            ),
+                            onSelected: (_) => setState(() {
+                              _section = section;
+                              _category = 'All';
+                            }),
+                          );
+                        },
+                      ),
                     ),
                   ),
-                  if (_section == 'Topics') ...[
-                    const SizedBox(height: 10),
+                  if (_section == 'Topics' && _categories.length > 1) ...[
+                    const SizedBox(height: 12),
+                    const _LearnFilterDivider(label: 'Filter by topic'),
+                    const SizedBox(height: 8),
                     SizedBox(
                       height: 40,
                       child: ListView.separated(
@@ -199,13 +279,18 @@ class _LearnScreenState extends State<LearnScreen> {
                     ),
                   ],
                   const SizedBox(height: 18),
-                  _LearnSectionHeader(
-                    label: _section == 'Topics'
-                        ? 'Topic guides'
-                        : '$_section library',
-                    detail: _section == 'Topics'
-                        ? '${topics.length} clear, source-linked answers'
-                        : 'Curated to keep browsing focused',
+                  quickTourTarget(
+                    registry: widget.tutorialRegistry,
+                    page: QuickTourPage.learn,
+                    id: 'topic-list',
+                    child: _LearnSectionHeader(
+                      label: _section == 'Topics'
+                          ? 'Topic guides'
+                          : '$_section library',
+                      detail: _section == 'Topics'
+                          ? '${topics.length} clear, source-linked answers'
+                          : 'Curated to keep browsing focused',
+                    ),
                   ),
                   const SizedBox(height: 8),
                 ],
@@ -259,73 +344,41 @@ class _LearnScreenState extends State<LearnScreen> {
   }
 }
 
-class _LearnHero extends StatelessWidget {
-  final String activeSection;
-  final int topicCount;
 
-  const _LearnHero({required this.activeSection, required this.topicCount});
+class _LearnFilterDivider extends StatelessWidget {
+  final String label;
+
+  const _LearnFilterDivider({required this.label});
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.primary.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-          color: theme.colorScheme.primary.withValues(alpha: 0.16),
+    return Row(
+      children: [
+        Expanded(
+          child: Divider(
+            height: 1,
+            color: theme.colorScheme.outlineVariant.withValues(alpha: 0.75),
+          ),
         ),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              color: theme.colorScheme.surface.withValues(alpha: 0.76),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              activeSection == 'Videos'
-                  ? Icons.play_circle_outline_rounded
-                  : activeSection == 'Articles'
-                  ? Icons.article_outlined
-                  : activeSection == 'Saved'
-                  ? Icons.bookmark_outline_rounded
-                  : Icons.auto_stories_rounded,
-              color: theme.colorScheme.primary,
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 10),
+          child: Text(
+            label,
+            style: theme.textTheme.labelSmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.2,
             ),
           ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  activeSection == 'Topics'
-                      ? 'Learn'
-                      : '$activeSection, chosen with care.',
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-                const SizedBox(height: 5),
-                Text(
-                  activeSection == 'Topics'
-                      ? 'At your own pace: $topicCount plain-language guides with sources and clear limits.'
-                      : 'Browse trusted material without turning SpineUp into an endless feed.',
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                    height: 1.4,
-                  ),
-                ),
-              ],
-            ),
+        ),
+        Expanded(
+          child: Divider(
+            height: 1,
+            color: theme.colorScheme.outlineVariant.withValues(alpha: 0.75),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }

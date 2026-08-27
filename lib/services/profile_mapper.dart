@@ -21,6 +21,10 @@ class ProfileMapper {
     return UserProfile(
       presetId: fallback.presetId,
       customPhotoPath: fallback.customPhotoPath,
+      avatarStyleId: fallback.avatarStyleId,
+      avatarOptions: fallback.avatarOptions,
+      avatarSeed: fallback.avatarSeed,
+      avatarMode: fallback.avatarMode,
       name: name.isEmpty ? fallback.name : name,
       diagnosis: _diagnosisLabel(data.curve.curveType) ?? fallback.diagnosis,
       braceStatus: _braceStatus(data.brace.wears) ?? fallback.braceStatus,

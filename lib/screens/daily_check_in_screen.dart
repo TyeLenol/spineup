@@ -6,7 +6,6 @@ import '../models/user_profile.dart';
 import '../services/gamification_service.dart';
 import '../services/session_service.dart';
 import '../theme/app_theme.dart';
-import 'my_journey_screen.dart';
 
 class DailyCheckInScreen extends StatefulWidget {
   final UserProfile userProfile;
@@ -135,22 +134,6 @@ class _DailyCheckInScreenState extends State<DailyCheckInScreen> {
         ),
         backgroundColor: cs.surface,
         surfaceTintColor: Colors.transparent,
-        actions: [
-          IconButton(
-            tooltip: 'View past entries',
-            icon: const Icon(Icons.history_rounded),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => const MyJourneyScreen(
-                    initialEventFilter: EventType.journalEntry,
-                  ),
-                ),
-              );
-            },
-          ),
-        ],
       ),
       body: SingleChildScrollView(
         padding: EdgeInsets.fromLTRB(
