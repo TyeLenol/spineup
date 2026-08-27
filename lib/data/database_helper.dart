@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 
@@ -33,7 +35,7 @@ class DatabaseHelper {
 
     return openDatabase(
       path,
-      version: 5,
+      version: 6,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -64,7 +66,11 @@ class DatabaseHelper {
         name TEXT,
         diagnosis TEXT,
         brace_status TEXT,
-        age_range TEXT
+        age_range TEXT,
+        avatar_style_id TEXT NOT NULL DEFAULT 'preset',
+        avatar_options TEXT NOT NULL DEFAULT '{}',
+        avatar_seed TEXT NOT NULL DEFAULT 'spineup-avatar',
+        avatar_mode TEXT NOT NULL DEFAULT 'preset'
       )
     ''');
     await db.execute('''
@@ -121,6 +127,20 @@ class DatabaseHelper {
     if (oldVersion < 5) {
       await _createCareSubjectsTable(db);
       await _seedLegacySelfCareSubjects(db);
+    }
+    if (oldVersion < 6) {
+      await db.execute(
+        "ALTER TABLE user_profiles ADD COLUMN avatar_style_id TEXT NOT NULL DEFAULT 'preset'",
+      );
+      await db.execute(
+        "ALTER TABLE user_profiles ADD COLUMN avatar_options TEXT NOT NULL DEFAULT '{}'",
+      );
+      await db.execute(
+        "ALTER TABLE user_profiles ADD COLUMN avatar_seed TEXT NOT NULL DEFAULT 'spineup-avatar'",
+      );
+      await db.execute(
+        "ALTER TABLE user_profiles ADD COLUMN avatar_mode TEXT NOT NULL DEFAULT 'preset'",
+      );
     }
   }
 
@@ -441,17 +461,37 @@ class DatabaseHelper {
     String? diagnosis,
     String? braceStatus,
     String? ageRange,
+    String? avatarStyleId,
+    Map<String, String>? avatarOptions,
+    String? avatarSeed,
+    String? avatarMode,
   }) async {
     final db = await database;
+    final columns = {
+      for (final row in await db.rawQuery('PRAGMA table_info(user_profiles)'))
+        row['name'] as String,
+    };
     final map = <String, dynamic>{
       'user_id': userId,
       'preset_id': presetId,
-      'custom_photo_path': customPhotoPath,
+      if (columns.contains('custom_photo_path'))
+        'custom_photo_path': customPhotoPath,
+      if (columns.contains('avatar_style_id'))
+        'avatar_style_id': avatarStyleId ?? 'preset',
+      if (columns.contains('avatar_options'))
+        'avatar_options': jsonEncode(avatarOptions ?? const <String, String>{}),
+      if (columns.contains('avatar_seed'))
+        'avatar_seed': avatarSeed ?? 'spineup-avatar',
+      if (columns.contains('avatar_mode'))
+        'avatar_mode': avatarMode ?? 'preset',
+      if (name != null && columns.contains('name')) 'name': name,
+      if (diagnosis != null && columns.contains('diagnosis'))
+        'diagnosis': diagnosis,
+      if (braceStatus != null && columns.contains('brace_status'))
+        'brace_status': braceStatus,
+      if (ageRange != null && columns.contains('age_range'))
+        'age_range': ageRange,
     };
-    if (name != null) map['name'] = name;
-    if (diagnosis != null) map['diagnosis'] = diagnosis;
-    if (braceStatus != null) map['brace_status'] = braceStatus;
-    if (ageRange != null) map['age_range'] = ageRange;
 
     await db.insert(
       'user_profiles',

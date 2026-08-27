@@ -41,6 +41,10 @@ const List<AvatarPreset> presetAvatars = [
 class UserProfile {
   final String presetId;
   final String? customPhotoPath;
+  final String avatarStyleId;
+  final Map<String, String> avatarOptions;
+  final String avatarSeed;
+  final String avatarMode;
   final String name;
   final String diagnosis;
   final String braceStatus;
@@ -49,6 +53,10 @@ class UserProfile {
   const UserProfile({
     required this.presetId,
     this.customPhotoPath,
+    this.avatarStyleId = 'preset',
+    this.avatarOptions = const <String, String>{},
+    this.avatarSeed = 'spineup-avatar',
+    this.avatarMode = 'preset',
     this.name = 'You',
     this.diagnosis = 'Not added',
     this.braceStatus = 'Not added',
@@ -68,6 +76,11 @@ class UserProfile {
   UserProfile copyWith({
     String? presetId,
     String? customPhotoPath,
+    bool clearCustomPhotoPath = false,
+    String? avatarStyleId,
+    Map<String, String>? avatarOptions,
+    String? avatarSeed,
+    String? avatarMode,
     String? name,
     String? diagnosis,
     String? braceStatus,
@@ -75,13 +88,24 @@ class UserProfile {
   }) {
     return UserProfile(
       presetId: presetId ?? this.presetId,
-      customPhotoPath: customPhotoPath ?? this.customPhotoPath,
+      customPhotoPath: clearCustomPhotoPath
+          ? null
+          : customPhotoPath ?? this.customPhotoPath,
+      avatarStyleId: avatarStyleId ?? this.avatarStyleId,
+      avatarOptions: avatarOptions ?? this.avatarOptions,
+      avatarSeed: avatarSeed ?? this.avatarSeed,
+      avatarMode: avatarMode ?? this.avatarMode,
       name: name ?? this.name,
       diagnosis: diagnosis ?? this.diagnosis,
       braceStatus: braceStatus ?? this.braceStatus,
       ageRange: ageRange ?? this.ageRange,
     );
   }
+
+  bool get usesPhoto => avatarMode == 'photo' && customPhotoPath != null;
+
+  bool get usesIllustratedAvatar =>
+      avatarMode == 'illustrated' && avatarStyleId != 'preset';
 
   AvatarPreset get preset {
     return presetAvatars.firstWhere(

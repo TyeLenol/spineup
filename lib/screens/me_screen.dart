@@ -1,19 +1,17 @@
-import 'dart:io';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import '../models/event.dart';
 import '../models/milestone.dart';
 import '../models/profile_data.dart';
-import '../models/user_profile.dart';
 import '../services/gamification_service.dart';
 import '../services/profile_store.dart';
 import '../services/session_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/avatar_display.dart';
 import '../widgets/badge_icon.dart';
+import 'avatar_studio_screen.dart';
 import 'care_subject_manager.dart';
 import 'profile_setup/profile_setup_screen.dart';
 import 'settings_screen.dart';
@@ -95,6 +93,19 @@ class _MeScreenState extends State<MeScreen>
     await Navigator.of(context).push<bool>(
       MaterialPageRoute(
         builder: (_) => const ProfileSetupScreen(editExisting: true),
+      ),
+    );
+    await _loadAll();
+  }
+
+  Future<void> _openAvatarStudio() async {
+    await Navigator.of(context).push<bool>(
+      MaterialPageRoute(
+        builder: (_) => AvatarStudioScreen(
+          userId: SessionService.currentCareSubjectId,
+          profile: _snap.userProfile,
+          gamificationService: _gs,
+        ),
       ),
     );
     await _loadAll();
@@ -195,38 +206,38 @@ class _MeScreenState extends State<MeScreen>
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(20),
                       ),
-                      child: Theme(
-                        data: Theme.of(
-                          context,
-                        ).copyWith(dividerColor: Colors.transparent),
-                        child: ExpansionTile(
-                          tilePadding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 4,
+                      child: InkWell(
+                        onTap: _openAvatarStudio,
+                        borderRadius: BorderRadius.circular(20),
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Row(
+                            children: [
+                              AvatarDisplay(
+                                profile: _snap.userProfile,
+                                size: 56,
+                              ),
+                              const SizedBox(width: 14),
+                              const Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Personalize your avatar',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.w800,
+                                      ),
+                                    ),
+                                    SizedBox(height: 4),
+                                    Text(
+                                      'Choose a style, make it yours, or use a local photo.',
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const Icon(Icons.chevron_right_rounded),
+                            ],
                           ),
-                          childrenPadding: const EdgeInsets.fromLTRB(
-                            16,
-                            0,
-                            16,
-                            16,
-                          ),
-                          leading: AvatarDisplay(
-                            profile: _snap.userProfile,
-                            size: 42,
-                          ),
-                          title: const Text(
-                            'Personalize your avatar',
-                            style: TextStyle(fontWeight: FontWeight.w800),
-                          ),
-                          subtitle: const Text('Choose an icon or local photo'),
-                          children: [
-                            _AvatarSettings(
-                              userId: SessionService.currentCareSubjectId,
-                              snap: _snap,
-                              gamificationService: _gs,
-                              onProfileUpdated: _loadAll,
-                            ),
-                          ],
                         ),
                       ),
                     ),
@@ -603,155 +614,7 @@ class _AchievementsSection extends StatelessWidget {
   }
 }
 
-// ─── Avatar & Profile Settings ────────────────────────────────────────────────
-
-class _AvatarSettings extends StatefulWidget {
-  final String userId;
-  final GamificationSnapshot snap;
-  final GamificationService gamificationService;
-  final VoidCallback onProfileUpdated;
-
-  const _AvatarSettings({
-    required this.userId,
-    required this.snap,
-    required this.gamificationService,
-    required this.onProfileUpdated,
-  });
-
-  @override
-  State<_AvatarSettings> createState() => _AvatarSettingsState();
-}
-
-class _AvatarSettingsState extends State<_AvatarSettings> {
-  Future<void> _pickImage() async {
-    final picker = ImagePicker();
-    final pickedFile = await picker.pickImage(
-      source: ImageSource.gallery,
-      imageQuality: 50,
-      maxWidth: 800,
-    );
-    if (pickedFile != null) {
-      final file = File(pickedFile.path);
-      final sizeBytes = await file.length();
-      if (sizeBytes > 5 * 1024 * 1024) {
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Image is too large (cap is ~5MB).')),
-        );
-        return;
-      }
-
-      await widget.gamificationService.updateProfile(
-        userId: widget.userId,
-        presetId: widget.snap.userProfile.presetId,
-        customPhotoPath: pickedFile.path,
-      );
-      widget.onProfileUpdated();
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-    final cs = Theme.of(context).colorScheme;
-    final currentPresetId = widget.snap.userProfile.presetId;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            AvatarDisplay(profile: widget.snap.userProfile, size: 64),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  OutlinedButton.icon(
-                    onPressed: _pickImage,
-                    icon: const Icon(Icons.photo_camera),
-                    label: const Text('Upload Custom Photo'),
-                  ),
-                  if (widget.snap.userProfile.customPhotoPath != null)
-                    TextButton(
-                      onPressed: () async {
-                        await widget.gamificationService.updateProfile(
-                          userId: widget.userId,
-                          presetId: currentPresetId,
-                          customPhotoPath: null,
-                        );
-                        widget.onProfileUpdated();
-                      },
-                      child: const Text('Remove Photo'),
-                    ),
-                ],
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 24),
-        Text('Choose Preset', style: tt.labelLarge),
-        const SizedBox(height: 8),
-        SizedBox(
-          height: 90,
-          child: ListView(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.only(left: 2, right: 16),
-            children: presetAvatars.map((preset) {
-              final isSelected = currentPresetId == preset.id;
-              return GestureDetector(
-                onTap: () async {
-                  await widget.gamificationService.updateProfile(
-                    userId: widget.userId,
-                    presetId: preset.id,
-                    customPhotoPath: widget.snap.userProfile.customPhotoPath,
-                  );
-                  widget.onProfileUpdated();
-                },
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 250),
-                  margin: const EdgeInsets.only(right: 12),
-                  width: 80,
-                  decoration: BoxDecoration(
-                    color: isSelected
-                        ? AppTheme.accentLavender.withValues(alpha: 0.15)
-                        : cs.surfaceContainer,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(
-                      color: isSelected
-                          ? AppTheme.accentLavender
-                          : AppTheme.borderCream,
-                      width: isSelected ? 2 : 1.5,
-                    ),
-                  ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      AvatarDisplay.buildPresetGraphic(preset, size: 40),
-                      const SizedBox(height: 6),
-                      Text(
-                        preset.name,
-                        style: tt.labelSmall?.copyWith(
-                          fontSize: 10,
-                          color: isSelected
-                              ? AppTheme.accentLavender
-                              : AppTheme.mutedForeground,
-                        ),
-                        textAlign: TextAlign.center,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            }).toList(),
-          ),
-        ),
-      ],
-    );
-  }
-}
+// ─── Avatar Studio entry ───────────────────────────────────────────────────────
 
 // ─── Structured Care Profile ────────────────────────────────────────────────────
 
