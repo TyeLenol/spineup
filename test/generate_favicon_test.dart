@@ -7,7 +7,10 @@ void main() {
   test('Generate Favicon', () async {
     final size = const Size(1024, 1024);
     final recorder = ui.PictureRecorder();
-    final canvas = Canvas(recorder, Rect.fromLTWH(0, 0, size.width, size.height));
+    final canvas = Canvas(
+      recorder,
+      Rect.fromLTWH(0, 0, size.width, size.height),
+    );
 
     // Fill background (AppTheme.primarySage is Color(0xFF6B8068))
     final bgPaint = Paint()..color = const Color(0xFF6B8068);
@@ -25,7 +28,9 @@ void main() {
     final strokePaint = Paint()
       ..color = color
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 12 * (boxSize / 100) // Scale stroke width proportionally
+      ..strokeWidth =
+          12 *
+          (boxSize / 100) // Scale stroke width proportionally
       ..strokeCap = StrokeCap.round;
 
     final scaleX = boxSize / 100;
@@ -56,7 +61,7 @@ void main() {
     final dotPaint = Paint()
       ..color = color
       ..style = PaintingStyle.fill;
-    
+
     canvas.drawCircle(
       Offset(30 * scaleX, 85 * scaleY),
       8 * scaleX, // Scale dot radius
@@ -64,8 +69,11 @@ void main() {
     );
 
     final picture = recorder.endRecording();
-    final image = await picture.toImage(size.width.toInt(), size.height.toInt());
-    
+    final image = await picture.toImage(
+      size.width.toInt(),
+      size.height.toInt(),
+    );
+
     // Convert to PNG first, because JPEG encoding is not built-in dart:ui
     // We will save as PNG, and then the user can use it as is or we can convert it.
     // Wait, dart:ui only supports PNG encoding reliably.
@@ -74,6 +82,5 @@ void main() {
 
     final file = File('favicon.png');
     await file.writeAsBytes(buffer);
-    print('Generated favicon.png');
   });
 }
