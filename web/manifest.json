@@ -1,11 +1,11 @@
 {
-    "name": "spineup",
-    "short_name": "spineup",
+    "name": "SpineUp",
+    "short_name": "SpineUp",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "background_color": "#5DCAA5",
+    "theme_color": "#5DCAA5",
+    "description": "A warm, local-first scoliosis self-management companion.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [
