@@ -20,6 +20,7 @@ The repository currently has the following Android settings:
 | Current version | `1.0.0+1` | `1.0.0` is the version name; `1` is the Android version code. |
 | Release signing | Debug signing configuration | The current `release` build is optimized but is **not yet an official production-signed SpineUp release**. |
 | CI validation | Resolve, format check, analyze, test, Android debug build | Defined in `.github/workflows/flutter_quality.yml`. |
+| Branded text fonts | Fraunces and Outfit are bundled under `assets/fonts/` | Release typography no longer depends on Google Fonts runtime fetching. |
 
 One platform detail is important before testing network-backed features in a release APK: the current `INTERNET` permission is present in the debug and profile manifest variants, but not in `android/app/src/main/AndroidManifest.xml`. A release build uses the main manifest, so RSS refreshes, source pages, thumbnails, and YouTube playback may be unavailable in the current release artifact until that permission is moved or added to the main manifest. This is not cloud sync; it only permits the optional outbound requests that Learn and external media already use.
 
@@ -97,7 +98,7 @@ You can also launch directly into release mode while connected to a device:
 flutter run --release
 ```
 
-This path tests the release build mode, tree-shaking, native startup, launcher icon, external media, local notifications, and performance more realistically than debug mode. It is still debug-signed in the current repository configuration, so it is for testing rather than public distribution.
+This path tests the release build mode, tree-shaking, native startup, launcher icon, bundled branded typography, external media, local notifications, and performance more realistically than debug mode. The bundled Fraunces and Outfit files add roughly 528 KB before final APK compression, which is the expected trade-off for keeping the intended typeface consistent offline. It is still debug-signed in the current repository configuration, so it is for testing rather than public distribution.
 
 ## 4. Smaller architecture-specific APKs
 
