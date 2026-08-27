@@ -396,6 +396,7 @@ class _ScheduleFormSheetState extends State<_ScheduleFormSheet> {
   late TextEditingController _notesController;
   late DateTime _selectedDateTime;
   bool _loading = false;
+  bool _titleError = false;
 
   @override
   void initState() {
@@ -403,6 +404,11 @@ class _ScheduleFormSheetState extends State<_ScheduleFormSheet> {
     _titleController = TextEditingController(
       text: widget.existing?.title ?? '',
     );
+    _titleController.addListener(() {
+      if (_titleError && _titleController.text.isNotEmpty) {
+        setState(() => _titleError = false);
+      }
+    });
     _notesController = TextEditingController(
       text: widget.existing?.notes ?? '',
     );
@@ -477,9 +483,7 @@ class _ScheduleFormSheetState extends State<_ScheduleFormSheet> {
   Future<void> _save() async {
     final title = _titleController.text.trim();
     if (title.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter an appointment title.')),
-      );
+      setState(() => _titleError = true);
       return;
     }
 
@@ -562,8 +566,26 @@ class _ScheduleFormSheetState extends State<_ScheduleFormSheet> {
               labelText: 'Appointment Title / Type',
               hintText: 'e.g. Orthopedist or physical therapy',
               prefixIcon: const Icon(Icons.badge_outlined),
+              errorText: _titleError ? 'Please enter a title for this appointment' : null,
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(
+                  color: _titleError
+                      ? Theme.of(context).colorScheme.error
+                      : Theme.of(context).colorScheme.outline,
+                ),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(
+                  color: _titleError
+                      ? Theme.of(context).colorScheme.error
+                      : Theme.of(context).colorScheme.primary,
+                  width: 2,
+                ),
               ),
             ),
           ),

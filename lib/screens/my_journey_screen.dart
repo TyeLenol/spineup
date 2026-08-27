@@ -356,60 +356,64 @@ class _MyJourneyScreenState extends State<MyJourneyScreen>
       floatingActionButtonLocation: ExpandableFab.location,
       floatingActionButton: Padding(
         padding: const EdgeInsets.only(bottom: 96),
-        child: quickTourTarget(
-          registry: widget.tutorialRegistry,
-          page: QuickTourPage.journey,
-          id: 'add-record',
-          child: ExpandableFab(
-            type: ExpandableFabType.up,
-            distance: 70,
-            openButtonBuilder: RotateFloatingActionButtonBuilder(
-              child: const Icon(
-                Icons.add_rounded,
-                color: Colors.white,
-                size: 28,
-              ),
-              fabSize: ExpandableFabSize.regular,
-              shape: const CircleBorder(),
-            ),
-            closeButtonBuilder: DefaultFloatingActionButtonBuilder(
-              child: const Icon(
-                Icons.close_rounded,
-                color: Colors.white,
-                size: 24,
-              ),
-              fabSize: ExpandableFabSize.regular,
-              shape: const CircleBorder(),
-            ),
-            children: [
-              FloatingActionButton.extended(
-                heroTag: 'fab_cobb',
-                onPressed: () => showCobbAngleLogger(
-                  context: context,
-                  userId: SessionService.currentCareSubjectId,
-                  gamificationService: _gs,
-                  onLogged: _handleLogged,
+        child: ExpandableFab(
+          type: ExpandableFabType.up,
+          distance: 70,
+          openButtonBuilder: RotateFloatingActionButtonBuilder(
+            child: quickTourTarget(
+              registry: widget.tutorialRegistry,
+              page: QuickTourPage.journey,
+              id: 'add-record',
+              child: const SizedBox(
+                width: 36,
+                height: 36,
+                child: Icon(
+                  Icons.add_rounded,
+                  color: Colors.white,
+                  size: 28,
                 ),
-                icon: const Icon(Icons.architecture_rounded),
-                label: const Text('Log Cobb Angle'),
-                backgroundColor: cs.surfaceContainerHigh,
-                foregroundColor: cs.onSurface,
               ),
-              FloatingActionButton.extended(
-                heroTag: 'fab_appointment',
-                onPressed: () => showAppointmentLogger(
-                  context: context,
-                  userId: SessionService.currentCareSubjectId,
-                  gamificationService: _gs,
-                  onLogged: _handleLogged,
-                ),
-                icon: const Icon(Icons.medical_services_outlined),
-                label: const Text('Schedule Visit'),
-                backgroundColor: cs.surfaceContainerHigh,
-                foregroundColor: cs.onSurface,
-              ),
-            ],
+            ),
+            fabSize: ExpandableFabSize.regular,
+            shape: const CircleBorder(),
           ),
+          closeButtonBuilder: DefaultFloatingActionButtonBuilder(
+            child: const Icon(
+              Icons.close_rounded,
+              color: Colors.white,
+              size: 24,
+            ),
+            fabSize: ExpandableFabSize.regular,
+            shape: const CircleBorder(),
+          ),
+          children: [
+            FloatingActionButton.extended(
+              heroTag: 'fab_cobb',
+              onPressed: () => showCobbAngleLogger(
+                context: context,
+                userId: SessionService.currentCareSubjectId,
+                gamificationService: _gs,
+                onLogged: _handleLogged,
+              ),
+              icon: const Icon(Icons.architecture_rounded),
+              label: const Text('Log Cobb Angle'),
+              backgroundColor: cs.surfaceContainerHigh,
+              foregroundColor: cs.onSurface,
+            ),
+            FloatingActionButton.extended(
+              heroTag: 'fab_appointment',
+              onPressed: () => showAppointmentLogger(
+                context: context,
+                userId: SessionService.currentCareSubjectId,
+                gamificationService: _gs,
+                onLogged: _handleLogged,
+              ),
+              icon: const Icon(Icons.medical_services_outlined),
+              label: const Text('Schedule Visit'),
+              backgroundColor: cs.surfaceContainerHigh,
+              foregroundColor: cs.onSurface,
+            ),
+          ],
         ),
       ),
     );
@@ -945,20 +949,20 @@ class _EventTile extends StatelessWidget {
         : 'pain not recorded';
     final moodLabel = event.payload['mood'] ?? 'mood not recorded';
 
-    final (icon, label, color) = switch (event.type) {
+    final (icon, label, accentColor) = switch (event.type) {
       EventType.stretchCompleted => (
         Icons.self_improvement_rounded,
-        'Stretch: ${event.payload['exercise_name'] ?? 'Session'}',
+        'Stretch \u00b7 ${event.payload['exercise_name'] ?? 'Session'}',
         AppTheme.primarySage,
       ),
       EventType.journalEntry => (
         Icons.edit_note_rounded,
-        'Journal: $painLabel · $moodLabel',
+        'Journal \u00b7 $painLabel · $moodLabel',
         AppTheme.secondaryCoral,
       ),
       EventType.angleLogged => (
         Icons.architecture_rounded,
-        'Cobb angle: ${(event.payload['degrees'] as num?)?.toStringAsFixed(1) ?? '?'}°',
+        'Cobb angle \u00b7 ${(event.payload['degrees'] as num?)?.toStringAsFixed(1) ?? '?'}°',
         AppTheme.accentLavender,
       ),
       EventType.appointmentAttended => (
@@ -975,46 +979,68 @@ class _EventTile extends StatelessWidget {
 
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
-        color: cs.surfaceContainer,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppTheme.borderCream),
+        color: cs.surfaceContainerLowest,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.35)),
       ),
-      child: Row(
-        children: [
-          Icon(icon, color: color, size: 20),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(label, style: tt.bodySmall),
-                Text(
-                  _formatDate(event.timestamp),
-                  style: tt.labelSmall?.copyWith(
-                    color: AppTheme.mutedForeground,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          if (showXp)
+      clipBehavior: Clip.antiAlias,
+      child: IntrinsicHeight(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-              decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Text(
-                '+${event.xpValue} XP',
-                style: tt.labelSmall?.copyWith(
-                  color: color,
-                  fontWeight: FontWeight.bold,
+              width: 4,
+              color: accentColor.withValues(alpha: 0.55),
+            ),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                child: Row(
+                  children: [
+                    Icon(icon, color: accentColor, size: 18),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            label,
+                            style: tt.bodySmall?.copyWith(fontWeight: FontWeight.w600),
+                          ),
+                          Text(
+                            _formatDate(event.timestamp),
+                            style: tt.labelSmall?.copyWith(
+                              color: cs.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    if (showXp) ...[
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: cs.outlineVariant),
+                        ),
+                        child: Text(
+                          '+${event.xpValue} XP',
+                          style: tt.labelSmall?.copyWith(
+                            color: cs.onSurfaceVariant,
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: 0.2,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
               ),
             ),
-        ],
+          ],
+        ),
       ),
     );
   }

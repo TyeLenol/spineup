@@ -61,6 +61,7 @@ class _NavigationShellState extends State<NavigationShell> {
       0 => TodayScreen(
         key: ValueKey('today-$subjectId'),
         tutorialRegistry: tutorialRegistry,
+        onGoToMe: () => _onItemTapped(3),
       ),
       1 => MyJourneyScreen(
         key: ValueKey('journey-$subjectId'),

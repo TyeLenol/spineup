@@ -69,7 +69,11 @@ class AvatarStyleDefinition {
         options.remove('${feature.optionKey}Probability');
       } else {
         options['${feature.optionKey}Variant'] = value;
-        options.remove('${feature.optionKey}Probability');
+        // Force probability to 100 so the chosen component always renders.
+        // Style definitions set accessories/glasses at 10–20% by default;
+        // leaving that in place means the avatar ignores the user's pick most
+        // of the time.
+        options['${feature.optionKey}Probability'] = 100;
       }
     }
     return options;

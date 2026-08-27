@@ -14,6 +14,7 @@ import '../widgets/badge_icon.dart';
 import 'avatar_studio_screen.dart';
 import 'care_subject_manager.dart';
 import 'profile_setup/profile_setup_screen.dart';
+import '../theme/app_transitions.dart';
 import 'settings_screen.dart';
 import '../widgets/quick_tour.dart';
 

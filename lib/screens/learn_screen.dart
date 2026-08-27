@@ -96,13 +96,26 @@ class _LearnScreenState extends State<LearnScreen> {
       bottom: false,
       child: CustomScrollView(
         slivers: [
+          SliverAppBar(
+            floating: true,
+            pinned: true,
+            backgroundColor: Colors.transparent,
+            surfaceTintColor: Colors.transparent,
+            title: Text('Learn', style: theme.textTheme.titleLarge),
+          ),
           SliverPadding(
-            padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
             sliver: SliverToBoxAdapter(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _LearnHero(activeSection: _section),
+                  Text(
+                    'Clear guides, trusted sources, and room to explore.',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                      height: 1.4,
+                    ),
+                  ),
                   const SizedBox(height: 16),
                   Text(
                     'Practice',
@@ -331,74 +344,6 @@ class _LearnScreenState extends State<LearnScreen> {
   }
 }
 
-class _LearnHero extends StatelessWidget {
-  final String activeSection;
-
-  const _LearnHero({required this.activeSection});
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.primary.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-          color: theme.colorScheme.primary.withValues(alpha: 0.16),
-        ),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 42,
-            height: 42,
-
-            decoration: BoxDecoration(
-              color: theme.colorScheme.surface.withValues(alpha: 0.76),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              activeSection == 'Videos'
-                  ? Icons.play_circle_outline_rounded
-                  : activeSection == 'Articles'
-                  ? Icons.article_outlined
-                  : activeSection == 'Saved'
-                  ? Icons.bookmark_outline_rounded
-                  : Icons.auto_stories_rounded,
-              color: theme.colorScheme.primary,
-            ),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  activeSection == 'Topics' ? 'Learn' : activeSection,
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-                const SizedBox(height: 5),
-                Text(
-                  activeSection == 'Topics'
-                      ? 'Clear guides, trusted sources, and room to explore.'
-                      : 'Browse trusted material at your own pace.',
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                    height: 1.4,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
 
 class _LearnFilterDivider extends StatelessWidget {
   final String label;
