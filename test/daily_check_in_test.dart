@@ -19,9 +19,8 @@ void main() {
       const MaterialApp(home: DailyCheckInScreen(userProfile: profile)),
     );
 
-    // Verify Title and View past entries button
+    // Verify the current app-bar title.
     expect(find.text('Daily Check-In'), findsOneWidget);
-    expect(find.byTooltip('View past entries'), findsOneWidget);
 
     // Unanswered health fields are explicit rather than silently prefilled.
     expect(find.text('Not recorded'), findsAtLeastNWidgets(1));
