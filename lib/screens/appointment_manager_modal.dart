@@ -294,7 +294,7 @@ class _AppointmentManagerModalState extends State<AppointmentManagerModal>
                         child: Text(
                           apt.title,
                           style: tt.titleSmall?.copyWith(
-                            fontWeight: FontWeight.bold,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
                       ),
@@ -366,7 +366,7 @@ class _AppointmentManagerModalState extends State<AppointmentManagerModal>
       ),
       child: Text(
         label,
-        style: TextStyle(color: fg, fontSize: 11, fontWeight: FontWeight.bold),
+        style: TextStyle(color: fg, fontSize: 11, fontWeight: FontWeight.w600),
       ),
     );
   }
@@ -566,7 +566,9 @@ class _ScheduleFormSheetState extends State<_ScheduleFormSheet> {
               labelText: 'Appointment Title / Type',
               hintText: 'e.g. Orthopedist or physical therapy',
               prefixIcon: const Icon(Icons.badge_outlined),
-              errorText: _titleError ? 'Please enter a title for this appointment' : null,
+              errorText: _titleError
+                  ? 'Please enter a title for this appointment'
+                  : null,
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
               ),

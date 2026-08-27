@@ -3,12 +3,7 @@ import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 
 /// Vera's available emotional poses.
-enum VeraPose {
-  celebrate,
-  wave,
-  proud,
-  idle,
-}
+enum VeraPose { celebrate, wave, proud, idle }
 
 /// Articulated 5-Segment Scoliosis Spine Mascot (Vera).
 ///
@@ -51,9 +46,10 @@ class _VeraCharacterState extends State<VeraCharacter>
       vsync: this,
       duration: const Duration(milliseconds: 2400),
     );
-    _bobY = Tween<double>(begin: -6, end: 6).animate(
-      CurvedAnimation(parent: _bobCtrl, curve: Curves.easeInOut),
-    );
+    _bobY = Tween<double>(
+      begin: -6,
+      end: 6,
+    ).animate(CurvedAnimation(parent: _bobCtrl, curve: Curves.easeInOut));
     if (widget.enableIdleBob) {
       _bobCtrl.repeat(reverse: true);
     }
@@ -62,9 +58,10 @@ class _VeraCharacterState extends State<VeraCharacter>
       vsync: this,
       duration: const Duration(milliseconds: 750),
     );
-    _flexDeform = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _flexCtrl, curve: Curves.elasticOut),
-    );
+    _flexDeform = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _flexCtrl, curve: Curves.elasticOut));
   }
 
   @override
@@ -147,13 +144,15 @@ class _SparkWidgetState extends State<_SparkWidget>
       vsync: this,
       duration: const Duration(milliseconds: 1000),
     );
-    _y = Tween<double>(begin: 0, end: -55).animate(
-      CurvedAnimation(parent: _ctrl, curve: Curves.easeOutCubic),
-    );
+    _y = Tween<double>(
+      begin: 0,
+      end: -55,
+    ).animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeOutCubic));
     _opacity = Tween<double>(begin: 1.0, end: 0.0).animate(
       CurvedAnimation(
-          parent: _ctrl,
-          curve: const Interval(0.5, 1.0, curve: Curves.easeOut)),
+        parent: _ctrl,
+        curve: const Interval(0.5, 1.0, curve: Curves.easeOut),
+      ),
     );
     _ctrl.forward().then((_) => widget.onComplete());
   }
@@ -189,7 +188,7 @@ class _SparkWidgetState extends State<_SparkWidget>
               '+30 XP 🎉',
               style: TextStyle(
                 color: Colors.white,
-                fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.w600,
                 fontSize: 12,
               ),
             ),
@@ -204,10 +203,7 @@ class _VeraScurvePainter extends CustomPainter {
   final VeraPose pose;
   final double flexAmount;
 
-  const _VeraScurvePainter({
-    required this.pose,
-    required this.flexAmount,
-  });
+  const _VeraScurvePainter({required this.pose, required this.flexAmount});
 
   static const Color _vertebraBody = Color(0xFF8B84C8); // Dusty lavender
   static const Color _vertebraHighlight = Color(0xFFAAA4DE); // Soft top shine
@@ -227,7 +223,10 @@ class _VeraScurvePainter extends CustomPainter {
     final nodes = [
       Offset(w * 0.50 + flexX, h * 0.20), // Head / Cervical node
       Offset(w * 0.62 + flexX * 0.7, h * 0.37), // Upper Thoracic (curved right)
-      Offset(w * 0.44 - flexX * 0.5, h * 0.54), // Mid Thoracic (curved left - S-Curve)
+      Offset(
+        w * 0.44 - flexX * 0.5,
+        h * 0.54,
+      ), // Mid Thoracic (curved left - S-Curve)
       Offset(w * 0.58 + flexX * 0.3, h * 0.71), // Lumbar (curved right)
       Offset(w * 0.50, h * 0.88), // Sacral Base node
     ];
@@ -353,15 +352,24 @@ class _VeraScurvePainter extends CustomPainter {
       canvas.drawCircle(Offset(ex, eyeY), eyeR, Paint()..color = _white);
       // Pupil
       canvas.drawCircle(
-          Offset(ex + side * 1.5, eyeY + 1), eyeR * 0.55, Paint()..color = _pupil);
+        Offset(ex + side * 1.5, eyeY + 1),
+        eyeR * 0.55,
+        Paint()..color = _pupil,
+      );
       // Highlight
       canvas.drawCircle(
-          Offset(ex - side * 1.5, eyeY - 2), eyeR * 0.22, Paint()..color = _white);
+        Offset(ex - side * 1.5, eyeY - 2),
+        eyeR * 0.22,
+        Paint()..color = _white,
+      );
 
       // Blush
       canvas.drawOval(
         Rect.fromCenter(
-          center: Offset(headCenter.dx + side * eyeSpacing * 1.35, eyeY + eyeR * 1.1),
+          center: Offset(
+            headCenter.dx + side * eyeSpacing * 1.35,
+            eyeY + eyeR * 1.1,
+          ),
           width: eyeR * 1.1,
           height: eyeR * 0.65,
         ),

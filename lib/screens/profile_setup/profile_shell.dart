@@ -141,7 +141,7 @@ class ProfileShell extends StatelessWidget {
                               title,
                               style: SpineFonts.fraunces(
                                 fontSize: 34,
-                                fontWeight: FontWeight.w800,
+                                fontWeight: FontWeight.w700,
                                 height: 1.05,
                                 letterSpacing: -0.7,
                                 color: AppTheme.foregroundDark,

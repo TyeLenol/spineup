@@ -9,6 +9,7 @@ import '../services/gamification_service.dart';
 import '../services/profile_store.dart';
 import '../services/session_service.dart';
 import '../theme/app_theme.dart';
+import '../theme/app_transitions.dart';
 import '../widgets/avatar_display.dart';
 import '../widgets/badge_icon.dart';
 import 'avatar_studio_screen.dart';
@@ -113,8 +114,10 @@ class _MeScreenState extends State<MeScreen>
 
   Future<void> _openSettings() async {
     await Navigator.of(context).push<void>(
-      MaterialPageRoute(
-        builder: (_) => SettingsScreen(
+      AppTransitions.buildEmphasizedDecelerateRoute<void>(
+        duration: const Duration(milliseconds: 420),
+        reverseDuration: const Duration(milliseconds: 320),
+        pageBuilder: (_) => SettingsScreen(
           onReplayQuickTour: widget.onReplayQuickTour,
           onDataChanged: () => _loadAll(),
           tutorialRegistry: widget.tutorialRegistry,
@@ -225,7 +228,7 @@ class _MeScreenState extends State<MeScreen>
                                     Text(
                                       'Personalize your avatar',
                                       style: TextStyle(
-                                        fontWeight: FontWeight.w800,
+                                        fontWeight: FontWeight.w700,
                                       ),
                                     ),
                                     SizedBox(height: 4),
@@ -337,7 +340,7 @@ class _IdentitySummary extends StatelessWidget {
               Text(
                 'Level ${snap.currentLevel} · $title',
                 style: tt.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w800,
+                  fontWeight: FontWeight.w700,
                   color: AppTheme.primarySage,
                 ),
               ),
@@ -392,7 +395,7 @@ class _ProgressSection extends StatelessWidget {
           ),
           title: const Text(
             'Progress & milestones',
-            style: TextStyle(fontWeight: FontWeight.w800),
+            style: TextStyle(fontWeight: FontWeight.w700),
           ),
           subtitle: Text(
             '$unlockedCount badges unlocked · ${snap.totalXp} XP total',
@@ -463,7 +466,7 @@ class _BadgesSection extends StatelessWidget {
                       style: tt.labelSmall?.copyWith(
                         fontSize: 10,
                         fontWeight: isUnlocked
-                            ? FontWeight.bold
+                            ? FontWeight.w600
                             : FontWeight.normal,
                         color: isUnlocked
                             ? AppTheme.primarySage
@@ -586,7 +589,7 @@ class _AchievementsSection extends StatelessWidget {
                         Text(
                           m.label,
                           style: tt.titleSmall?.copyWith(
-                            fontWeight: FontWeight.bold,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
                         Text(
@@ -694,7 +697,7 @@ class _CareProfileSection extends StatelessWidget {
                       Text(
                         _name(),
                         style: textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w800,
+                          fontWeight: FontWeight.w700,
                         ),
                       ),
                       const SizedBox(height: 3),

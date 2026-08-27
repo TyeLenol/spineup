@@ -121,7 +121,7 @@ class _LearnScreenState extends State<LearnScreen> {
                     'Practice',
                     style: theme.textTheme.labelLarge?.copyWith(
                       color: theme.colorScheme.primary,
-                      fontWeight: FontWeight.w800,
+                      fontWeight: FontWeight.w700,
                       letterSpacing: 0.2,
                     ),
                   ),
@@ -155,7 +155,7 @@ class _LearnScreenState extends State<LearnScreen> {
                                       'Movement library and My Routine',
                                       style: theme.textTheme.titleSmall
                                           ?.copyWith(
-                                            fontWeight: FontWeight.w800,
+                                            fontWeight: FontWeight.w700,
                                           ),
                                     ),
                                     const SizedBox(height: 3),
@@ -243,7 +243,7 @@ class _LearnScreenState extends State<LearnScreen> {
                                   ? theme.colorScheme.onPrimary
                                   : theme.colorScheme.onSurfaceVariant,
                               fontWeight: selected
-                                  ? FontWeight.w800
+                                  ? FontWeight.w700
                                   : FontWeight.w600,
                             ),
                             onSelected: (_) => setState(() {
@@ -344,7 +344,6 @@ class _LearnScreenState extends State<LearnScreen> {
   }
 }
 
-
 class _LearnFilterDivider extends StatelessWidget {
   final String label;
 
@@ -409,7 +408,7 @@ class _LearnSectionHeader extends StatelessWidget {
             Text(
               label,
               style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w800,
+                fontWeight: FontWeight.w700,
               ),
             ),
           ],

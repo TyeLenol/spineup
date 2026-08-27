@@ -221,7 +221,7 @@ class _XpToken extends StatelessWidget {
           '+$value XP',
           style: Theme.of(context).textTheme.labelMedium?.copyWith(
             color: accent,
-            fontWeight: FontWeight.w800,
+            fontWeight: FontWeight.w700,
           ),
         ),
       ),

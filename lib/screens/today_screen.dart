@@ -224,14 +224,14 @@ class _TodayScreenState extends State<TodayScreen>
                       style: tt.labelSmall?.copyWith(
                         color: AppTheme.mutedForeground,
                         letterSpacing: 1.2,
-                        fontWeight: FontWeight.bold,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                     const SizedBox(height: 2),
                     Text(
                       '$greeting, $name',
                       style: tt.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                   ],
@@ -405,7 +405,7 @@ class _LevelXpCard extends StatelessWidget {
               'Level ${snap.currentLevel}',
               style: tt.labelLarge?.copyWith(
                 color: AppTheme.primarySage,
-                fontWeight: FontWeight.w800,
+                fontWeight: FontWeight.w700,
               ),
             ),
           ),
@@ -416,7 +416,7 @@ class _LevelXpCard extends StatelessWidget {
               children: [
                 Text(
                   snap.currentTitle,
-                  style: tt.titleSmall?.copyWith(fontWeight: FontWeight.w800),
+                  style: tt.titleSmall?.copyWith(fontWeight: FontWeight.w700),
                 ),
                 const SizedBox(height: 6),
                 ClipRRect(
@@ -436,7 +436,7 @@ class _LevelXpCard extends StatelessWidget {
           const SizedBox(width: 12),
           Text(
             '${snap.totalXp} XP',
-            style: tt.labelLarge?.copyWith(fontWeight: FontWeight.w800),
+            style: tt.labelLarge?.copyWith(fontWeight: FontWeight.w700),
           ),
         ],
       ),
@@ -490,108 +490,116 @@ class RoutineExerciseCardState extends State<RoutineExerciseCard> {
           children: [
             Container(
               width: 4,
-              color: widget.done 
-                  ? AppTheme.primarySage.withValues(alpha: 0.2) 
+              color: widget.done
+                  ? AppTheme.primarySage.withValues(alpha: 0.2)
                   : AppTheme.primarySage.withValues(alpha: 0.55),
             ),
             Expanded(
               child: Material(
                 color: Colors.transparent,
                 child: InkWell(
-          borderRadius: BorderRadius.circular(16),
-          onTap: () => setState(() => _expanded = !_expanded),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Row(
-                  children: [
-                    Opacity(
-                      opacity: widget.done ? 0.5 : 1.0,
-                      child: Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: cs.surfaceContainerHighest,
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          widget.exercise.icon,
-                          color: AppTheme.mutedForeground,
-                          size: 20,
-                        ),
-                      ),
+                  borderRadius: BorderRadius.circular(16),
+                  onTap: () => setState(() => _expanded = !_expanded),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
                     ),
-                    const SizedBox(width: 14),
-                    Expanded(
-                      child: Opacity(
-                        opacity: widget.done ? 0.5 : 1.0,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Row(
                           children: [
-                            _AnimatedSquigglyStrikethrough(
-                              isStruck: widget.done,
-                              child: Text(
-                                widget.exercise.name,
-                                style: tt.titleSmall?.copyWith(
-                                  color: widget.done
-                                      ? AppTheme.mutedForeground
-                                      : cs.onSurface,
+                            Opacity(
+                              opacity: widget.done ? 0.5 : 1.0,
+                              child: Container(
+                                padding: const EdgeInsets.all(10),
+                                decoration: BoxDecoration(
+                                  color: cs.surfaceContainerHighest,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Icon(
+                                  widget.exercise.icon,
+                                  color: AppTheme.mutedForeground,
+                                  size: 20,
                                 ),
                               ),
                             ),
-                            const SizedBox(height: 4),
-                            Text(
-                              '${widget.exercise.durationLabel}  ·  ${_expanded ? 'Hide steps' : 'View steps'}',
-                              style: tt.bodySmall?.copyWith(
-                                color: AppTheme.mutedForeground,
-                                fontSize: 11,
+                            const SizedBox(width: 14),
+                            Expanded(
+                              child: Opacity(
+                                opacity: widget.done ? 0.5 : 1.0,
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    _AnimatedSquigglyStrikethrough(
+                                      isStruck: widget.done,
+                                      child: Text(
+                                        widget.exercise.name,
+                                        style: tt.titleSmall?.copyWith(
+                                          color: widget.done
+                                              ? AppTheme.mutedForeground
+                                              : cs.onSurface,
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      '${widget.exercise.durationLabel}  ·  ${_expanded ? 'Hide steps' : 'View steps'}',
+                                      style: tt.bodySmall?.copyWith(
+                                        color: AppTheme.mutedForeground,
+                                        fontSize: 11,
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
+                            ),
+                            Icon(
+                              widget.done
+                                  ? Icons.check_circle_rounded
+                                  : Icons.circle_outlined,
+                              color: widget.done
+                                  ? AppTheme.primarySage
+                                  : _expanded
+                                  ? AppTheme.primarySage
+                                  : AppTheme.mutedForeground.withValues(
+                                      alpha: 0.5,
+                                    ),
+                              size: 28,
                             ),
                           ],
                         ),
-                      ),
-                    ),
-                    Icon(
-                      widget.done
-                          ? Icons.check_circle_rounded
-                          : Icons.circle_outlined,
-                      color: widget.done
-                          ? AppTheme.primarySage
-                          : _expanded
-                          ? AppTheme.primarySage
-                          : AppTheme.mutedForeground.withValues(alpha: 0.5),
-                      size: 28,
-                    ),
-                  ],
-                ),
-                if (_expanded) ...[
-                  const SizedBox(height: 16),
-                  const Divider(),
-                  const SizedBox(height: 12),
-                  Text(widget.exercise.description, style: tt.bodyMedium),
-                  const SizedBox(height: 12),
-                  FilledButton.icon(
-                    onPressed: () => _showExerciseInstructions(
-                      context,
-                      widget.exercise,
-                      onMarkDone: widget.onMarkDone,
-                    ),
-                    icon: const Icon(Icons.play_arrow_rounded),
-                    label: const Text('Start Exercise'),
-                    style: FilledButton.styleFrom(
-                      backgroundColor: AppTheme.primarySage,
+                        if (_expanded) ...[
+                          const SizedBox(height: 16),
+                          const Divider(),
+                          const SizedBox(height: 12),
+                          Text(
+                            widget.exercise.description,
+                            style: tt.bodyMedium,
+                          ),
+                          const SizedBox(height: 12),
+                          FilledButton.icon(
+                            onPressed: () => _showExerciseInstructions(
+                              context,
+                              widget.exercise,
+                              onMarkDone: widget.onMarkDone,
+                            ),
+                            icon: const Icon(Icons.play_arrow_rounded),
+                            label: const Text('Start Exercise'),
+                            style: FilledButton.styleFrom(
+                              backgroundColor: AppTheme.primarySage,
+                            ),
+                          ),
+                        ],
+                      ],
                     ),
                   ),
-                ],
-              ],
+                ),
+              ),
             ),
-          ),
+          ],
         ),
-      ),
-    ),
-  ],
-),
       ),
     );
   }
@@ -759,7 +767,7 @@ class RoutineExerciseGuidedFlowSheetState
               Expanded(
                 child: Text(
                   widget.exercise.name,
-                  style: tt.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+                  style: tt.titleSmall?.copyWith(fontWeight: FontWeight.w600),
                 ),
               ),
               TextButton.icon(
@@ -781,7 +789,7 @@ class RoutineExerciseGuidedFlowSheetState
                 'Step ${_currentStepIndex + 1} of ${steps.length}',
                 style: tt.labelSmall?.copyWith(
                   color: AppTheme.primarySage,
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
               const Spacer(),
@@ -824,7 +832,9 @@ class RoutineExerciseGuidedFlowSheetState
                     width: 4,
                     color: _stepCompleted
                         ? AppTheme.primarySage.withValues(alpha: 0.6)
-                        : AppTheme.secondaryCoral.withValues(alpha: 0.6), // Warm coral active state
+                        : AppTheme.secondaryCoral.withValues(
+                            alpha: 0.6,
+                          ), // Warm coral active state
                   ),
                   Expanded(
                     child: Padding(
@@ -874,19 +884,26 @@ class RoutineExerciseGuidedFlowSheetState
                                 color: cs.surfaceContainerLowest,
                                 borderRadius: BorderRadius.circular(14),
                                 border: Border.all(
-                                  color: cs.outlineVariant.withValues(alpha: 0.35),
+                                  color: cs.outlineVariant.withValues(
+                                    alpha: 0.35,
+                                  ),
                                 ),
                               ),
                               clipBehavior: Clip.antiAlias,
                               child: IntrinsicHeight(
                                 child: Row(
-                                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.stretch,
                                   children: [
                                     Container(
                                       width: 4,
                                       color: _stepCompleted
-                                          ? AppTheme.primarySage.withValues(alpha: 0.6)
-                                          : AppTheme.secondaryCoral.withValues(alpha: 0.6),
+                                          ? AppTheme.primarySage.withValues(
+                                              alpha: 0.6,
+                                            )
+                                          : AppTheme.secondaryCoral.withValues(
+                                              alpha: 0.6,
+                                            ),
                                     ),
                                     Expanded(
                                       child: Padding(
@@ -907,7 +924,8 @@ class RoutineExerciseGuidedFlowSheetState
                                             ),
                                             const SizedBox(width: 10),
                                             Column(
-                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
                                               children: [
                                                 Text(
                                                   _stepCompleted
@@ -916,17 +934,20 @@ class RoutineExerciseGuidedFlowSheetState
                                                   style: tt.labelMedium?.copyWith(
                                                     color: _stepCompleted
                                                         ? AppTheme.primarySage
-                                                        : AppTheme.secondaryCoral,
-                                                    fontWeight: FontWeight.bold,
+                                                        : AppTheme
+                                                              .secondaryCoral,
+                                                    fontWeight: FontWeight.w600,
                                                   ),
                                                 ),
                                                 if (!_stepCompleted)
                                                   Text(
                                                     'Tap Next when ready',
-                                                    style: tt.bodySmall?.copyWith(
-                                                      fontSize: 10,
-                                                      color: AppTheme.mutedForeground,
-                                                    ),
+                                                    style: tt.bodySmall
+                                                        ?.copyWith(
+                                                          fontSize: 10,
+                                                          color: AppTheme
+                                                              .mutedForeground,
+                                                        ),
                                                   ),
                                               ],
                                             ),
@@ -934,8 +955,10 @@ class RoutineExerciseGuidedFlowSheetState
                                             IconButton(
                                               icon: Icon(
                                                 _timerRunning
-                                                    ? Icons.pause_circle_filled_rounded
-                                                    : Icons.play_circle_fill_rounded,
+                                                    ? Icons
+                                                          .pause_circle_filled_rounded
+                                                    : Icons
+                                                          .play_circle_fill_rounded,
                                               ),
                                               color: _stepCompleted
                                                   ? AppTheme.primarySage
@@ -1041,7 +1064,7 @@ class _DailyCheckInSummaryCard extends StatelessWidget {
               Text(
                 'Daily Check-in',
                 style: tt.labelSmall?.copyWith(
-                  fontWeight: FontWeight.w900,
+                  fontWeight: FontWeight.w700,
                   color: Colors.black54,
                   letterSpacing: 1.1,
                 ),
@@ -1050,7 +1073,7 @@ class _DailyCheckInSummaryCard extends StatelessWidget {
               Text(
                 logged ? 'Done for today!' : 'How is your spine feeling?',
                 style: tt.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w900,
+                  fontWeight: FontWeight.w700,
                   color: Colors.black,
                   fontSize: 18,
                   height: 1.2,
@@ -1065,7 +1088,7 @@ class _DailyCheckInSummaryCard extends StatelessWidget {
                     child: Text(
                       logged ? 'COMPLETE' : 'CHECK IN',
                       style: tt.labelSmall?.copyWith(
-                        fontWeight: FontWeight.w900,
+                        fontWeight: FontWeight.w700,
                         color: Colors.black,
                         letterSpacing: 1.2,
                       ),
@@ -1147,7 +1170,7 @@ class _RoutineEntryCard extends StatelessWidget {
                     Text(
                       '$completed/$total',
                       style: tt.labelLarge?.copyWith(
-                        fontWeight: FontWeight.w800,
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
                   ],
@@ -1161,7 +1184,7 @@ class _RoutineEntryCard extends StatelessWidget {
                     Text(
                       routineName,
                       style: tt.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w800,
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -1180,7 +1203,7 @@ class _RoutineEntryCard extends StatelessWidget {
                       completed == total ? 'Review routine' : 'Open routine',
                       style: tt.labelLarge?.copyWith(
                         color: AppTheme.primarySage,
-                        fontWeight: FontWeight.w800,
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
                   ],
@@ -1287,7 +1310,7 @@ class _RoutineSheetState extends State<_RoutineSheet> {
                     child: Text(
                       'Guided exercises',
                       style: tt.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w800,
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
                   ),
@@ -1311,7 +1334,7 @@ class _RoutineSheetState extends State<_RoutineSheet> {
                       child: Text(
                         'Saved exercise videos',
                         style: tt.titleSmall?.copyWith(
-                          fontWeight: FontWeight.w800,
+                          fontWeight: FontWeight.w700,
                         ),
                       ),
                     ),
@@ -1382,7 +1405,7 @@ class _SavedRoutineVideoCard extends StatelessWidget {
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: theme.textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w800,
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -1448,7 +1471,7 @@ class _StatPairSection extends StatelessWidget {
                 Text(
                   '$streakDays',
                   style: tt.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w600,
                     color: cs.onSurface,
                   ),
                 ),
@@ -1483,7 +1506,7 @@ class _StatPairSection extends StatelessWidget {
                 Text(
                   '$percentage%',
                   style: tt.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w600,
                     color: cs.onSurface,
                   ),
                 ),
@@ -1587,7 +1610,7 @@ class _NextAppointmentCard extends StatelessWidget {
                             monthStr,
                             style: tt.labelSmall?.copyWith(
                               color: AppTheme.primarySage,
-                              fontWeight: FontWeight.bold,
+                              fontWeight: FontWeight.w600,
                               fontSize: 10,
                               letterSpacing: 0.5,
                             ),
@@ -1596,7 +1619,7 @@ class _NextAppointmentCard extends StatelessWidget {
                             dayStr,
                             style: tt.titleMedium?.copyWith(
                               color: cs.surface,
-                              fontWeight: FontWeight.w900,
+                              fontWeight: FontWeight.w700,
                               height: 1.1,
                             ),
                           ),
@@ -1619,7 +1642,7 @@ class _NextAppointmentCard extends StatelessWidget {
                         color: AppTheme.mutedForeground,
                         fontSize: 10,
                         letterSpacing: 1.1,
-                        fontWeight: FontWeight.bold,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                     const SizedBox(height: 2),
@@ -1627,14 +1650,14 @@ class _NextAppointmentCard extends StatelessWidget {
                       Text(
                         '$titleStr • $timeStr',
                         style: tt.labelLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.w600,
                         ),
                       )
                     else
                       Text(
                         titleStr,
                         style: tt.labelLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.w600,
                           color: AppTheme.primarySage,
                         ),
                       ),

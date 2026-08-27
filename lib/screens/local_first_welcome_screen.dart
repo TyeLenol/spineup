@@ -56,7 +56,7 @@ class LocalFirstWelcomeScreen extends StatelessWidget {
                         style: SpineFonts.fraunces(
                           color: AppTheme.foregroundDark,
                           fontSize: 40,
-                          fontWeight: FontWeight.w800,
+                          fontWeight: FontWeight.w700,
                           height: 1.0,
                           letterSpacing: -1.2,
                         ),

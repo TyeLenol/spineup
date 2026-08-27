@@ -225,7 +225,7 @@ class AuthPrimaryButton extends StatelessWidget {
                     label,
                     style: SpineFonts.outfit(
                       fontSize: 17,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w600,
                       color: textColor,
                     ),
                   ),

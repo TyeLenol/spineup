@@ -342,7 +342,7 @@ class ExternalContentCard extends StatelessWidget {
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: theme.textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w800,
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
                     const SizedBox(height: 5),
@@ -607,7 +607,7 @@ class _ExternalContentDetailPageState extends State<ExternalContentDetailPage>
             item.sourceName,
             style: theme.textTheme.titleSmall?.copyWith(
               color: AppTheme.primarySage,
-              fontWeight: FontWeight.w800,
+              fontWeight: FontWeight.w700,
             ),
           ),
           if (item.publishedAt != null) ...[
@@ -650,7 +650,7 @@ class _ExternalContentDetailPageState extends State<ExternalContentDetailPage>
             title: Text(
               'Source details',
               style: theme.textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.w800,
+                fontWeight: FontWeight.w700,
               ),
             ),
             subtitle: const Text('View or copy the original link'),
@@ -780,7 +780,7 @@ class _CuratedBrief extends StatelessWidget {
             Text(
               'SpineUp reading brief',
               style: theme.textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.w800,
+                fontWeight: FontWeight.w700,
               ),
             ),
             if (item.readingMinutes != null) ...[
@@ -799,7 +799,7 @@ class _CuratedBrief extends StatelessWidget {
           Text(
             'Key points',
             style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w800,
+              fontWeight: FontWeight.w700,
             ),
           ),
           const SizedBox(height: 8),
@@ -831,7 +831,7 @@ class _CuratedBrief extends StatelessWidget {
                 Text(
                   section.heading,
                   style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w800,
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
                 const SizedBox(height: 6),
@@ -899,7 +899,7 @@ class _SourceArticleCard extends StatelessWidget {
                 child: Text(
                   'Read this article on the original source',
                   style: theme.textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w800,
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
               ),

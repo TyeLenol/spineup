@@ -257,7 +257,7 @@ class _MyJourneyScreenState extends State<MyJourneyScreen>
                                   ),
                                   style: tt.labelSmall?.copyWith(
                                     color: AppTheme.primarySage,
-                                    fontWeight: FontWeight.bold,
+                                    fontWeight: FontWeight.w600,
                                   ),
                                   items: const [
                                     DropdownMenuItem(
@@ -367,11 +367,7 @@ class _MyJourneyScreenState extends State<MyJourneyScreen>
               child: const SizedBox(
                 width: 36,
                 height: 36,
-                child: Icon(
-                  Icons.add_rounded,
-                  color: Colors.white,
-                  size: 28,
-                ),
+                child: Icon(Icons.add_rounded, color: Colors.white, size: 28),
               ),
             ),
             fabSize: ExpandableFabSize.regular,
@@ -519,7 +515,7 @@ class _CobbChart extends StatelessWidget {
               Text(
                 'Your trend will appear here',
                 textAlign: TextAlign.center,
-                style: tt.titleSmall?.copyWith(fontWeight: FontWeight.w800),
+                style: tt.titleSmall?.copyWith(fontWeight: FontWeight.w700),
               ),
               const SizedBox(height: 5),
               Text(
@@ -605,7 +601,7 @@ class _CobbChart extends StatelessWidget {
                     Text(
                       'Angle trend',
                       style: tt.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w800,
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
                     const SizedBox(height: 3),
@@ -643,7 +639,7 @@ class _CobbChart extends StatelessWidget {
                       style: tt.labelSmall?.copyWith(
                         color: AppTheme.accentLavender,
                         fontSize: 9,
-                        fontWeight: FontWeight.w800,
+                        fontWeight: FontWeight.w700,
                         letterSpacing: 0.8,
                       ),
                     ),
@@ -652,7 +648,7 @@ class _CobbChart extends StatelessWidget {
                       '${sortedHistory.last.degrees.toStringAsFixed(1)}°',
                       style: tt.titleMedium?.copyWith(
                         color: AppTheme.accentLavender,
-                        fontWeight: FontWeight.w800,
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
                   ],
@@ -989,13 +985,13 @@ class _EventTile extends StatelessWidget {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Container(
-              width: 4,
-              color: accentColor.withValues(alpha: 0.55),
-            ),
+            Container(width: 4, color: accentColor.withValues(alpha: 0.55)),
             Expanded(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 10,
+                ),
                 child: Row(
                   children: [
                     Icon(icon, color: accentColor, size: 18),
@@ -1006,7 +1002,9 @@ class _EventTile extends StatelessWidget {
                         children: [
                           Text(
                             label,
-                            style: tt.bodySmall?.copyWith(fontWeight: FontWeight.w600),
+                            style: tt.bodySmall?.copyWith(
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                           Text(
                             _formatDate(event.timestamp),
@@ -1020,7 +1018,10 @@ class _EventTile extends StatelessWidget {
                     if (showXp) ...[
                       const SizedBox(width: 8),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 7,
+                          vertical: 3,
+                        ),
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(20),
                           border: Border.all(color: cs.outlineVariant),

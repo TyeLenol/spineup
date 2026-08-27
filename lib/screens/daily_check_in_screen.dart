@@ -130,7 +130,7 @@ class _DailyCheckInScreenState extends State<DailyCheckInScreen> {
       appBar: AppBar(
         title: Text(
           'Daily Check-In',
-          style: tt.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+          style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w600),
         ),
         backgroundColor: cs.surface,
         surfaceTintColor: Colors.transparent,
@@ -148,7 +148,7 @@ class _DailyCheckInScreenState extends State<DailyCheckInScreen> {
             // ── Mood section (5-point scale) ─────────────────────────
             Text(
               'How are you feeling today?',
-              style: tt.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+              style: tt.titleSmall?.copyWith(fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 8),
             Wrap(
@@ -177,7 +177,7 @@ class _DailyCheckInScreenState extends State<DailyCheckInScreen> {
                     labelStyle: TextStyle(
                       fontSize: 13,
                       fontWeight: selected
-                          ? FontWeight.bold
+                          ? FontWeight.w600
                           : FontWeight.normal,
                       color: selected ? Colors.white : cs.onSurface,
                     ),
@@ -198,14 +198,14 @@ class _DailyCheckInScreenState extends State<DailyCheckInScreen> {
               children: [
                 Text(
                   'Pain level (optional)',
-                  style: tt.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+                  style: tt.titleSmall?.copyWith(fontWeight: FontWeight.w600),
                 ),
                 const Spacer(),
                 Text(
                   _painLabel(_painLevel),
                   style: tt.labelSmall?.copyWith(
                     color: _painColor(_painLevel),
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ],
@@ -248,7 +248,7 @@ class _DailyCheckInScreenState extends State<DailyCheckInScreen> {
             // ── Location chips ────────────────────────────────────
             Text(
               'Pain Location (optional)',
-              style: tt.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+              style: tt.titleSmall?.copyWith(fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 6),
             Wrap(
@@ -291,7 +291,7 @@ class _DailyCheckInScreenState extends State<DailyCheckInScreen> {
             // ── Tightness chips ────────────────────────────────────
             Text(
               'Tightness (optional)',
-              style: tt.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+              style: tt.titleSmall?.copyWith(fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 6),
             Wrap(
@@ -319,7 +319,7 @@ class _DailyCheckInScreenState extends State<DailyCheckInScreen> {
             // ── Fatigue chips ──────────────────────────────────────
             Text(
               'Fatigue (optional)',
-              style: tt.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+              style: tt.titleSmall?.copyWith(fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 6),
             Wrap(
@@ -350,7 +350,7 @@ class _DailyCheckInScreenState extends State<DailyCheckInScreen> {
                 children: [
                   Text(
                     'Brace Wear',
-                    style: tt.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+                    style: tt.titleSmall?.copyWith(fontWeight: FontWeight.w600),
                   ),
                   const Spacer(),
                   Text(
@@ -361,7 +361,7 @@ class _DailyCheckInScreenState extends State<DailyCheckInScreen> {
                       color: _braceHours == null
                           ? AppTheme.mutedForeground
                           : AppTheme.primarySage,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                 ],
@@ -405,7 +405,7 @@ class _DailyCheckInScreenState extends State<DailyCheckInScreen> {
             // ── Notes ─────────────────────────────────────────────
             Text(
               'Daily Notes (optional)',
-              style: tt.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+              style: tt.titleSmall?.copyWith(fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 8),
             TextField(

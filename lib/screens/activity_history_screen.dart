@@ -53,9 +53,7 @@ class _ActivityHistoryScreenState extends State<ActivityHistoryScreen> {
     final cs = Theme.of(context).colorScheme;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Activity history'),
-      ),
+      appBar: AppBar(title: const Text('Activity history')),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : RefreshIndicator(
@@ -66,7 +64,7 @@ class _ActivityHistoryScreenState extends State<ActivityHistoryScreen> {
                   Text(
                     'Everything recorded for this profile',
                     style: tt.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w800,
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -235,13 +233,13 @@ class _HistoryEventTile extends StatelessWidget {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Container(
-              width: 4,
-              color: accentColor.withValues(alpha: 0.55),
-            ),
+            Container(width: 4, color: accentColor.withValues(alpha: 0.55)),
             Expanded(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 12,
+                ),
                 child: Row(
                   children: [
                     Icon(icon, color: accentColor, size: 19),
@@ -269,12 +267,12 @@ class _HistoryEventTile extends StatelessWidget {
                     const SizedBox(width: 8),
                     Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 3),
+                        horizontal: 8,
+                        vertical: 3,
+                      ),
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                          color: cs.outlineVariant,
-                        ),
+                        border: Border.all(color: cs.outlineVariant),
                       ),
                       child: Text(
                         '+${event.xpValue} XP',

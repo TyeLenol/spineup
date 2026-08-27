@@ -93,7 +93,7 @@ class _Chunky3DButtonState extends State<Chunky3DButton>
                     widget.label,
                     style: SpineFonts.outfit(
                       fontSize: 15,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w600,
                       color: Colors.white,
                       letterSpacing: 0.2,
                     ),

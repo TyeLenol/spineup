@@ -57,16 +57,20 @@ class _Ob2IllustrationState extends State<Ob2Illustration>
       curve: const Interval(0.60, 1.0, curve: Curves.easeOutBack),
     );
 
-    _veraFloat = Tween<double>(begin: -5, end: 5).animate(
-      CurvedAnimation(parent: _floatCtrl, curve: Curves.easeInOut),
-    );
+    _veraFloat = Tween<double>(
+      begin: -5,
+      end: 5,
+    ).animate(CurvedAnimation(parent: _floatCtrl, curve: Curves.easeInOut));
     _pillFloat = Tween<double>(begin: 3, end: -4).animate(
-      CurvedAnimation(parent: _floatCtrl,
-          curve: const Interval(0.15, 1.0, curve: Curves.easeInOut)),
+      CurvedAnimation(
+        parent: _floatCtrl,
+        curve: const Interval(0.15, 1.0, curve: Curves.easeInOut),
+      ),
     );
-    _crownPulse = Tween<double>(begin: 1.0, end: 1.20).animate(
-      CurvedAnimation(parent: _pulseCtrl, curve: Curves.easeInOut),
-    );
+    _crownPulse = Tween<double>(
+      begin: 1.0,
+      end: 1.20,
+    ).animate(CurvedAnimation(parent: _pulseCtrl, curve: Curves.easeInOut));
 
     _entryCtrl.forward();
   }
@@ -271,7 +275,7 @@ class _DayBlock extends StatelessWidget {
         label,
         style: TextStyle(
           fontSize: 8,
-          fontWeight: FontWeight.bold,
+          fontWeight: FontWeight.w600,
           color: lit ? Colors.white : AppTheme.mutedForeground,
         ),
       ),
@@ -302,7 +306,7 @@ class _SagePill extends StatelessWidget {
         label,
         style: const TextStyle(
           color: Colors.white,
-          fontWeight: FontWeight.bold,
+          fontWeight: FontWeight.w600,
           fontSize: 13,
           letterSpacing: 0.2,
         ),
