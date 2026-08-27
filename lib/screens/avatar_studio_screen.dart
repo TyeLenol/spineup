@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:math';
 
@@ -72,6 +73,12 @@ class _AvatarStudioScreenState extends State<AvatarStudioScreen> {
     _seed = widget.profile.avatarSeed == 'spineup-avatar'
         ? 'spineup-${widget.userId}'
         : widget.profile.avatarSeed;
+  }
+
+  Future<void> _handleBack() async {
+    if (await _confirmExit() && mounted) {
+      Navigator.of(context).pop();
+    }
   }
 
   Future<bool> _confirmExit() async {
@@ -197,10 +204,12 @@ class _AvatarStudioScreenState extends State<AvatarStudioScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final cs = theme.colorScheme;
 
-    return WillPopScope(
-      onWillPop: _confirmExit,
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) unawaited(_handleBack());
+      },
       child: Scaffold(
         backgroundColor: AppTheme.profileCanvas,
         appBar: AppBar(
@@ -208,11 +217,7 @@ class _AvatarStudioScreenState extends State<AvatarStudioScreen> {
           elevation: 0,
           leading: IconButton(
             tooltip: 'Back',
-            onPressed: () async {
-              if (await _confirmExit() && mounted) {
-                Navigator.of(context).pop();
-              }
-            },
+            onPressed: _handleBack,
             icon: const Icon(Icons.arrow_back_rounded),
           ),
           title: const Text('Avatar Studio'),
@@ -349,7 +354,7 @@ class _PreviewCard extends StatelessWidget {
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
-                  color: AppTheme.accentCoral.withValues(alpha: 0.12),
+                  color: AppTheme.secondaryCoral.withValues(alpha: 0.12),
                   blurRadius: 24,
                   offset: const Offset(0, 10),
                 ),
@@ -482,12 +487,12 @@ class _FeatureRow extends StatelessWidget {
                   padding: const EdgeInsets.all(5),
                   decoration: BoxDecoration(
                     color: selected
-                        ? AppTheme.accentCoral.withValues(alpha: 0.12)
+                        ? AppTheme.secondaryCoral.withValues(alpha: 0.12)
                         : Theme.of(context).colorScheme.surface,
                     borderRadius: BorderRadius.circular(14),
                     border: Border.all(
                       color: selected
-                          ? AppTheme.accentCoral
+                          ? AppTheme.secondaryCoral
                           : AppTheme.borderCream,
                       width: selected ? 2 : 1,
                     ),

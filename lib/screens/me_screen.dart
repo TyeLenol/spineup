@@ -5,7 +5,6 @@ import 'package:intl/intl.dart';
 import '../models/event.dart';
 import '../models/milestone.dart';
 import '../models/profile_data.dart';
-import '../models/user_profile.dart';
 import '../services/gamification_service.dart';
 import '../services/profile_store.dart';
 import '../services/session_service.dart';

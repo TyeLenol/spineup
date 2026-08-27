@@ -1,4 +1,4 @@
-import 'package:dicebear_core/dicebear_core.dart';
+import 'package:dicebear_core/dicebear_core.dart' show Avatar, Style;
 import 'package:dicebear_styles/croodles.dart';
 import 'package:dicebear_styles/lorelei_neutral.dart';
 import 'package:dicebear_styles/open_peeps.dart';
