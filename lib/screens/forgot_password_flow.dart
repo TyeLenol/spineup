@@ -469,7 +469,7 @@ class _SetNewPasswordScreenState extends State<SetNewPasswordScreen> {
                             style: TextStyle(
                               color: Colors.white,
                               fontSize: 10,
-                              fontWeight: FontWeight.bold,
+                              fontWeight: FontWeight.w600,
                               height: 1.0,
                             ),
                           ),

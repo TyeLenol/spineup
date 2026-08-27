@@ -51,20 +51,20 @@ class AppTheme {
     return base.copyWith(
       displayLarge: headingFont.displayLarge?.copyWith(
         color: foregroundColor,
-        fontWeight: FontWeight.bold,
+        fontWeight: FontWeight.w600,
         letterSpacing: -0.5,
       ),
       displayMedium: headingFont.displayMedium?.copyWith(
         color: foregroundColor,
-        fontWeight: FontWeight.bold,
+        fontWeight: FontWeight.w600,
       ),
       displaySmall: headingFont.displaySmall?.copyWith(
         color: foregroundColor,
-        fontWeight: FontWeight.bold,
+        fontWeight: FontWeight.w600,
       ),
       headlineLarge: headingFont.headlineLarge?.copyWith(
         color: foregroundColor,
-        fontWeight: FontWeight.bold,
+        fontWeight: FontWeight.w600,
       ),
       headlineMedium: headingFont.headlineMedium?.copyWith(
         color: foregroundColor,
@@ -102,7 +102,7 @@ class AppTheme {
       ),
       labelLarge: bodyFont.labelLarge?.copyWith(
         color: foregroundColor,
-        fontWeight: FontWeight.bold,
+        fontWeight: FontWeight.w600,
         fontSize: 14,
       ),
       labelMedium: bodyFont.labelMedium?.copyWith(
@@ -155,7 +155,7 @@ class AppTheme {
           if (states.contains(WidgetState.selected)) {
             return const TextStyle(
               fontSize: 12,
-              fontWeight: FontWeight.bold,
+              fontWeight: FontWeight.w600,
               color: secondaryCoral,
             );
           }
@@ -214,7 +214,7 @@ class AppTheme {
           if (states.contains(WidgetState.selected)) {
             return const TextStyle(
               fontSize: 12,
-              fontWeight: FontWeight.bold,
+              fontWeight: FontWeight.w600,
               color: darkSecondary,
             );
           }

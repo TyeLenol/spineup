@@ -117,7 +117,7 @@ class _CountUpWidgetState extends State<CountUpWidget> with TickerProviderStateM
               color: widget.color,
               fontFamily: 'serif',
               fontSize: 48.0,
-              fontWeight: FontWeight.w900,
+              fontWeight: FontWeight.w700,
               fontFeatures: const [FontFeature.tabularFigures()],
             ),
           ),

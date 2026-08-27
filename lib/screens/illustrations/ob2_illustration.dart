@@ -271,7 +271,7 @@ class _DayBlock extends StatelessWidget {
         label,
         style: TextStyle(
           fontSize: 8,
-          fontWeight: FontWeight.bold,
+          fontWeight: FontWeight.w600,
           color: lit ? Colors.white : AppTheme.mutedForeground,
         ),
       ),
@@ -302,7 +302,7 @@ class _SagePill extends StatelessWidget {
         label,
         style: const TextStyle(
           color: Colors.white,
-          fontWeight: FontWeight.bold,
+          fontWeight: FontWeight.w600,
           fontSize: 13,
           letterSpacing: 0.2,
         ),

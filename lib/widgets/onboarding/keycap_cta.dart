@@ -92,7 +92,7 @@ class _KeycapCtaState extends State<KeycapCta> {
                         style: TextStyle(
                           color: widget.text,
                           fontSize: widget.compact ? 15.0 : 16.0,
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
                       if (widget.icon != null) ...[

@@ -228,7 +228,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   'Appearance',
                   style: Theme.of(
                     sheetContext,
-                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
                 ),
                 const SizedBox(height: 4),
                 Text(
@@ -523,7 +523,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             'Make SpineUp feel right for you.',
             style: Theme.of(
               context,
-            ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800),
+            ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: 6),
           Text(
@@ -680,7 +680,7 @@ class _SettingsGroupLabel extends StatelessWidget {
     return Text(
       label,
       style: Theme.of(context).textTheme.titleSmall?.copyWith(
-        fontWeight: FontWeight.w800,
+        fontWeight: FontWeight.w700,
         color: AppTheme.mutedForeground,
         letterSpacing: 0.2,
       ),

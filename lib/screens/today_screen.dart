@@ -224,14 +224,14 @@ class _TodayScreenState extends State<TodayScreen>
                       style: tt.labelSmall?.copyWith(
                         color: AppTheme.mutedForeground,
                         letterSpacing: 1.2,
-                        fontWeight: FontWeight.bold,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                     const SizedBox(height: 2),
                     Text(
                       '$greeting, $name',
                       style: tt.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                   ],
@@ -405,7 +405,7 @@ class _LevelXpCard extends StatelessWidget {
               'Level ${snap.currentLevel}',
               style: tt.labelLarge?.copyWith(
                 color: AppTheme.primarySage,
-                fontWeight: FontWeight.w800,
+                fontWeight: FontWeight.w700,
               ),
             ),
           ),
@@ -416,7 +416,7 @@ class _LevelXpCard extends StatelessWidget {
               children: [
                 Text(
                   snap.currentTitle,
-                  style: tt.titleSmall?.copyWith(fontWeight: FontWeight.w800),
+                  style: tt.titleSmall?.copyWith(fontWeight: FontWeight.w700),
                 ),
                 const SizedBox(height: 6),
                 ClipRRect(
@@ -436,7 +436,7 @@ class _LevelXpCard extends StatelessWidget {
           const SizedBox(width: 12),
           Text(
             '${snap.totalXp} XP',
-            style: tt.labelLarge?.copyWith(fontWeight: FontWeight.w800),
+            style: tt.labelLarge?.copyWith(fontWeight: FontWeight.w700),
           ),
         ],
       ),
@@ -759,7 +759,7 @@ class RoutineExerciseGuidedFlowSheetState
               Expanded(
                 child: Text(
                   widget.exercise.name,
-                  style: tt.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+                  style: tt.titleSmall?.copyWith(fontWeight: FontWeight.w600),
                 ),
               ),
               TextButton.icon(
@@ -781,7 +781,7 @@ class RoutineExerciseGuidedFlowSheetState
                 'Step ${_currentStepIndex + 1} of ${steps.length}',
                 style: tt.labelSmall?.copyWith(
                   color: AppTheme.primarySage,
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
               const Spacer(),
@@ -917,7 +917,7 @@ class RoutineExerciseGuidedFlowSheetState
                                                     color: _stepCompleted
                                                         ? AppTheme.primarySage
                                                         : AppTheme.secondaryCoral,
-                                                    fontWeight: FontWeight.bold,
+                                                    fontWeight: FontWeight.w600,
                                                   ),
                                                 ),
                                                 if (!_stepCompleted)
@@ -1041,7 +1041,7 @@ class _DailyCheckInSummaryCard extends StatelessWidget {
               Text(
                 'Daily Check-in',
                 style: tt.labelSmall?.copyWith(
-                  fontWeight: FontWeight.w900,
+                  fontWeight: FontWeight.w700,
                   color: Colors.black54,
                   letterSpacing: 1.1,
                 ),
@@ -1050,7 +1050,7 @@ class _DailyCheckInSummaryCard extends StatelessWidget {
               Text(
                 logged ? 'Done for today!' : 'How is your spine feeling?',
                 style: tt.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w900,
+                  fontWeight: FontWeight.w700,
                   color: Colors.black,
                   fontSize: 18,
                   height: 1.2,
@@ -1065,7 +1065,7 @@ class _DailyCheckInSummaryCard extends StatelessWidget {
                     child: Text(
                       logged ? 'COMPLETE' : 'CHECK IN',
                       style: tt.labelSmall?.copyWith(
-                        fontWeight: FontWeight.w900,
+                        fontWeight: FontWeight.w700,
                         color: Colors.black,
                         letterSpacing: 1.2,
                       ),
@@ -1147,7 +1147,7 @@ class _RoutineEntryCard extends StatelessWidget {
                     Text(
                       '$completed/$total',
                       style: tt.labelLarge?.copyWith(
-                        fontWeight: FontWeight.w800,
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
                   ],
@@ -1161,7 +1161,7 @@ class _RoutineEntryCard extends StatelessWidget {
                     Text(
                       routineName,
                       style: tt.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w800,
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -1180,7 +1180,7 @@ class _RoutineEntryCard extends StatelessWidget {
                       completed == total ? 'Review routine' : 'Open routine',
                       style: tt.labelLarge?.copyWith(
                         color: AppTheme.primarySage,
-                        fontWeight: FontWeight.w800,
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
                   ],
@@ -1287,7 +1287,7 @@ class _RoutineSheetState extends State<_RoutineSheet> {
                     child: Text(
                       'Guided exercises',
                       style: tt.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w800,
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
                   ),
@@ -1311,7 +1311,7 @@ class _RoutineSheetState extends State<_RoutineSheet> {
                       child: Text(
                         'Saved exercise videos',
                         style: tt.titleSmall?.copyWith(
-                          fontWeight: FontWeight.w800,
+                          fontWeight: FontWeight.w700,
                         ),
                       ),
                     ),
@@ -1382,7 +1382,7 @@ class _SavedRoutineVideoCard extends StatelessWidget {
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: theme.textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w800,
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -1448,7 +1448,7 @@ class _StatPairSection extends StatelessWidget {
                 Text(
                   '$streakDays',
                   style: tt.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w600,
                     color: cs.onSurface,
                   ),
                 ),
@@ -1483,7 +1483,7 @@ class _StatPairSection extends StatelessWidget {
                 Text(
                   '$percentage%',
                   style: tt.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w600,
                     color: cs.onSurface,
                   ),
                 ),
@@ -1587,7 +1587,7 @@ class _NextAppointmentCard extends StatelessWidget {
                             monthStr,
                             style: tt.labelSmall?.copyWith(
                               color: AppTheme.primarySage,
-                              fontWeight: FontWeight.bold,
+                              fontWeight: FontWeight.w600,
                               fontSize: 10,
                               letterSpacing: 0.5,
                             ),
@@ -1596,7 +1596,7 @@ class _NextAppointmentCard extends StatelessWidget {
                             dayStr,
                             style: tt.titleMedium?.copyWith(
                               color: cs.surface,
-                              fontWeight: FontWeight.w900,
+                              fontWeight: FontWeight.w700,
                               height: 1.1,
                             ),
                           ),
@@ -1619,7 +1619,7 @@ class _NextAppointmentCard extends StatelessWidget {
                         color: AppTheme.mutedForeground,
                         fontSize: 10,
                         letterSpacing: 1.1,
-                        fontWeight: FontWeight.bold,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                     const SizedBox(height: 2),
@@ -1627,14 +1627,14 @@ class _NextAppointmentCard extends StatelessWidget {
                       Text(
                         '$titleStr • $timeStr',
                         style: tt.labelLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.w600,
                         ),
                       )
                     else
                       Text(
                         titleStr,
                         style: tt.labelLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.w600,
                           color: AppTheme.primarySage,
                         ),
                       ),

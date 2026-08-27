@@ -66,7 +66,7 @@ class _ActivityHistoryScreenState extends State<ActivityHistoryScreen> {
                   Text(
                     'Everything recorded for this profile',
                     style: tt.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w800,
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
                   const SizedBox(height: 4),

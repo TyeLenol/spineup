@@ -189,7 +189,7 @@ class _SparkWidgetState extends State<_SparkWidget>
               '+30 XP 🎉',
               style: TextStyle(
                 color: Colors.white,
-                fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.w600,
                 fontSize: 12,
               ),
             ),

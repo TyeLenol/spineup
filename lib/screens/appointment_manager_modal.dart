@@ -294,7 +294,7 @@ class _AppointmentManagerModalState extends State<AppointmentManagerModal>
                         child: Text(
                           apt.title,
                           style: tt.titleSmall?.copyWith(
-                            fontWeight: FontWeight.bold,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
                       ),
@@ -366,7 +366,7 @@ class _AppointmentManagerModalState extends State<AppointmentManagerModal>
       ),
       child: Text(
         label,
-        style: TextStyle(color: fg, fontSize: 11, fontWeight: FontWeight.bold),
+        style: TextStyle(color: fg, fontSize: 11, fontWeight: FontWeight.w600),
       ),
     );
   }

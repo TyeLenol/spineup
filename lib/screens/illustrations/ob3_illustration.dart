@@ -305,7 +305,7 @@ class _CommunityCard extends StatelessWidget {
             children: [
               Icon(Icons.favorite_rounded, color: accent, size: 11),
               const SizedBox(width: 3),
-              Text('24', style: TextStyle(fontSize: 9, color: accent, fontWeight: FontWeight.bold)),
+              Text('24', style: TextStyle(fontSize: 9, color: accent, fontWeight: FontWeight.w600)),
             ],
           ),
         ],
@@ -370,7 +370,7 @@ class _CoralPill extends StatelessWidget {
         label,
         style: const TextStyle(
           color: Colors.white,
-          fontWeight: FontWeight.bold,
+          fontWeight: FontWeight.w600,
           fontSize: 11,
           letterSpacing: 0.2,
         ),

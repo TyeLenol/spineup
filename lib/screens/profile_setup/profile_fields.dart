@@ -371,7 +371,7 @@ class ProfileSlider extends StatelessWidget {
             value.round().toString(),
             style: SpineFonts.outfit(
               fontSize: 16,
-              fontWeight: FontWeight.w800,
+              fontWeight: FontWeight.w700,
               color: Colors.white,
             ),
           ),

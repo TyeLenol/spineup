@@ -145,7 +145,7 @@ class _Ob1IllustrationState extends State<Ob1Illustration>
                               'Cat-Cow Stretch',
                               style: TextStyle(
                                 fontSize: 11,
-                                fontWeight: FontWeight.bold,
+                                fontWeight: FontWeight.w600,
                                 color: AppTheme.foregroundDark,
                               ),
                             ),
@@ -153,7 +153,7 @@ class _Ob1IllustrationState extends State<Ob1Illustration>
                               '+30 XP',
                               style: TextStyle(
                                 fontSize: 11,
-                                fontWeight: FontWeight.bold,
+                                fontWeight: FontWeight.w600,
                                 color: AppTheme.secondaryCoral,
                               ),
                             ),
@@ -198,7 +198,7 @@ class _Ob1IllustrationState extends State<Ob1Illustration>
                         : '🎉 Flexed $_flexCount time${_flexCount > 1 ? 's' : ''}! +${_flexCount * 30} XP',
                     style: const TextStyle(
                       color: Colors.white,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w600,
                       fontSize: 12,
                     ),
                   ),

@@ -262,7 +262,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                 style: SpineFonts.fraunces(
                                   color: screen.tint,
                                   fontSize: 39,
-                                  fontWeight: FontWeight.w900,
+                                  fontWeight: FontWeight.w700,
                                   height: 0.98,
                                   letterSpacing: -1.2,
                                 ),

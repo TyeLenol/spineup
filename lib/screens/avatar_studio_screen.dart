@@ -235,7 +235,7 @@ class _AvatarStudioScreenState extends State<AvatarStudioScreen> {
               Text(
                 'Make this care space yours',
                 style: theme.textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.w800,
+                  fontWeight: FontWeight.w700,
                   color: AppTheme.foregroundDark,
                 ),
               ),
@@ -366,7 +366,7 @@ class _PreviewCard extends StatelessWidget {
           Text(
             mode == 'photo' ? 'Your local photo' : definition.name,
             style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w800,
+              fontWeight: FontWeight.w700,
             ),
           ),
         ],
@@ -423,7 +423,7 @@ class _StyleCard extends StatelessWidget {
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                fontWeight: FontWeight.w800,
+                fontWeight: FontWeight.w700,
                 color: selected ? AppTheme.accentLavender : null,
               ),
             ),
@@ -463,7 +463,7 @@ class _FeatureRow extends StatelessWidget {
           feature.label,
           style: Theme.of(
             context,
-          ).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w800),
+          ).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w700),
         ),
         const SizedBox(height: 8),
         SizedBox(
@@ -557,7 +557,7 @@ class _PhotoSection extends StatelessWidget {
             'Prefer a photo?',
             style: Theme.of(
               context,
-            ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800),
+            ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: 4),
           const Text('Photos stay on this device too.'),
@@ -599,7 +599,7 @@ class _SectionLabel extends StatelessWidget {
     return Text(
       label,
       style: Theme.of(context).textTheme.titleMedium?.copyWith(
-        fontWeight: FontWeight.w800,
+        fontWeight: FontWeight.w700,
         color: AppTheme.foregroundDark,
       ),
     );
