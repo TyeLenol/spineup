@@ -274,7 +274,7 @@ SpineUp’s visual system is intentionally warm, expressive, and calm. The prima
 
 The application includes reduced-motion checks for top-level transitions and uses semantic labels/tooltips for important controls. Page-aware tutorials use a dimmed overlay and a glow/focus treatment on the actual target widget rather than relying on inaccurate pointer arrows. Each of Today, My Journey, Learn, Me, and Settings has its own tutorial script and completion state.
 
-The Web and Android surfaces share the SpineUp name, metadata, splash identity, favicon, PWA icons, adaptive launcher icon, and native launch background. The wordmark is omitted from tiny launcher/favicon assets because it would not remain legible at those dimensions.
+The Web and Android surfaces share the SpineUp name, metadata, splash identity, favicon, PWA icons, adaptive launcher icon, and native launch background. The favicon and legacy launcher PNGs are generated from the visible square tile in the supplied SpineUp mark asset; transparent canvas below that tile is not carried into the final icon. The Android adaptive foreground uses the same mark at a smaller centered scale because Android launchers apply a mask and safe zone. The wordmark is omitted from tiny launcher/favicon assets because it would not remain legible at those dimensions.
 
 Fraunces and Outfit are bundled in `assets/fonts/` at the static weights used by the app. `lib/theme/spine_fonts.dart` applies those registered Flutter families directly, so release builds do not silently fall back to a platform font when the device is offline or the release manifest does not permit network access. The `google_fonts` runtime dependency is not needed for the app’s typography. The corresponding SIL Open Font License texts are preserved beside the font files and registered with Flutter’s license registry.
 
@@ -296,7 +296,7 @@ Fraunces and Outfit are bundled in `assets/fonts/` at the static weights used by
 | Reminders | `lib/services/reminder_service.dart`, `android/app/src/main/AndroidManifest.xml` |
 | Theme and motion | `lib/theme/app_theme.dart`, `lib/theme/app_transitions.dart`, `lib/widgets/m3_squiggly_line.dart` |
 | Bundled typography | `lib/theme/spine_fonts.dart`, `assets/fonts/` |
-| Branding | `assets/branding/spineup_mark.svg`, `lib/screens/splash_screen.dart`, `android/app/src/main/res/`, `web/` |
+| Branding | `assets/branding/spineup_mark.svg`, `assets/branding/spineup_mark.png`, `lib/screens/splash_screen.dart`, `android/app/src/main/res/`, `web/` |
 
 ## 12. Development and validation
 
