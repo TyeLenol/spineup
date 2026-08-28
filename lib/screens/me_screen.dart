@@ -617,7 +617,7 @@ class _AchievementsSection extends StatelessWidget {
                       ],
                     ),
                   ),
-                  const Icon(
+                  Icon(
                     Icons.verified_rounded,
                     color: Theme.of(context).colorScheme.primary,
                     size: 20,
@@ -695,9 +695,7 @@ class _CareProfileSection extends StatelessWidget {
       color: colorScheme.surfaceContainerHigh,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(22),
-        side: const BorderSide(
-          color: Theme.of(context).colorScheme.outlineVariant,
-        ),
+        side: BorderSide(color: Theme.of(context).colorScheme.outlineVariant),
       ),
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16, 15, 16, 14),

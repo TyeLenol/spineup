@@ -621,7 +621,7 @@ class _ScheduleFormSheetState extends State<_ScheduleFormSheet> {
               ),
               child: Row(
                 children: [
-                  const Icon(
+                  Icon(
                     Icons.calendar_today_rounded,
                     size: 20,
                     color: Theme.of(context).colorScheme.primary,
@@ -925,7 +925,7 @@ class _AppointmentDetailSheetState extends State<_AppointmentDetailSheet> {
               ),
               child: Row(
                 children: [
-                  const Icon(
+                  Icon(
                     Icons.check_circle_rounded,
                     color: Theme.of(context).colorScheme.primary,
                   ),

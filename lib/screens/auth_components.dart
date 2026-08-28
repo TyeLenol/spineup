@@ -13,7 +13,7 @@ class AuthBackButton extends StatelessWidget {
     return InkWell(
       onTap: onBack ?? () => Navigator.of(context).maybePop(),
       borderRadius: BorderRadius.circular(24),
-      child: const SizedBox(
+      child: SizedBox(
         width: 48,
         height: 48,
         child: Icon(
