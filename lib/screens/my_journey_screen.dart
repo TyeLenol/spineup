@@ -300,7 +300,9 @@ class _MyJourneyScreenState extends State<MyJourneyScreen>
                         Text(
                           'Recorded from your entries; not a diagnosis or prediction.',
                           style: tt.bodySmall?.copyWith(
-                            color: AppTheme.mutedForeground,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurfaceVariant,
                             height: 1.35,
                           ),
                         ),
@@ -339,7 +341,9 @@ class _MyJourneyScreenState extends State<MyJourneyScreen>
                               'Your recorded check-ins, routines, and measurements will appear here.',
                               textAlign: TextAlign.center,
                               style: tt.bodySmall?.copyWith(
-                                color: AppTheme.mutedForeground,
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurfaceVariant,
                               ),
                             ),
                           )
@@ -438,7 +442,9 @@ class _PrivacyBanner extends StatelessWidget {
             child: Text(
               'Privacy Notice: Your health data, symptom logs, and Cobb angle '
               'readings are stored locally on your device only.',
-              style: tt.bodySmall?.copyWith(color: AppTheme.mutedForeground),
+              style: tt.bodySmall?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
             ),
           ),
         ],
@@ -522,7 +528,7 @@ class _CobbChart extends StatelessWidget {
                 'Log a measurement from your clinic record to start a visual record of what you entered.',
                 textAlign: TextAlign.center,
                 style: tt.bodySmall?.copyWith(
-                  color: AppTheme.mutedForeground,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                   height: 1.35,
                 ),
               ),
@@ -608,14 +614,14 @@ class _CobbChart extends StatelessWidget {
                     Text(
                       '$rangeLabel · ${sortedHistory.length} ${sortedHistory.length == 1 ? 'measurement' : 'measurements'}',
                       style: tt.bodySmall?.copyWith(
-                        color: AppTheme.mutedForeground,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
                     ),
                     const SizedBox(height: 2),
                     Text(
                       'Tap a point for the exact date',
                       style: tt.labelSmall?.copyWith(
-                        color: AppTheme.mutedForeground,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
                         fontSize: 10,
                       ),
                     ),

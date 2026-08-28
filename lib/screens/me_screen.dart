@@ -341,19 +341,21 @@ class _IdentitySummary extends StatelessWidget {
                 'Level ${snap.currentLevel} · $title',
                 style: tt.titleMedium?.copyWith(
                   fontWeight: FontWeight.w700,
-                  color: AppTheme.primarySage,
+                  color: Theme.of(context).colorScheme.primary,
                 ),
               ),
               const SizedBox(height: 5),
               Text(
                 '${snap.totalXp} XP total',
-                style: tt.bodyMedium?.copyWith(color: AppTheme.mutedForeground),
+                style: tt.bodyMedium?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
               ),
               const SizedBox(height: 8),
               Text(
                 'Progress stays in the background while your profile leads.',
                 style: tt.bodySmall?.copyWith(
-                  color: AppTheme.mutedForeground,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                   height: 1.3,
                 ),
               ),
@@ -428,7 +430,9 @@ class _BadgesSection extends StatelessWidget {
         _SectionHeader(title: 'Badges'),
         Text(
           'Collectible milestone badges',
-          style: tt.bodySmall?.copyWith(color: AppTheme.mutedForeground),
+          style: tt.bodySmall?.copyWith(
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
         ),
         const SizedBox(height: 12),
         SizedBox(
@@ -443,13 +447,15 @@ class _BadgesSection extends StatelessWidget {
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
                   color: isUnlocked
-                      ? AppTheme.primarySage.withValues(alpha: 0.15)
+                      ? Theme.of(
+                          context,
+                        ).colorScheme.primary.withValues(alpha: 0.15)
                       : cs.surfaceContainer.withValues(alpha: 0.5),
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(
                     color: isUnlocked
-                        ? AppTheme.primarySage
-                        : AppTheme.borderCream,
+                        ? Theme.of(context).colorScheme.primary
+                        : Theme.of(context).colorScheme.outlineVariant,
                     width: isUnlocked ? 1.5 : 1.0,
                   ),
                 ),
@@ -469,8 +475,8 @@ class _BadgesSection extends StatelessWidget {
                             ? FontWeight.w600
                             : FontWeight.normal,
                         color: isUnlocked
-                            ? AppTheme.primarySage
-                            : AppTheme.mutedForeground,
+                            ? Theme.of(context).colorScheme.primary
+                            : Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
                     ),
                   ],
@@ -545,7 +551,9 @@ class _AchievementsSection extends StatelessWidget {
         _SectionHeader(title: 'Achievements'),
         Text(
           'Chronological milestone history',
-          style: tt.bodySmall?.copyWith(color: AppTheme.mutedForeground),
+          style: tt.bodySmall?.copyWith(
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
         ),
         const SizedBox(height: 12),
         if (unlocked.isEmpty)
@@ -555,11 +563,15 @@ class _AchievementsSection extends StatelessWidget {
             decoration: BoxDecoration(
               color: cs.surfaceContainer,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: AppTheme.borderCream),
+              border: Border.all(
+                color: Theme.of(context).colorScheme.outlineVariant,
+              ),
             ),
             child: Text(
               'No achievements unlocked yet. Keep logging to earn milestones!',
-              style: tt.bodySmall?.copyWith(color: AppTheme.mutedForeground),
+              style: tt.bodySmall?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
               textAlign: TextAlign.center,
             ),
           )
@@ -576,7 +588,9 @@ class _AchievementsSection extends StatelessWidget {
               decoration: BoxDecoration(
                 color: cs.surfaceContainer,
                 borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: AppTheme.borderCream),
+                border: Border.all(
+                  color: Theme.of(context).colorScheme.outlineVariant,
+                ),
               ),
               child: Row(
                 children: [
@@ -595,7 +609,7 @@ class _AchievementsSection extends StatelessWidget {
                         Text(
                           dateStr,
                           style: tt.bodySmall?.copyWith(
-                            color: AppTheme.primarySage,
+                            color: Theme.of(context).colorScheme.primary,
                             fontSize: 11,
                             fontWeight: FontWeight.w600,
                           ),
@@ -605,7 +619,7 @@ class _AchievementsSection extends StatelessWidget {
                   ),
                   const Icon(
                     Icons.verified_rounded,
-                    color: AppTheme.primarySage,
+                    color: Theme.of(context).colorScheme.primary,
                     size: 20,
                   ),
                 ],
@@ -681,7 +695,9 @@ class _CareProfileSection extends StatelessWidget {
       color: colorScheme.surfaceContainerHigh,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(22),
-        side: const BorderSide(color: AppTheme.borderCream),
+        side: const BorderSide(
+          color: Theme.of(context).colorScheme.outlineVariant,
+        ),
       ),
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16, 15, 16, 14),

@@ -133,7 +133,7 @@ class _ConsentRow extends StatelessWidget {
                         style: SpineFonts.outfit(
                           fontSize: 15,
                           fontWeight: FontWeight.w700,
-                          color: AppTheme.foregroundDark,
+                          color: Theme.of(context).colorScheme.onSurface,
                         ),
                       ),
                     ),

@@ -8,7 +8,6 @@ import 'package:youtube_player_iframe/youtube_player_iframe.dart';
 
 import '../models/external_content.dart';
 import '../services/external_content_service.dart';
-import '../theme/app_theme.dart';
 
 class ExternalContentSection extends StatefulWidget {
   final ExternalContentKind? kindFilter;
@@ -189,7 +188,7 @@ class _ExternalContentSectionState extends State<ExternalContentSection> {
                   ? 'Saved content'
                   : 'From trusted sources',
               style: theme.textTheme.labelLarge?.copyWith(
-                color: AppTheme.mutedForeground,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
             ),
             const Spacer(),
@@ -330,7 +329,9 @@ class ExternalContentCard extends StatelessWidget {
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: theme.textTheme.labelSmall?.copyWith(
-                              color: AppTheme.mutedForeground,
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurfaceVariant,
                             ),
                           ),
                         ),
@@ -606,7 +607,7 @@ class _ExternalContentDetailPageState extends State<ExternalContentDetailPage>
           Text(
             item.sourceName,
             style: theme.textTheme.titleSmall?.copyWith(
-              color: AppTheme.primarySage,
+              color: Theme.of(context).colorScheme.primary,
               fontWeight: FontWeight.w700,
             ),
           ),
@@ -615,7 +616,7 @@ class _ExternalContentDetailPageState extends State<ExternalContentDetailPage>
             Text(
               'Published ${DateFormat.yMMMd().format(item.publishedAt!)}',
               style: theme.textTheme.bodySmall?.copyWith(
-                color: AppTheme.mutedForeground,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
             ),
           ],
@@ -660,7 +661,7 @@ class _ExternalContentDetailPageState extends State<ExternalContentDetailPage>
                 child: SelectableText(
                   item.contentUrl,
                   style: theme.textTheme.bodySmall?.copyWith(
-                    color: AppTheme.mutedForeground,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                 ),
               ),
@@ -746,9 +747,11 @@ class _ExternalSafetyCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: AppTheme.primarySage.withValues(alpha: 0.08),
+        color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppTheme.primarySage.withValues(alpha: 0.25)),
+        border: Border.all(
+          color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.25),
+        ),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -788,7 +791,7 @@ class _CuratedBrief extends StatelessWidget {
               Text(
                 '${item.readingMinutes} min read',
                 style: theme.textTheme.labelMedium?.copyWith(
-                  color: AppTheme.mutedForeground,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
               ),
             ],
@@ -851,7 +854,7 @@ class _CuratedBrief extends StatelessWidget {
                 'Reviewed ${DateFormat.yMMMd().format(item.reviewedAt!)}',
             ].join(' · '),
             style: theme.textTheme.bodySmall?.copyWith(
-              color: AppTheme.mutedForeground,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
           ),
         if (item.limitations != null) ...[
@@ -859,7 +862,7 @@ class _CuratedBrief extends StatelessWidget {
           Text(
             item.limitations!,
             style: theme.textTheme.bodySmall?.copyWith(
-              color: AppTheme.mutedForeground,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
               fontStyle: FontStyle.italic,
               height: 1.4,
             ),
@@ -996,7 +999,7 @@ class _ExternalContentEmptyState extends StatelessWidget {
                 ? Icons.bookmark_border_rounded
                 : Icons.library_books_outlined,
             size: 42,
-            color: AppTheme.mutedForeground,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
           ),
           const SizedBox(height: 10),
           Text(
@@ -1012,7 +1015,7 @@ class _ExternalContentEmptyState extends StatelessWidget {
                 ? 'Save an article or video and it will appear here.'
                 : 'Try a different category or search term.',
             style: theme.textTheme.bodySmall?.copyWith(
-              color: AppTheme.mutedForeground,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
             textAlign: TextAlign.center,
           ),

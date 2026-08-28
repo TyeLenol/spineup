@@ -4,7 +4,6 @@ import '../data/database_helper.dart';
 import '../models/care_subject.dart';
 import '../services/profile_store.dart';
 import '../services/session_service.dart';
-import '../theme/app_theme.dart';
 
 /// Result returned when a manager action changes the active subject list or
 /// selection and the parent screen should refresh its subject-scoped data.
@@ -144,9 +143,9 @@ class _CareSubjectManagerState extends State<CareSubjectManager> {
             const SizedBox(height: 4),
             Text(
               'Switch whose private records you are viewing. A profile change refreshes Today, Journey, appointments, and rewards.',
-              style: Theme.of(
-                context,
-              ).textTheme.bodySmall?.copyWith(color: AppTheme.mutedForeground),
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
             ),
             const SizedBox(height: 16),
             if (_loading)
@@ -188,7 +187,7 @@ class _CareSubjectManagerState extends State<CareSubjectManager> {
                 'Your own profile cannot be deleted here. Use the account deletion control for a complete local wipe.',
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  color: AppTheme.mutedForeground,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
               ),
             ],
@@ -261,7 +260,7 @@ class _SubjectTile extends StatelessWidget {
                     Text(
                       subtitle,
                       style: theme.textTheme.bodySmall?.copyWith(
-                        color: AppTheme.mutedForeground,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
                     ),
                   ],

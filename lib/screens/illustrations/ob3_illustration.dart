@@ -302,9 +302,9 @@ class _CommunityCard extends StatelessWidget {
           const SizedBox(height: 4),
           Text(
             subtext,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 9,
-              color: AppTheme.mutedForeground,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
           ),
           const SizedBox(height: 6),

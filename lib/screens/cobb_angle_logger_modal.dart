@@ -188,14 +188,16 @@ class _DisclaimerBanner extends StatelessWidget {
           Icon(
             Icons.info_outline_rounded,
             size: 20,
-            color: AppTheme.mutedForeground,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
           ),
           const SizedBox(width: 10),
           Expanded(
             child: Text(
               'SpineUp is not a diagnostic tool. Measurements are for tracking '
               'personal progress. Always consult your orthopedic specialist.',
-              style: tt.bodySmall?.copyWith(color: AppTheme.mutedForeground),
+              style: tt.bodySmall?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
             ),
           ),
         ],
@@ -219,7 +221,9 @@ class _ManualEntryPanel extends StatelessWidget {
       children: [
         Text(
           'Enter the Cobb angle value from your X-ray report.',
-          style: tt.bodyMedium?.copyWith(color: AppTheme.mutedForeground),
+          style: tt.bodyMedium?.copyWith(
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
         ),
         const SizedBox(height: 16),
         TextField(

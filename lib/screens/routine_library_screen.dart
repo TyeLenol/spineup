@@ -4,7 +4,6 @@ import '../models/external_content.dart';
 import '../models/routine.dart';
 import '../services/external_content_service.dart';
 import '../services/routine_service.dart';
-import '../theme/app_theme.dart';
 import 'external_content_screen.dart';
 
 class RoutineLibraryScreen extends StatefulWidget {
@@ -260,7 +259,7 @@ class _RoutineLibraryScreenState extends State<RoutineLibraryScreen> {
                       Text(
                         '${exercises.length} movements · ${(totalSeconds / 60).ceil()} min estimated',
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: AppTheme.mutedForeground,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
                       ),
                     ],
@@ -278,9 +277,9 @@ class _RoutineLibraryScreenState extends State<RoutineLibraryScreen> {
         const SizedBox(height: 12),
         Text(
           'Your routine is saved only for the active care profile on this device.',
-          style: Theme.of(
-            context,
-          ).textTheme.bodySmall?.copyWith(color: AppTheme.mutedForeground),
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
         ),
         const SizedBox(height: 12),
         if (exercises.isEmpty)
@@ -299,10 +298,13 @@ class _RoutineLibraryScreenState extends State<RoutineLibraryScreen> {
                 margin: const EdgeInsets.only(bottom: 10),
                 child: ListTile(
                   leading: CircleAvatar(
-                    backgroundColor: AppTheme.primarySage.withValues(
-                      alpha: 0.14,
+                    backgroundColor: Theme.of(
+                      context,
+                    ).colorScheme.primary.withValues(alpha: 0.14),
+                    child: Icon(
+                      exercise.icon,
+                      color: Theme.of(context).colorScheme.primary,
                     ),
-                    child: Icon(exercise.icon, color: AppTheme.primarySage),
                   ),
                   title: Text(exercise.name),
                   subtitle: Text(
@@ -351,9 +353,9 @@ class _RoutineLibraryScreenState extends State<RoutineLibraryScreen> {
             Text(
               'Start with a template or browse movements to add your own selections.',
               textAlign: TextAlign.center,
-              style: Theme.of(
-                context,
-              ).textTheme.bodySmall?.copyWith(color: AppTheme.mutedForeground),
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
             ),
           ],
         ),
@@ -372,9 +374,9 @@ class _RoutineLibraryScreenState extends State<RoutineLibraryScreen> {
         const SizedBox(height: 5),
         Text(
           'Choose a curated starting point, then edit it to make it yours.',
-          style: Theme.of(
-            context,
-          ).textTheme.bodySmall?.copyWith(color: AppTheme.mutedForeground),
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
         ),
         const SizedBox(height: 14),
         ...RoutineService.templates.map(_templateCard),
@@ -403,7 +405,7 @@ class _RoutineLibraryScreenState extends State<RoutineLibraryScreen> {
             Text(
               '${exercises.length} movements · ${exercises.map((e) => e.durationSeconds).fold<int>(0, (a, b) => a + b) ~/ 60 + 1} min estimated',
               style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                color: AppTheme.mutedForeground,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
             ),
             const SizedBox(height: 12),
@@ -495,8 +497,13 @@ class _RoutineLibraryScreenState extends State<RoutineLibraryScreen> {
       margin: const EdgeInsets.only(bottom: 10),
       child: ListTile(
         leading: CircleAvatar(
-          backgroundColor: AppTheme.primarySage.withValues(alpha: 0.14),
-          child: Icon(exercise.icon, color: AppTheme.primarySage),
+          backgroundColor: Theme.of(
+            context,
+          ).colorScheme.primary.withValues(alpha: 0.14),
+          child: Icon(
+            exercise.icon,
+            color: Theme.of(context).colorScheme.primary,
+          ),
         ),
         title: Text(exercise.name),
         subtitle: Text(
@@ -511,7 +518,7 @@ class _RoutineLibraryScreenState extends State<RoutineLibraryScreen> {
                 ? Icons.check_circle_rounded
                 : Icons.add_circle_outline_rounded,
           ),
-          color: inRoutine ? AppTheme.primarySage : null,
+          color: inRoutine ? Theme.of(context).colorScheme.primary : null,
         ),
         onTap: () => _showExerciseDetails(exercise),
       ),
@@ -535,12 +542,12 @@ class _RoutineLibraryScreenState extends State<RoutineLibraryScreen> {
                 children: [
                   CircleAvatar(
                     radius: 28,
-                    backgroundColor: AppTheme.primarySage.withValues(
-                      alpha: 0.14,
-                    ),
+                    backgroundColor: Theme.of(
+                      context,
+                    ).colorScheme.primary.withValues(alpha: 0.14),
                     child: Icon(
                       exercise.icon,
-                      color: AppTheme.primarySage,
+                      color: Theme.of(context).colorScheme.primary,
                       size: 28,
                     ),
                   ),
@@ -608,7 +615,7 @@ class _RoutineLibraryScreenState extends State<RoutineLibraryScreen> {
               Text(
                 exercise.safetyLabel,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: AppTheme.mutedForeground,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
               ),
               const SizedBox(height: 16),

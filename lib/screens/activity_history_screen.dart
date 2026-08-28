@@ -71,7 +71,7 @@ class _ActivityHistoryScreenState extends State<ActivityHistoryScreen> {
                   Text(
                     'Review check-ins, routines, measurements, and visits in one place.',
                     style: tt.bodySmall?.copyWith(
-                      color: AppTheme.mutedForeground,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -127,9 +127,10 @@ class _ActivityHistoryScreenState extends State<ActivityHistoryScreen> {
                           Icon(
                             Icons.history_toggle_off_rounded,
                             size: 44,
-                            color: AppTheme.mutedForeground.withValues(
-                              alpha: 0.6,
-                            ),
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurfaceVariant
+                                .withValues(alpha: 0.6),
                           ),
                           const SizedBox(height: 12),
                           Text(
@@ -142,7 +143,9 @@ class _ActivityHistoryScreenState extends State<ActivityHistoryScreen> {
                             'Your records will appear here after you log them.',
                             textAlign: TextAlign.center,
                             style: tt.bodySmall?.copyWith(
-                              color: AppTheme.mutedForeground,
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurfaceVariant,
                             ),
                           ),
                         ],
@@ -197,7 +200,7 @@ class _HistoryEventTile extends StatelessWidget {
       EventType.stretchCompleted => (
         Icons.self_improvement_rounded,
         'Routine · ${event.payload['exercise_name'] ?? 'Session'}',
-        AppTheme.primarySage,
+        Theme.of(context).colorScheme.primary,
       ),
       EventType.journalEntry => (
         Icons.edit_note_rounded,
@@ -212,7 +215,7 @@ class _HistoryEventTile extends StatelessWidget {
       EventType.appointmentAttended => (
         Icons.medical_services_rounded,
         'Visit recorded',
-        AppTheme.primarySage,
+        Theme.of(context).colorScheme.primary,
       ),
       EventType.profileCompleted => (
         Icons.person_rounded,

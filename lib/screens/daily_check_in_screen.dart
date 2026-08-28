@@ -5,7 +5,6 @@ import '../models/event.dart';
 import '../models/user_profile.dart';
 import '../services/gamification_service.dart';
 import '../services/session_service.dart';
-import '../theme/app_theme.dart';
 
 class DailyCheckInScreen extends StatefulWidget {
   final UserProfile userProfile;
@@ -68,8 +67,8 @@ class _DailyCheckInScreenState extends State<DailyCheckInScreen> {
     super.dispose();
   }
 
-  Color _painColor(double? v) {
-    if (v == null) return AppTheme.mutedForeground;
+  Color _painColor(BuildContext context, double? v) {
+    if (v == null) return Theme.of(context).colorScheme.onSurfaceVariant;
     if (v <= 3) return Colors.green;
     if (v <= 6) return Colors.orange;
     return Colors.red;
@@ -162,7 +161,7 @@ class _DailyCheckInScreenState extends State<DailyCheckInScreen> {
                   ),
                   label: const Text('Not recorded'),
                   selected: _mood == null,
-                  selectedColor: AppTheme.primarySage,
+                  selectedColor: cs.primary,
                   onSelected: (_) => setState(() => _mood = null),
                 ),
                 ..._moodOptions.map((opt) {
@@ -182,7 +181,7 @@ class _DailyCheckInScreenState extends State<DailyCheckInScreen> {
                       color: selected ? Colors.white : cs.onSurface,
                     ),
                     selected: selected,
-                    selectedColor: AppTheme.primarySage,
+                    selectedColor: cs.primary,
                     backgroundColor: cs.surfaceContainerHigh,
                     onSelected: (val) {
                       if (val) setState(() => _mood = opt.label);
@@ -204,7 +203,7 @@ class _DailyCheckInScreenState extends State<DailyCheckInScreen> {
                 Text(
                   _painLabel(_painLevel),
                   style: tt.labelSmall?.copyWith(
-                    color: _painColor(_painLevel),
+                    color: _painColor(context, _painLevel),
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -221,9 +220,9 @@ class _DailyCheckInScreenState extends State<DailyCheckInScreen> {
                 children: [
                   SliderTheme(
                     data: SliderTheme.of(context).copyWith(
-                      activeTrackColor: _painColor(_painLevel),
-                      inactiveTrackColor: AppTheme.borderCream,
-                      thumbColor: _painColor(_painLevel),
+                      activeTrackColor: _painColor(context, _painLevel),
+                      inactiveTrackColor: cs.outlineVariant,
+                      thumbColor: _painColor(context, _painLevel),
                     ),
                     child: Slider(
                       value: _painLevel!,
@@ -273,7 +272,7 @@ class _DailyCheckInScreenState extends State<DailyCheckInScreen> {
                         ),
                       ),
                       selected: selected,
-                      selectedColor: AppTheme.primarySage,
+                      selectedColor: cs.primary,
                       onSelected: (_) {
                         setState(() {
                           if (selected) {
@@ -308,7 +307,7 @@ class _DailyCheckInScreenState extends State<DailyCheckInScreen> {
                     ),
                   ),
                   selected: selected,
-                  selectedColor: AppTheme.primarySage,
+                  selectedColor: cs.primary,
                   onSelected: (val) =>
                       setState(() => _tightness = val ? option : null),
                 );
@@ -336,7 +335,7 @@ class _DailyCheckInScreenState extends State<DailyCheckInScreen> {
                     ),
                   ),
                   selected: selected,
-                  selectedColor: AppTheme.primarySage,
+                  selectedColor: cs.primary,
                   onSelected: (val) =>
                       setState(() => _fatigue = val ? option : null),
                 );
@@ -359,8 +358,8 @@ class _DailyCheckInScreenState extends State<DailyCheckInScreen> {
                         : '${_braceHours!.round()} hrs',
                     style: tt.labelSmall?.copyWith(
                       color: _braceHours == null
-                          ? AppTheme.mutedForeground
-                          : AppTheme.primarySage,
+                          ? Theme.of(context).colorScheme.onSurfaceVariant
+                          : cs.primary,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -377,9 +376,9 @@ class _DailyCheckInScreenState extends State<DailyCheckInScreen> {
                   children: [
                     SliderTheme(
                       data: SliderTheme.of(context).copyWith(
-                        activeTrackColor: AppTheme.primarySage,
-                        inactiveTrackColor: AppTheme.borderCream,
-                        thumbColor: AppTheme.primarySage,
+                        activeTrackColor: cs.primary,
+                        inactiveTrackColor: cs.outlineVariant,
+                        thumbColor: cs.primary,
                       ),
                       child: Slider(
                         value: _braceHours!,
@@ -418,7 +417,7 @@ class _DailyCheckInScreenState extends State<DailyCheckInScreen> {
                 fillColor: cs.surfaceContainer,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: AppTheme.borderCream),
+                  borderSide: BorderSide(color: cs.outlineVariant),
                 ),
               ),
             ),

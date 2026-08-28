@@ -251,7 +251,7 @@ class _CommunityScreenState extends State<CommunityScreen>
                         : 'No community posts yet.',
                     textAlign: TextAlign.center,
                     style: tt.bodyMedium?.copyWith(
-                      color: AppTheme.mutedForeground,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
                   ),
                 ),
@@ -329,7 +329,7 @@ class _PostCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: cs.surfaceContainer,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppTheme.borderCream),
+        border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -350,7 +350,7 @@ class _PostCard extends StatelessWidget {
                   Text(
                     _timeAgo(post.timestamp),
                     style: tt.labelSmall?.copyWith(
-                      color: AppTheme.mutedForeground,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
                   ),
                 ],
@@ -360,7 +360,7 @@ class _PostCard extends StatelessWidget {
                 IconButton(
                   tooltip: 'Report post',
                   icon: const Icon(Icons.flag_outlined, size: 18),
-                  color: AppTheme.mutedForeground,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                   constraints: const BoxConstraints(
                     minWidth: 48,
                     minHeight: 48,
@@ -391,7 +391,9 @@ class _PostCard extends StatelessWidget {
                     vertical: 4,
                   ),
                   decoration: BoxDecoration(
-                    color: AppTheme.primarySage.withValues(alpha: 0.12),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.primary.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Row(
@@ -402,7 +404,7 @@ class _PostCard extends StatelessWidget {
                       Text(
                         milestone.label,
                         style: tt.labelSmall?.copyWith(
-                          color: AppTheme.primarySage,
+                          color: Theme.of(context).colorScheme.primary,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -430,7 +432,7 @@ class _PostCard extends StatelessWidget {
                 label: '${post.upvotes}',
                 color: post.upvotedByMe
                     ? AppTheme.secondaryCoral
-                    : AppTheme.mutedForeground,
+                    : Theme.of(context).colorScheme.onSurfaceVariant,
                 onTap: onUpvote,
               ),
               const SizedBox(width: 10),
@@ -442,8 +444,8 @@ class _PostCard extends StatelessWidget {
                     : Icons.bookmark_border_rounded,
                 label: post.isSaved ? 'Saved' : 'Save',
                 color: post.isSaved
-                    ? AppTheme.primarySage
-                    : AppTheme.mutedForeground,
+                    ? Theme.of(context).colorScheme.primary
+                    : Theme.of(context).colorScheme.onSurfaceVariant,
                 onTap: onSave,
               ),
               const SizedBox(width: 10),
@@ -452,7 +454,7 @@ class _PostCard extends StatelessWidget {
               _ActionChip(
                 icon: Icons.chat_bubble_outline_rounded,
                 label: '${post.replies.length}',
-                color: AppTheme.mutedForeground,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
                 onTap: onOpenReplies,
               ),
 
@@ -461,7 +463,7 @@ class _PostCard extends StatelessWidget {
                 Text(
                   'Reported',
                   style: tt.labelSmall?.copyWith(
-                    color: AppTheme.mutedForeground,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                 ),
               ],
@@ -582,7 +584,7 @@ class _ReplySheetState extends State<_ReplySheet> {
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: tt.bodySmall?.copyWith(
-                      color: AppTheme.mutedForeground,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
                   ),
                   const Divider(height: 24),
@@ -597,7 +599,7 @@ class _ReplySheetState extends State<_ReplySheet> {
                       child: Text(
                         'No replies yet. Be the first!',
                         style: tt.bodyMedium?.copyWith(
-                          color: AppTheme.mutedForeground,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
                       ),
                     )
@@ -624,7 +626,9 @@ class _ReplySheetState extends State<_ReplySheet> {
                                   Text(
                                     _timeAgo(r.timestamp),
                                     style: tt.labelSmall?.copyWith(
-                                      color: AppTheme.mutedForeground,
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.onSurfaceVariant,
                                     ),
                                   ),
                                 ],
