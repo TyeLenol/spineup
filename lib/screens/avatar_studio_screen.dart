@@ -11,6 +11,48 @@ import '../theme/app_theme.dart';
 import '../widgets/avatar_display.dart';
 import '../widgets/dicebear_avatar.dart';
 
+Color _avatarCanvas(BuildContext context) {
+  final theme = Theme.of(context);
+  return theme.brightness == Brightness.dark
+      ? theme.scaffoldBackgroundColor
+      : AppTheme.profileCanvas;
+}
+
+Color _avatarSurface(BuildContext context) {
+  final theme = Theme.of(context);
+  return theme.brightness == Brightness.dark
+      ? theme.colorScheme.surfaceContainer
+      : const Color(0xFFFFF7EF);
+}
+
+Color _avatarPreviewSurface(BuildContext context) {
+  final theme = Theme.of(context);
+  return theme.brightness == Brightness.dark
+      ? theme.colorScheme.surfaceContainerHighest
+      : const Color(0xFFFFE9D6);
+}
+
+Color _avatarBorder(BuildContext context) {
+  final theme = Theme.of(context);
+  return theme.brightness == Brightness.dark
+      ? theme.colorScheme.outlineVariant
+      : AppTheme.borderCream;
+}
+
+Color _avatarForeground(BuildContext context) {
+  final theme = Theme.of(context);
+  return theme.brightness == Brightness.dark
+      ? theme.colorScheme.onSurface
+      : AppTheme.foregroundDark;
+}
+
+Color _avatarMuted(BuildContext context) {
+  final theme = Theme.of(context);
+  return theme.brightness == Brightness.dark
+      ? theme.colorScheme.onSurfaceVariant
+      : AppTheme.mutedForeground;
+}
+
 class AvatarStudioScreen extends StatefulWidget {
   final String userId;
   final UserProfile profile;
@@ -211,7 +253,7 @@ class _AvatarStudioScreenState extends State<AvatarStudioScreen> {
         if (!didPop) unawaited(_handleBack());
       },
       child: Scaffold(
-        backgroundColor: AppTheme.profileCanvas,
+        backgroundColor: _avatarCanvas(context),
         appBar: AppBar(
           backgroundColor: Colors.transparent,
           elevation: 0,
@@ -236,14 +278,14 @@ class _AvatarStudioScreenState extends State<AvatarStudioScreen> {
                 'Make this care space yours',
                 style: theme.textTheme.headlineSmall?.copyWith(
                   fontWeight: FontWeight.w700,
-                  color: AppTheme.foregroundDark,
+                  color: _avatarForeground(context),
                 ),
               ),
               const SizedBox(height: 4),
               Text(
                 'Your avatar is created and saved on this device.',
                 style: theme.textTheme.bodyMedium?.copyWith(
-                  color: AppTheme.mutedForeground,
+                  color: _avatarMuted(context),
                 ),
               ),
               const SizedBox(height: 22),
@@ -298,7 +340,7 @@ class _AvatarStudioScreenState extends State<AvatarStudioScreen> {
               Text(
                 _definition.credit,
                 style: theme.textTheme.labelSmall?.copyWith(
-                  color: AppTheme.mutedForeground,
+                  color: _avatarMuted(context),
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -339,9 +381,9 @@ class _PreviewCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(22),
       decoration: BoxDecoration(
-        color: const Color(0xFFFFF7EF),
+        color: _avatarSurface(context),
         borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: AppTheme.borderCream),
+        border: Border.all(color: _avatarBorder(context)),
       ),
       child: Column(
         children: [
@@ -350,7 +392,7 @@ class _PreviewCard extends StatelessWidget {
             height: 190,
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: const Color(0xFFFFE9D6),
+              color: _avatarPreviewSurface(context),
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
@@ -404,7 +446,7 @@ class _StyleCard extends StatelessWidget {
               : cs.surface,
           borderRadius: BorderRadius.circular(18),
           border: Border.all(
-            color: selected ? AppTheme.accentLavender : AppTheme.borderCream,
+            color: selected ? AppTheme.accentLavender : _avatarBorder(context),
             width: selected ? 2 : 1,
           ),
         ),
@@ -493,7 +535,7 @@ class _FeatureRow extends StatelessWidget {
                     border: Border.all(
                       color: selected
                           ? AppTheme.secondaryCoral
-                          : AppTheme.borderCream,
+                          : _avatarBorder(context),
                       width: selected ? 2 : 1,
                     ),
                   ),
@@ -548,7 +590,7 @@ class _PhotoSection extends StatelessWidget {
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surfaceContainer,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: AppTheme.borderCream),
+        border: Border.all(color: _avatarBorder(context)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

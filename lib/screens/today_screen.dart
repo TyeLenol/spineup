@@ -187,7 +187,9 @@ class _TodayScreenState extends State<TodayScreen>
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    final tt = Theme.of(context).textTheme;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final tt = theme.textTheme;
 
     final now = DateTime.now();
     final hour = now.hour;
@@ -222,7 +224,7 @@ class _TodayScreenState extends State<TodayScreen>
                     Text(
                       dateStr,
                       style: tt.labelSmall?.copyWith(
-                        color: AppTheme.mutedForeground,
+                        color: colorScheme.onSurfaceVariant,
                         letterSpacing: 1.2,
                         fontWeight: FontWeight.w600,
                       ),
@@ -248,7 +250,7 @@ class _TodayScreenState extends State<TodayScreen>
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           border: Border.all(
-                            color: AppTheme.borderCream,
+                            color: colorScheme.outlineVariant,
                             width: 2,
                           ),
                           boxShadow: [
@@ -261,9 +263,9 @@ class _TodayScreenState extends State<TodayScreen>
                         ),
                         child: ClipOval(
                           child: _loadingSnap
-                              ? const ColoredBox(
-                                  color: Color(0xFFFFF1E5),
-                                  child: SizedBox.expand(),
+                              ? ColoredBox(
+                                  color: colorScheme.surfaceContainerHighest,
+                                  child: const SizedBox.expand(),
                                 )
                               : AvatarDisplay(
                                   profile: _snap.userProfile,
@@ -520,7 +522,9 @@ class RoutineExerciseCardState extends State<RoutineExerciseCard> {
                                 ),
                                 child: Icon(
                                   widget.exercise.icon,
-                                  color: AppTheme.mutedForeground,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurfaceVariant,
                                   size: 20,
                                 ),
                               ),
@@ -538,7 +542,9 @@ class RoutineExerciseCardState extends State<RoutineExerciseCard> {
                                         widget.exercise.name,
                                         style: tt.titleSmall?.copyWith(
                                           color: widget.done
-                                              ? AppTheme.mutedForeground
+                                              ? Theme.of(
+                                                  context,
+                                                ).colorScheme.onSurfaceVariant
                                               : cs.onSurface,
                                         ),
                                       ),
@@ -547,7 +553,9 @@ class RoutineExerciseCardState extends State<RoutineExerciseCard> {
                                     Text(
                                       '${widget.exercise.durationLabel}  ·  ${_expanded ? 'Hide steps' : 'View steps'}',
                                       style: tt.bodySmall?.copyWith(
-                                        color: AppTheme.mutedForeground,
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.onSurfaceVariant,
                                         fontSize: 11,
                                       ),
                                     ),
@@ -563,9 +571,10 @@ class RoutineExerciseCardState extends State<RoutineExerciseCard> {
                                   ? AppTheme.primarySage
                                   : _expanded
                                   ? AppTheme.primarySage
-                                  : AppTheme.mutedForeground.withValues(
-                                      alpha: 0.5,
-                                    ),
+                                  : Theme.of(context)
+                                        .colorScheme
+                                        .onSurfaceVariant
+                                        .withValues(alpha: 0.5),
                               size: 28,
                             ),
                           ],
@@ -788,14 +797,16 @@ class RoutineExerciseGuidedFlowSheetState
               Text(
                 'Step ${_currentStepIndex + 1} of ${steps.length}',
                 style: tt.labelSmall?.copyWith(
-                  color: AppTheme.primarySage,
+                  color: cs.primary,
                   fontWeight: FontWeight.w600,
                 ),
               ),
               const Spacer(),
               Text(
                 '${(progress * 100).round()}%',
-                style: tt.labelSmall?.copyWith(color: AppTheme.mutedForeground),
+                style: tt.labelSmall?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
               ),
             ],
           ),
@@ -805,10 +816,8 @@ class RoutineExerciseGuidedFlowSheetState
             child: LinearProgressIndicator(
               value: progress,
               minHeight: 6,
-              backgroundColor: AppTheme.borderCream,
-              valueColor: const AlwaysStoppedAnimation<Color>(
-                AppTheme.primarySage,
-              ),
+              backgroundColor: cs.outlineVariant,
+              valueColor: AlwaysStoppedAnimation<Color>(cs.primary),
             ),
           ),
           const SizedBox(height: 20),
@@ -1043,13 +1052,15 @@ class _DailyCheckInSummaryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final tt = theme.textTheme;
     final logged = latestLog != null;
 
     return Card(
       elevation: 0,
       margin: EdgeInsets.zero,
-      color: AppTheme.primarySage,
+      color: colorScheme.primary,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
       child: InkWell(
         onTap: onTap,
@@ -1065,7 +1076,7 @@ class _DailyCheckInSummaryCard extends StatelessWidget {
                 'Daily Check-in',
                 style: tt.labelSmall?.copyWith(
                   fontWeight: FontWeight.w700,
-                  color: Colors.black54,
+                  color: colorScheme.onPrimary.withValues(alpha: 0.72),
                   letterSpacing: 1.1,
                 ),
               ),
@@ -1074,7 +1085,7 @@ class _DailyCheckInSummaryCard extends StatelessWidget {
                 logged ? 'Done for today!' : 'How is your spine feeling?',
                 style: tt.titleMedium?.copyWith(
                   fontWeight: FontWeight.w700,
-                  color: Colors.black,
+                  color: colorScheme.onPrimary,
                   fontSize: 18,
                   height: 1.2,
                 ),
@@ -1089,7 +1100,7 @@ class _DailyCheckInSummaryCard extends StatelessWidget {
                       logged ? 'COMPLETE' : 'CHECK IN',
                       style: tt.labelSmall?.copyWith(
                         fontWeight: FontWeight.w700,
-                        color: Colors.black,
+                        color: colorScheme.onPrimary,
                         letterSpacing: 1.2,
                       ),
                     ),
@@ -1097,15 +1108,15 @@ class _DailyCheckInSummaryCard extends StatelessWidget {
                   const Spacer(),
                   Container(
                     padding: const EdgeInsets.all(8),
-                    decoration: const BoxDecoration(
-                      color: Colors.black,
+                    decoration: BoxDecoration(
+                      color: colorScheme.onPrimary,
                       shape: BoxShape.circle,
                     ),
                     child: Icon(
                       logged
                           ? Icons.check_rounded
                           : Icons.chevron_right_rounded,
-                      color: AppTheme.primarySage,
+                      color: colorScheme.primary,
                       size: 20,
                     ),
                   ),
@@ -1195,7 +1206,7 @@ class _RoutineEntryCard extends StatelessWidget {
                           ? 'All done for today.'
                           : 'A short set of guided movements for today.',
                       style: tt.bodySmall?.copyWith(
-                        color: AppTheme.mutedForeground,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -1282,7 +1293,9 @@ class _RoutineSheetState extends State<_RoutineSheet> {
                         Text(
                           '${_completed.length} of ${widget.exercises.length} complete',
                           style: tt.bodySmall?.copyWith(
-                            color: AppTheme.mutedForeground,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurfaceVariant,
                           ),
                         ),
                       ],
@@ -1343,7 +1356,7 @@ class _RoutineSheetState extends State<_RoutineSheet> {
                       child: Text(
                         'Open a saved video when you want visual guidance. It plays from its original source.',
                         style: tt.bodySmall?.copyWith(
-                          color: AppTheme.mutedForeground,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
                       ),
                     ),
@@ -1412,7 +1425,7 @@ class _SavedRoutineVideoCard extends StatelessWidget {
                     Text(
                       '${item.sourceName}  ·  Watch from source',
                       style: theme.textTheme.bodySmall?.copyWith(
-                        color: AppTheme.mutedForeground,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
                     ),
                   ],
@@ -1479,7 +1492,7 @@ class _StatPairSection extends StatelessWidget {
                 Text(
                   'Day Streak',
                   style: tt.labelSmall?.copyWith(
-                    color: AppTheme.mutedForeground,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                 ),
               ],
@@ -1514,7 +1527,7 @@ class _StatPairSection extends StatelessWidget {
                 Text(
                   'Daily Goal',
                   style: tt.labelSmall?.copyWith(
-                    color: AppTheme.mutedForeground,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                 ),
               ],
@@ -1639,7 +1652,7 @@ class _NextAppointmentCard extends StatelessWidget {
                     Text(
                       'NEXT APPOINTMENT',
                       style: tt.labelSmall?.copyWith(
-                        color: AppTheme.mutedForeground,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
                         fontSize: 10,
                         letterSpacing: 1.1,
                         fontWeight: FontWeight.w600,
@@ -1658,15 +1671,15 @@ class _NextAppointmentCard extends StatelessWidget {
                         titleStr,
                         style: tt.labelLarge?.copyWith(
                           fontWeight: FontWeight.w600,
-                          color: AppTheme.primarySage,
+                          color: Theme.of(context).colorScheme.primary,
                         ),
                       ),
                   ],
                 ),
               ),
-              const Icon(
+              Icon(
                 Icons.chevron_right_rounded,
-                color: AppTheme.mutedForeground,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
             ],
           ),

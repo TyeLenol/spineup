@@ -13,12 +13,12 @@ class AuthBackButton extends StatelessWidget {
     return InkWell(
       onTap: onBack ?? () => Navigator.of(context).maybePop(),
       borderRadius: BorderRadius.circular(24),
-      child: const SizedBox(
+      child: SizedBox(
         width: 48,
         height: 48,
         child: Icon(
           Icons.chevron_left_rounded,
-          color: AppTheme.mutedForeground,
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
           size: 28,
         ),
       ),
@@ -39,7 +39,7 @@ class AuthFieldLabel extends StatelessWidget {
       style: SpineFonts.outfit(
         fontSize: 13,
         fontWeight: FontWeight.w600,
-        color: AppTheme.foregroundDark,
+        color: Theme.of(context).colorScheme.onSurface,
         letterSpacing: 0.1,
       ),
     );
@@ -116,7 +116,7 @@ class AuthTextField extends StatelessWidget {
                   onChanged: onChanged,
                   style: SpineFonts.outfit(
                     fontSize: 16,
-                    color: AppTheme.foregroundDark,
+                    color: Theme.of(context).colorScheme.onSurface,
                     fontWeight: FontWeight.w500,
                   ),
                   decoration: InputDecoration(
@@ -170,7 +170,7 @@ class AuthEyeToggle extends StatelessWidget {
             showPassword
                 ? Icons.visibility_off_outlined
                 : Icons.visibility_outlined,
-            color: AppTheme.mutedForeground,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
             size: 20,
           ),
         ),

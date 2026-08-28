@@ -54,7 +54,7 @@ class LocalFirstWelcomeScreen extends StatelessWidget {
                       Text(
                         'Make room for\ncare.',
                         style: SpineFonts.fraunces(
-                          color: AppTheme.foregroundDark,
+                          color: Theme.of(context).colorScheme.onSurface,
                           fontSize: 40,
                           fontWeight: FontWeight.w700,
                           height: 1.0,

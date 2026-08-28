@@ -46,7 +46,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             "That email doesn't look quite right. Give it a check! 💌",
             style: SpineFonts.outfit(color: Colors.white),
           ),
-          backgroundColor: AppTheme.foregroundDark,
+          backgroundColor: Theme.of(context).colorScheme.onSurface,
           behavior: SnackBarBehavior.floating,
         ),
       );
@@ -83,7 +83,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   _IconBadge(
                     mainIcon: Icons.lock_outline_rounded,
                     badgeIcon: Icons.help_outline_rounded,
-                    primaryColor: AppTheme.primarySage,
+                    primaryColor: Theme.of(context).colorScheme.primary,
                     badgeColor: const Color(0xFF8B7FF1), // purple badge
                   ),
                   const SizedBox(height: 32),
@@ -95,7 +95,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                         TextSpan(
                           text: 'password?',
                           style: _headingStyle(
-                            color: AppTheme.primarySage,
+                            color: Theme.of(context).colorScheme.primary,
                             italic: true,
                           ),
                         ),
@@ -109,7 +109,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                     style: SpineFonts.outfit(
                       fontSize: 15,
                       height: 1.5,
-                      color: AppTheme.mutedForeground,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
                   ),
                   const SizedBox(height: 40),
@@ -123,12 +123,12 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                     focusNode: _emailFocus,
                     hintText: 'name@example.com',
                     keyboardType: TextInputType.emailAddress,
-                    accentColor: AppTheme.primarySage,
+                    accentColor: Theme.of(context).colorScheme.primary,
                   ),
                   const SizedBox(height: 32),
                   AuthPrimaryButton(
                     label: 'Send reset link',
-                    color: AppTheme.primarySage,
+                    color: Theme.of(context).colorScheme.primary,
                     textColor: AppTheme.onPrimaryDark,
                     loading: _loading,
                     onTap: _send,
@@ -182,7 +182,7 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
             'Please enter all 4 digits.',
             style: SpineFonts.outfit(color: Colors.white),
           ),
-          backgroundColor: AppTheme.foregroundDark,
+          backgroundColor: Theme.of(context).colorScheme.onSurface,
         ),
       );
       return;
@@ -237,7 +237,7 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
                         TextSpan(
                           text: 'email.',
                           style: _headingStyle(
-                            color: AppTheme.primarySage,
+                            color: Theme.of(context).colorScheme.primary,
                             italic: true,
                           ),
                         ),
@@ -251,7 +251,7 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
                     style: SpineFonts.outfit(
                       fontSize: 15,
                       height: 1.5,
-                      color: AppTheme.mutedForeground,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
                   ),
                   const SizedBox(height: 40),
@@ -356,7 +356,7 @@ class _SetNewPasswordScreenState extends State<SetNewPasswordScreen> {
             'Password needs at least 8 characters and one number or symbol.',
             style: SpineFonts.outfit(color: Colors.white),
           ),
-          backgroundColor: AppTheme.foregroundDark,
+          backgroundColor: Theme.of(context).colorScheme.onSurface,
         ),
       );
       return;
@@ -368,7 +368,7 @@ class _SetNewPasswordScreenState extends State<SetNewPasswordScreen> {
             'Passwords do not match.',
             style: SpineFonts.outfit(color: Colors.white),
           ),
-          backgroundColor: AppTheme.foregroundDark,
+          backgroundColor: Theme.of(context).colorScheme.onSurface,
         ),
       );
       return;
@@ -385,7 +385,7 @@ class _SetNewPasswordScreenState extends State<SetNewPasswordScreen> {
             'Password updated successfully! 🔒',
             style: SpineFonts.outfit(color: Colors.white),
           ),
-          backgroundColor: AppTheme.primarySage,
+          backgroundColor: Theme.of(context).colorScheme.primary,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
@@ -422,7 +422,9 @@ class _SetNewPasswordScreenState extends State<SetNewPasswordScreen> {
                     mainIcon: Icons.lock_outline_rounded,
                     badgeIcon: Icons.check_rounded,
                     primaryColor: AppTheme.secondaryCoral,
-                    badgeColor: AppTheme.primarySage, // green checkmark badge
+                    badgeColor: Theme.of(
+                      context,
+                    ).colorScheme.primary, // green checkmark badge
                   ),
                   const SizedBox(height: 32),
                   RichText(
@@ -447,7 +449,7 @@ class _SetNewPasswordScreenState extends State<SetNewPasswordScreen> {
                     style: SpineFonts.outfit(
                       fontSize: 15,
                       height: 1.5,
-                      color: AppTheme.mutedForeground,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
                   ),
                   const SizedBox(height: 40),
@@ -517,7 +519,7 @@ class _SetNewPasswordScreenState extends State<SetNewPasswordScreen> {
                       style: SpineFonts.outfit(
                         fontSize: 13,
                         height: 1.4,
-                        color: AppTheme.mutedForeground,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
                     ),
                   ),
@@ -542,10 +544,7 @@ class _SetNewPasswordScreenState extends State<SetNewPasswordScreen> {
 
 // ── Shared UI Utils ─────────────────────────────────────────────────────────
 
-TextStyle _headingStyle({
-  Color color = AppTheme.foregroundDark,
-  bool italic = false,
-}) {
+TextStyle _headingStyle({Color? color, bool italic = false}) {
   return SpineFonts.fraunces(
     fontSize: 32,
     fontWeight: FontWeight.w700,
@@ -630,7 +629,9 @@ class _Screen1Accents extends StatelessWidget {
             left: 60,
             child: _Dot(
               size: 10,
-              color: AppTheme.primarySage.withValues(alpha: 0.4),
+              color: Theme.of(
+                context,
+              ).colorScheme.primary.withValues(alpha: 0.4),
             ),
           ),
           Positioned(
@@ -638,7 +639,9 @@ class _Screen1Accents extends StatelessWidget {
             right: 80,
             child: _Dot(
               size: 14,
-              color: AppTheme.primarySage.withValues(alpha: 0.3),
+              color: Theme.of(
+                context,
+              ).colorScheme.primary.withValues(alpha: 0.3),
             ),
           ),
           Positioned(
@@ -646,7 +649,9 @@ class _Screen1Accents extends StatelessWidget {
             right: 65,
             child: _Dot(
               size: 8,
-              color: AppTheme.primarySage.withValues(alpha: 0.25),
+              color: Theme.of(
+                context,
+              ).colorScheme.primary.withValues(alpha: 0.25),
             ),
           ),
           Positioned(
@@ -683,7 +688,9 @@ class _Screen2Accents extends StatelessWidget {
             child: Icon(
               Icons.auto_awesome,
               size: 24,
-              color: AppTheme.primarySage.withValues(alpha: 0.7),
+              color: Theme.of(
+                context,
+              ).colorScheme.primary.withValues(alpha: 0.7),
             ),
           ),
           Positioned(
@@ -691,7 +698,9 @@ class _Screen2Accents extends StatelessWidget {
             left: 95,
             child: _Dot(
               size: 10,
-              color: AppTheme.primarySage.withValues(alpha: 0.35),
+              color: Theme.of(
+                context,
+              ).colorScheme.primary.withValues(alpha: 0.35),
             ),
           ),
           Positioned(
@@ -757,7 +766,7 @@ class _Screen3Accents extends StatelessWidget {
           Positioned(
             top: 275,
             left: 110,
-            child: _Dot(size: 10, color: AppTheme.primarySage),
+            child: _Dot(size: 10, color: Theme.of(context).colorScheme.primary),
           ),
         ],
       ),

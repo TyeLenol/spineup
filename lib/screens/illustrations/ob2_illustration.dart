@@ -276,7 +276,9 @@ class _DayBlock extends StatelessWidget {
         style: TextStyle(
           fontSize: 8,
           fontWeight: FontWeight.w600,
-          color: lit ? Colors.white : AppTheme.mutedForeground,
+          color: lit
+              ? Colors.white
+              : Theme.of(context).colorScheme.onSurfaceVariant,
         ),
       ),
     );

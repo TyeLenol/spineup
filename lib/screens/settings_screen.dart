@@ -10,7 +10,6 @@ import '../services/portable_archive_service.dart';
 import '../services/profile_store.dart';
 import '../services/reminder_service.dart';
 import '../services/session_service.dart';
-import '../theme/app_theme.dart';
 import '../widgets/portable_archive_dialogs.dart';
 import '../widgets/quick_tour.dart';
 
@@ -677,11 +676,12 @@ class _SettingsGroupLabel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Text(
       label,
       style: Theme.of(context).textTheme.titleSmall?.copyWith(
         fontWeight: FontWeight.w700,
-        color: AppTheme.mutedForeground,
+        color: colorScheme.onSurfaceVariant,
         letterSpacing: 0.2,
       ),
     );
@@ -702,7 +702,7 @@ class _SettingsCard extends StatelessWidget {
       color: colorScheme.surfaceContainer,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(20),
-        side: const BorderSide(color: AppTheme.borderCream),
+        side: BorderSide(color: colorScheme.outlineVariant, width: 1.2),
       ),
       child: Column(children: children),
     );

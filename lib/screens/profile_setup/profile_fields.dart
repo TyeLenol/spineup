@@ -95,7 +95,7 @@ class ProfileField extends StatelessWidget {
                         fontSize: 13,
                         fontWeight: FontWeight.w700,
                         letterSpacing: 0.1,
-                        color: AppTheme.foregroundDark,
+                        color: Theme.of(context).colorScheme.onSurface,
                       ),
                     ),
                   ),
@@ -158,7 +158,7 @@ class ProfileTextInput extends StatelessWidget {
       style: SpineFonts.outfit(
         fontSize: 16,
         fontWeight: FontWeight.w500,
-        color: AppTheme.foregroundDark,
+        color: Theme.of(context).colorScheme.onSurface,
       ),
       decoration: InputDecoration(
         labelText: labelText,
@@ -292,7 +292,7 @@ class ProfileChipGroup<T> extends StatelessWidget {
                         fontWeight: FontWeight.w700,
                         color: on
                             ? AppTheme.profileActionDeep
-                            : AppTheme.foregroundDark,
+                            : Theme.of(context).colorScheme.onSurface,
                       ),
                     ),
                     if (opt.hint != null) ...[

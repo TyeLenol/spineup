@@ -86,7 +86,9 @@ class ProfileShell extends StatelessWidget {
                                 height: 5,
                                 width: double.infinity,
                                 decoration: BoxDecoration(
-                                  color: AppTheme.borderCream,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.outlineVariant,
                                   borderRadius: BorderRadius.circular(3),
                                 ),
                                 child: LayoutBuilder(
@@ -144,7 +146,7 @@ class ProfileShell extends StatelessWidget {
                                 fontWeight: FontWeight.w700,
                                 height: 1.05,
                                 letterSpacing: -0.7,
-                                color: AppTheme.foregroundDark,
+                                color: Theme.of(context).colorScheme.onSurface,
                               ),
                             ),
                             const SizedBox(height: 12),

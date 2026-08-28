@@ -148,12 +148,14 @@ class _AppointmentManagerModalState extends State<AppointmentManagerModal>
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: AppTheme.primarySage.withValues(alpha: 0.15),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.primary.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: const Icon(
+                  child: Icon(
                     Icons.medical_services_rounded,
-                    color: AppTheme.primarySage,
+                    color: Theme.of(context).colorScheme.primary,
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -165,7 +167,7 @@ class _AppointmentManagerModalState extends State<AppointmentManagerModal>
                       Text(
                         'Keep appointments and visit notes together',
                         style: tt.bodySmall?.copyWith(
-                          color: AppTheme.mutedForeground,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
                       ),
                     ],
@@ -190,9 +192,11 @@ class _AppointmentManagerModalState extends State<AppointmentManagerModal>
           // Tab Bar
           TabBar(
             controller: _tabController,
-            indicatorColor: AppTheme.primarySage,
-            labelColor: AppTheme.primarySage,
-            unselectedLabelColor: AppTheme.mutedForeground,
+            indicatorColor: Theme.of(context).colorScheme.primary,
+            labelColor: Theme.of(context).colorScheme.primary,
+            unselectedLabelColor: Theme.of(
+              context,
+            ).colorScheme.onSurfaceVariant,
             tabs: const [
               Tab(text: 'Upcoming'),
               Tab(text: 'Past Visits'),
@@ -241,14 +245,18 @@ class _AppointmentManagerModalState extends State<AppointmentManagerModal>
                     ? Icons.event_available_rounded
                     : Icons.history_toggle_off_rounded,
                 size: 48,
-                color: AppTheme.mutedForeground.withValues(alpha: 0.5),
+                color: Theme.of(
+                  context,
+                ).colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
               ),
               const SizedBox(height: 12),
               Text(
                 isUpcoming
                     ? 'No upcoming appointments'
                     : 'No past appointments logged',
-                style: tt.titleSmall?.copyWith(color: AppTheme.mutedForeground),
+                style: tt.titleSmall?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
               ),
               const SizedBox(height: 4),
               Text(
@@ -256,7 +264,9 @@ class _AppointmentManagerModalState extends State<AppointmentManagerModal>
                     ? 'Tap "+ Schedule" above to book your doctor or therapy visit.'
                     : 'Recorded visits will show up here for your reference.',
                 textAlign: TextAlign.center,
-                style: tt.bodySmall?.copyWith(color: AppTheme.mutedForeground),
+                style: tt.bodySmall?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
               ),
             ],
           ),
@@ -277,7 +287,9 @@ class _AppointmentManagerModalState extends State<AppointmentManagerModal>
           margin: const EdgeInsets.only(bottom: 12),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
-            side: const BorderSide(color: AppTheme.borderCream),
+            side: BorderSide(
+              color: Theme.of(context).colorScheme.outlineVariant,
+            ),
           ),
           color: cs.surfaceContainer,
           child: InkWell(
@@ -304,16 +316,16 @@ class _AppointmentManagerModalState extends State<AppointmentManagerModal>
                   const SizedBox(height: 8),
                   Row(
                     children: [
-                      const Icon(
+                      Icon(
                         Icons.access_time_rounded,
                         size: 16,
-                        color: AppTheme.primarySage,
+                        color: Theme.of(context).colorScheme.primary,
                       ),
                       const SizedBox(width: 6),
                       Text(
                         dateStr,
                         style: tt.bodySmall?.copyWith(
-                          color: AppTheme.mutedForeground,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
                       ),
                     ],
@@ -325,7 +337,7 @@ class _AppointmentManagerModalState extends State<AppointmentManagerModal>
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: tt.bodySmall?.copyWith(
-                        color: AppTheme.mutedForeground,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
                         fontStyle: FontStyle.italic,
                       ),
                     ),
@@ -345,12 +357,14 @@ class _AppointmentManagerModalState extends State<AppointmentManagerModal>
     String label;
 
     if (apt.isCompleted) {
-      bg = AppTheme.primarySage.withValues(alpha: 0.15);
-      fg = AppTheme.primarySage;
+      bg = Theme.of(context).colorScheme.primary.withValues(alpha: 0.15);
+      fg = Theme.of(context).colorScheme.primary;
       label = 'Visit recorded';
     } else if (apt.isCancelled) {
-      bg = AppTheme.mutedForeground.withValues(alpha: 0.15);
-      fg = AppTheme.mutedForeground;
+      bg = Theme.of(
+        context,
+      ).colorScheme.onSurfaceVariant.withValues(alpha: 0.15);
+      fg = Theme.of(context).colorScheme.onSurfaceVariant;
       label = 'Cancelled';
     } else {
       bg = AppTheme.accentLavender.withValues(alpha: 0.15);
@@ -600,15 +614,17 @@ class _ScheduleFormSheetState extends State<_ScheduleFormSheet> {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
               decoration: BoxDecoration(
-                border: Border.all(color: AppTheme.borderCream),
+                border: Border.all(
+                  color: Theme.of(context).colorScheme.outlineVariant,
+                ),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Row(
                 children: [
-                  const Icon(
+                  Icon(
                     Icons.calendar_today_rounded,
                     size: 20,
-                    color: AppTheme.primarySage,
+                    color: Theme.of(context).colorScheme.primary,
                   ),
                   const SizedBox(width: 12),
                   Column(
@@ -617,7 +633,7 @@ class _ScheduleFormSheetState extends State<_ScheduleFormSheet> {
                       Text(
                         'Scheduled Date & Time',
                         style: tt.labelSmall?.copyWith(
-                          color: AppTheme.mutedForeground,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
                       ),
                       Text(
@@ -784,7 +800,7 @@ class _AppointmentDetailSheetState extends State<_AppointmentDetailSheet> {
             children: [
               Icon(
                 Icons.medical_services_rounded,
-                color: AppTheme.primarySage,
+                color: Theme.of(context).colorScheme.primary,
                 size: 28,
               ),
               const SizedBox(width: 12),
@@ -799,17 +815,19 @@ class _AppointmentDetailSheetState extends State<_AppointmentDetailSheet> {
             decoration: BoxDecoration(
               color: cs.surfaceContainer,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: AppTheme.borderCream),
+              border: Border.all(
+                color: Theme.of(context).colorScheme.outlineVariant,
+              ),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
                   children: [
-                    const Icon(
+                    Icon(
                       Icons.access_time_rounded,
                       size: 18,
-                      color: AppTheme.primarySage,
+                      color: Theme.of(context).colorScheme.primary,
                     ),
                     const SizedBox(width: 8),
                     Text(
@@ -825,7 +843,7 @@ class _AppointmentDetailSheetState extends State<_AppointmentDetailSheet> {
                   Text(
                     'Notes:',
                     style: tt.labelSmall?.copyWith(
-                      color: AppTheme.mutedForeground,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -859,7 +877,7 @@ class _AppointmentDetailSheetState extends State<_AppointmentDetailSheet> {
                 child: Text(
                   'Can be marked done once appointment time has arrived.',
                   style: tt.bodySmall?.copyWith(
-                    color: AppTheme.mutedForeground,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                     fontStyle: FontStyle.italic,
                   ),
                 ),
@@ -900,20 +918,22 @@ class _AppointmentDetailSheetState extends State<_AppointmentDetailSheet> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: AppTheme.primarySage.withValues(alpha: 0.15),
+                color: Theme.of(
+                  context,
+                ).colorScheme.primary.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Row(
                 children: [
-                  const Icon(
+                  Icon(
                     Icons.check_circle_rounded,
-                    color: AppTheme.primarySage,
+                    color: Theme.of(context).colorScheme.primary,
                   ),
                   const SizedBox(width: 10),
                   Text(
                     'Visit recorded',
                     style: tt.titleMedium?.copyWith(
-                      color: AppTheme.primarySage,
+                      color: Theme.of(context).colorScheme.primary,
                     ),
                   ),
                 ],
