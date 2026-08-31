@@ -131,7 +131,7 @@ The Android `INTERNET` permission is currently declared only in the debug and pr
 
 | Document | Contents |
 | --- | --- |
-| [`docs/APP_DOCUMENTATION.md`](docs/APP_DOCUMENTATION.md) | Full product, architecture, feature, storage, privacy, content, gamification, testing, maintainer, and release-posture reference. |
+| [`docs/APP_DOCUMENTATION.md`](docs/APP_DOCUMENTATION.md) | Full CS 3-style academic project report: introduction, related systems, methodology, implementation, testing, results, findings, conclusions, and recommendations. |
 | [`docs/RELEASE_FROM_IDE.md`](docs/RELEASE_FROM_IDE.md) | Step-by-step VS Code and Android Studio release-build instructions. |
 | [`assets/branding/spineup_mark.svg`](assets/branding/spineup_mark.svg) | Scalable source for the splash-derived SpineUp loop-and-dot mark. |
 | [Flutter Android deployment guide](https://docs.flutter.dev/deployment/android) | Official Flutter build and release reference. |

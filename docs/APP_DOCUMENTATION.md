@@ -1,349 +1,672 @@
-# SpineUp application documentation
+# SPINEUP
+## Computer Science Project Documentation
+### 2025 / 2026
 
-**Project:** SpineUp
-**Platform:** Flutter Android and Web
-**Current documentation revision:** 1.0
-**Author:** Manus AI
+**Project title:** SpineUp: A Local-First Scoliosis Self-Management Companion
 
-## 1. What SpineUp is
+**Platform:** Flutter for Android and Web
 
-SpineUp is an open-source, local-first scoliosis self-management companion designed for a school project and a possible future F-Droid-oriented public release. It helps a person, parent, or caregiver keep a small, understandable record of everyday care activities without requiring an account, cloud synchronization, advertising, analytics, or a medical-device claim.
+**Document revision:** 2.0
 
-The app is intentionally a **recording, learning, routine, and conversation-support tool**. It is not a clinician, diagnostic system, progression predictor, treatment planner, or emergency service. The app’s copy and safety labels repeatedly direct users to qualified healthcare professionals for individual assessment, new or worsening symptoms, and questions about exercises or treatment.
+**Prepared by:** Manus AI
 
-> SpineUp records what a person chooses to track. It does not diagnose scoliosis, measure progression, prescribe exercises, or replace professional care.
+---
 
-The current repository supports Android and Web builds. iOS is not part of the present delivery scope. Community is intentionally hidden for now; its model and screen remain in the source tree but are not part of the active four-tab navigation experience.
+## Declaration
 
-## 2. Product principles
+I declare that this project documentation describes the design and implementation of SpineUp, an open-source Flutter application developed as a school Computer Science project. The document is based on the current source repository, its automated tests, its build configuration, and the project decisions recorded during development. External material used to explain related systems, technical standards, or medical context is identified in the References section.
 
-| Principle | What it means in the implementation |
-| --- | --- |
-| **Local first** | User records are stored on the device. A user does not need an online account to use the main experience. |
-| **Private by default** | Health-related records are scoped to the active local owner and care subject. The app does not silently upload them. |
-| **Portable by choice** | Users can export and import protected archives when changing phones or preserving a backup. |
-| **Caregiver-aware** | One local owner can manage separate care spaces for themselves and people they care for. |
-| **Non-diagnostic** | Cobb angles, symptoms, exercises, and articles are framed as records or general information rather than clinical conclusions. |
-| **Gentle motivation** | XP, levels, streaks, milestones, and feedback encourage return use without turning health information into a competition. |
-| **Warm and human** | The interface uses a mature hand-drawn identity, cream/sage/coral/lavender colors, expressive illustration, restrained motion, and clear hierarchy. |
-| **Open-source direction** | The project avoids mandatory proprietary identity, cloud, analytics, or store-specific account assumptions. |
+SpineUp is an educational software project and not a clinical research instrument. Its records, educational summaries, exercise descriptions, and charts must not be interpreted as professional diagnosis or treatment advice.
 
-## 3. User-facing feature inventory
+## Dedication
 
-### 3.1 First launch and onboarding
+This project is dedicated to people living with scoliosis and to the families, caregivers, teachers, and healthcare professionals who support them. It is also dedicated to students who use software design to make difficult everyday experiences easier to understand and manage.
 
-The app begins at the branded splash screen. The splash uses the SpineUp loop-and-dot mark and then checks local state. A first-time user sees a three-screen onboarding carousel that introduces gentle care, support for oneself or someone else, and protected portability. The carousel supports skip, next, back, progress dots, keyboard navigation on Web, swipe navigation, and reduced-motion-aware transitions.
+## Acknowledgement
 
-After onboarding, the local-first welcome screen explains that the user can create a private space for themselves or someone they care for. The primary action opens the six-step profile setup flow. No sign-in or account creation is required for the current product direction.
+The project acknowledges the Flutter and Dart communities, the open-source package authors whose libraries support local storage, notifications, media playback, avatars, and cryptographic archives, and the medical and educational sources that informed the application’s safety boundaries. The project also acknowledges the iterative review process through which the navigation, onboarding, charts, routines, profile spaces, content library, and dark-mode behavior were refined.
 
-### 3.2 Profile setup and care spaces
+## Abstract
 
-Profile setup is a six-step flow. It is reused for first-run setup, editing the current profile, and creating a new ward profile.
+SpineUp is an open-source, local-first Flutter application for scoliosis self-management and care conversations. It is designed for a person using the app for themselves or for a parent or caregiver managing one or more ward profiles. The application does not require an account, cloud synchronization, advertising, analytics, or a hosted backend for its core experience. Instead, it stores records on the device and gives the user an encrypted export and import path for deliberate portability.
 
-| Step | Purpose |
-| --- | --- |
-| 1. Ownership | Choose **Me** or **Someone I care for**. Ward profiles require a relationship selection. |
-| 2. Consent and privacy | Explain local storage, protected export/import, deletion, separate caregiver-owned profiles, and the non-diagnostic boundary. |
-| 3. Basics | Add only the essentials the user is comfortable recording, including a display name and optional basics. |
-| 4. Curve details | Optionally record known Cobb angles, curve type, Risser or Lenke information, and related details from a clinic visit or report. |
-| 5. Care routine | Optionally record brace and physiotherapy context. The copy makes clear that this does not replace a clinician’s plan. |
-| 6. Goals | Choose the areas the user wants to track, such as pain, brace hours, physiotherapy consistency, surgery preparation, progression conversations, or exploration. |
+The application combines daily check-ins, local event history, Cobb-angle recording, contextual pain and activity notes, appointment management, guided routines, educational topics, source-linked articles, optional YouTube playback, editable exercise routines, reminders, avatars, XP, streaks, and milestones. The design deliberately separates motivation from clinical interpretation. XP rewards actions such as recording a check-in or completing a stretch; it does not reward a symptom result or claim that a curve has improved.
 
-A ward profile is a separate local care subject. When ownership changes from self to ward during setup, the app discards previously entered health fields instead of allowing a caregiver’s health data to leak into the ward profile. The owner can later switch between care spaces from **Me**.
+The project follows a small Flutter architecture in which screens compose the interface, services contain domain rules and persistence operations, models represent serializable data, and a database helper manages SQLite. A structured profile model separates ownership, care information, goals, and optional records from decorative runtime profile information such as avatar settings. Care-subject isolation ensures that a caregiver’s records, routines, saved content, and progress are not shown inside a ward’s care space.
 
-Profile completion saves both structured profile data and a runtime display profile. A profile-completed event is recorded once for the care subject, without XP, so initial setup does not artificially start the user at a higher level.
+The project’s principal contribution is not a diagnostic algorithm. It is a cohesive, private, understandable, and portable self-management experience that combines record keeping, general education, gentle routines, and preparation for conversations with qualified professionals. Current limitations include placeholder Android application identity, debug signing for the current release build, incomplete F-Droid packaging, and the need for additional real-device testing.
 
-### 3.3 Today
+## Table of Contents
 
-**Today** is the daily action surface. It is intentionally short and action-oriented rather than an activity archive.
+1. [Chapter 1: Introduction](#chapter-1-introduction)
+2. [Chapter 2: Review of Related Systems](#chapter-2-review-of-related-systems)
+3. [Chapter 3: Methodology](#chapter-3-methodology)
+4. [Chapter 4: Implementation, Testing, and Results](#chapter-4-implementation-testing-and-results)
+5. [Chapter 5: Findings, Conclusions and Recommendations](#chapter-5-findings-conclusions-and-recommendations)
+6. [References](#references)
 
-The page includes the current date and greeting, the active profile avatar, a daily check-in card, the active routine entry, a compact streak/XP progress area, the current level card, and the next appointment card. The routine entry opens a bottom sheet rather than adding a long exercise list to the main scroll.
+# Chapter 1: Introduction
 
-The daily check-in records a journal-style event with the information selected by the user. Saving the check-in refreshes the snapshot and shows the restrained action-reward feedback component.
+## 1.1 Background of the Project
 
-The routine flow supports the following actions:
+Scoliosis is a condition involving three-dimensional changes in the alignment of the spine and trunk. The Cobb angle is commonly used by clinicians to quantify spinal curvature from radiographs, while other observations such as symptoms, brace use, activity, and appointments help describe a person’s wider care experience [1]. People and caregivers may need to remember daily experiences, prepare questions for appointments, follow a clinician-provided routine, and make sense of general educational information without turning a personal record into a self-diagnosis.
 
-1. Open **Today** and tap the active routine.
-2. Review the routine’s exercises in the sheet.
-3. Expand an exercise to read its description and safety label.
-4. Start the guided flow.
-5. Move through step-by-step instructions with optional timers, pause/resume, previous, next, and finish-early controls.
-6. Mark the exercise complete, record the event locally, and receive the relevant XP feedback.
+Many existing digital tools focus on one narrow function. Some emphasize screening or measurement, some provide prescribed or curve-specific exercise programmes, and some offer broad symptom tracking. SpineUp was conceived as a school project that brings the useful, non-diagnostic parts of these experiences together while placing privacy, ownership, portability, and clear safety language at the centre.
 
-The user can edit or replace the active routine through the routine library. Exercise cards are not medical prescriptions; their copy consistently advises a comfortable range and stopping when pain or feeling unwell occurs.
+The initial design context is Ghana and West Africa, although the application is not limited to one country. The project therefore avoids requiring a reliable cloud connection for its primary record experience. Optional network features are limited to source-linked educational content, thumbnails, external pages, and YouTube playback.
 
-### 3.4 My Journey
+## 1.2 Problem Statement
 
-**My Journey** is the local record-review surface. It shows the user’s recorded Cobb-angle history in a modern chart with an adaptive number of date labels, exact-date tooltips, selectable time ranges, and optional contextual overlays for pain or completed stretches. Pain and activity context are not displayed as if they were measurements on the same clinical scale as a Cobb angle.
+A person living with scoliosis or a caregiver supporting them may have information spread across notebooks, messages, appointment papers, video links, and memory. Generic health trackers may be too broad, specialist tools may focus on clinical measurement, and exercise resources may not provide a simple way to connect a video or movement with a personal routine. These gaps can make everyday self-management feel fragmented and can make it difficult to prepare a clear account for a healthcare appointment.
 
-The page also provides a privacy reminder, a compact recent-records preview, and access to full activity history. An expandable action button allows the user to log a Cobb angle or schedule a visit. Records are presented as observations and conversation aids; the chart does not calculate or predict curve progression.
+A further problem is trust. Health-related records are sensitive, yet many modern applications are designed around accounts, cloud services, analytics, or commercial identity providers. Users who want a simple private record may not want to create an online account or upload their information. SpineUp addresses this problem by making local storage the default and deliberate export the user’s choice.
 
-### 3.5 Learn
+## 1.3 Aim of the Project
 
-**Learn** combines local educational topics with source-linked external content. Its main sections are **Topics**, **Articles**, **Videos**, and **Saved**. Search and category chips help users narrow the content without forcing a single linear reading path.
+The aim of SpineUp is to design and implement a warm, accessible, local-first scoliosis self-management application that helps users record everyday care information, follow a gentle personal routine, find general source-linked education, and prepare for conversations with qualified healthcare professionals without presenting itself as a medical authority.
 
-The Topics section contains source-linked topic guides and contextual help. The reusable question-mark help pattern can show a short explanation first and provide a **Learn more** action for a fuller bottom sheet or detail view. This pattern is used for complex profile or care concepts where a short label alone would not be sufficient.
+## 1.4 Novelty of the Project
 
-Articles and videos are represented by `ExternalContentItem` records. A card displays the content kind, source, title, summary, category, save state, and—when applicable—routine inclusion state. The detail page provides source information, safety framing, and a link to the original source.
+The project’s novelty lies in the combination of several modest but important design decisions. First, a single local owner can manage separate self and ward care spaces without requiring an online identity. Secondly, the application combines structured care records with a non-clinical daily experience rather than treating the user only as a measurement. Thirdly, exercise videos can be saved and included in a personal routine while original sources remain visible. Fourthly, the application provides a protected, owner-scoped portability path without making cloud sync mandatory. Finally, its warm hand-drawn visual language, page-aware tutorials, restrained XP feedback, and adaptive dark-mode surfaces are designed to make repetitive self-management inviting without becoming childish or competitive.
 
-For curated article entries, SpineUp renders a readable in-app brief with key points, sections, estimated reading time, review date, limitations, and a link to the original source. RSS-discovered entries are presented as source-linked summaries and open the original article rather than pretending that the full third-party article has been copied into the app.
+## 1.5 Specific Project Objectives
 
-YouTube items with a recognized video ID can play in the detail page through an embedded player with controls, fullscreen support, captions, and privacy-enhanced mode. The original video source remains available as a separate action. Exercise videos can be saved and added to **My Routine**; inclusion also saves the item for the active care subject.
+The project objectives are to:
 
-### 3.6 Me
+1. provide a four-area main navigation experience for Today, My Journey, Learn, and Me;
+2. provide a six-step profile setup flow that supports self and caregiver-owned ward profiles;
+3. store care subjects, events, appointments, profiles, routines, and saved content locally;
+4. keep records isolated by local owner and active care subject;
+5. support daily check-ins, Cobb-angle logging, appointment records, activity history, and contextual notes;
+6. provide editable routines, guided movement steps, timers, and optional video references;
+7. provide source-transparent educational content from local briefs, RSS summaries, and optional YouTube playback;
+8. provide encrypted export and import for deliberate device changes or backups;
+9. provide Android-only local reminders without transmitting health information;
+10. use XP, levels, streaks, and milestones as gentle return-use motivation rather than clinical scoring;
+11. maintain a cohesive Android/Web visual identity, including the splash-derived launcher icon and bundled typography; and
+12. validate the implementation through automated formatting, analysis, tests, and Android builds.
 
-**Me** is the active care-space and personalisation surface. It shows the active subject’s identity, avatar, level and XP, care-profile summary, progress and milestones, and navigation to related management actions.
+## 1.6 Scope of the Project
 
-The user can edit the active profile, add or switch a ward profile, open Avatar Studio, and enter Settings. The profile summary separates structured care information from the lightweight runtime display profile so that a decorative avatar choice is not confused with clinical data.
+The current scope includes Flutter Android and Web builds. Android is the primary mobile target. The app supports first-run onboarding, local profile setup, care-subject switching, daily records, routines, appointments, educational content, avatars, reminders, protected archives, light and dark themes, and local progress feedback.
 
-### 3.7 Avatar Studio
+The scope excludes diagnosis, automatic Cobb-angle measurement from camera images, curve-progression prediction, treatment prescription, emergency triage, mandatory online accounts, cloud synchronization, analytics, advertising, iOS delivery, and an active Community feature. Community remains hidden from the active navigation and is deferred for a future decision.
 
-Avatar Studio is fully local. It supports three curated DiceBear-based illustrated styles: Open Peeps, Croodles, and Line Face/Lorelei Neutral. Each style exposes a controlled set of options with a maximum of five choices per supported feature, and the randomize action respects the current style rather than silently changing it.
+## 1.7 Project Limitations
 
-Users can switch between an illustrated avatar and a locally selected photo. The photo path is stored as local runtime state; it is not embedded in the protected archive payload. The archive preview reports omitted attachments so the user is not led to believe that the photo itself has been exported.
+The application is not a substitute for professional assessment. Its Cobb-angle screen records values supplied by the user; it does not verify how a value was measured. Its exercise catalogue and source-linked material are general educational resources and do not replace an individualized clinical plan. RSS content depends on external sources and may be unavailable, malformed, or changed. Curated briefs remain available when feeds fail, but a release build must have the correct Android network permission for network-backed content to work.
 
-Avatar selections are stored per care subject and included in the profile’s runtime metadata for protected archive transfer where appropriate. Avatar Studio contains local license credits for the open-source avatar packages.
+The current Android application ID is still `com.example.spineup`, and the current Gradle release configuration uses debug signing for local release-mode testing. A recognized open-source `LICENSE`, F-Droid metadata, permanent release signing, production package identity, isolated F-Droid build, and further device QA remain future packaging work.
 
-### 3.8 Settings
+## 1.8 Academic and Practical Relevance of the Project
 
-Settings is grouped into four areas:
+Academically, SpineUp demonstrates requirements analysis, human-centred interface design, local database design, data ownership boundaries, encryption, cross-platform development, testing, and software documentation. It also demonstrates how a project can place safety and privacy boundaries around a health-related theme without claiming to deliver a clinical system.
 
-| Group | Current responsibilities |
-| --- | --- |
-| **Preferences** | Appearance mode and the Android daily reminder. |
-| **Help and guidance** | Replay the page-aware quick tour and view About information. |
-| **Privacy and portability** | Explain local storage, export a protected archive, inspect an archive before import, and import using explicit mode selection. |
-| **Danger zone** | Delete all local data belonging to the current owner after confirmation. |
+Practically, the application provides one place for a user or caregiver to maintain a small record of daily experiences, appointments, routines, and questions. Its local-first operation can be useful in contexts where connectivity, data costs, or trust in cloud services are important considerations. Its portability feature addresses the practical risk of losing local records when changing devices, provided that the user safely retains the archive passphrase and export file.
 
-The reminder is Android-only and local. The user chooses a time, Android notification permission is requested when needed, and the schedule is stored and rescheduled locally. The reminder is a quiet prompt rather than a clinical adherence alarm.
+## 1.9 Beneficiaries of the Project
 
-## 4. Application architecture
+The direct beneficiaries are people living with scoliosis, parents, caregivers, and other supporters who want a simple local record and routine companion. Secondary beneficiaries include students and educators studying mobile application design, healthcare professionals who may receive a clearer user-prepared conversation record, and open-source contributors interested in privacy-conscious health software.
 
-SpineUp uses a deliberately small Flutter architecture rather than a large state-management framework. Widgets compose the user experience; services centralise persistence and domain rules; models provide serializable structures; the database helper owns SQLite access.
+## 1.10 Project Activity Planning
 
-```text
-lib/
-├── main.dart                         App bootstrap, theme, top-level routes
-├── data/
-│   └── database_helper.dart           SQLite connection, schema, queries, migrations
-├── models/                            Plain domain and serialization models
-├── screens/                           User-facing routes and feature composition
-│   ├── profile_setup/                 Six-step profile setup and reusable steps
-│   └── ...                            Today, Journey, Learn, Me, Settings, media flows
-├── services/                          Persistence, sessions, routines, archives, reminders
-├── theme/                             Theme, transitions, edge-to-edge helpers
-└── widgets/                           Shared navigation, avatars, tours, feedback, art
+| Phase | Main activities | Outputs |
+|---|---|---|
+| 1. Problem definition | Identify the fragmented record, routine, education, and privacy problems. | Product scope and safety boundary. |
+| 2. Requirements analysis | Define user roles, care subjects, daily actions, content needs, portability, and platform scope. | Functional and non-functional requirements. |
+| 3. Architecture and data design | Design the Flutter layers, SQLite tables, subject ownership rules, archive model, and service responsibilities. | Architecture model and database design. |
+| 4. Core implementation | Build onboarding, profile setup, navigation, Today, Journey, Learn, Me, and Settings. | Working Flutter application. |
+| 5. Feature integration | Add routines, appointments, external content, reminders, avatars, archives, XP, and tutorials. | Integrated local-first feature set. |
+| 6. Visual refinement | Refine the warm brand, charts, iconography, typography, transitions, dark mode, and accessibility states. | Cohesive Android/Web interface. |
+| 7. Verification | Run formatting, analysis, tests, Android builds, and targeted review of privacy and scope. | CI-validated project branch. |
+| 8. Release preparation | Prepare documentation, licensing, metadata, signing, device QA, and future F-Droid packaging. | Deferred public-release checklist. |
+
+## 1.11 Definitions and Explanation of Terms
+
+| Term | Meaning in this project |
+|---|---|
+| **Care subject** | The person whose records are being viewed, either the local owner or a person supported by the owner. |
+| **Local owner** | The local session owner who may manage one self profile and one or more ward profiles. |
+| **Ward profile** | A separate care space belonging to the local owner and representing someone the owner cares for. |
+| **Cobb angle** | A user-entered spinal curvature value associated with a record; SpineUp does not measure or validate it. |
+| **Protected archive** | An authenticated encrypted export containing owner-scoped data for deliberate portability. |
+| **Curated brief** | A SpineUp-authored educational summary that identifies and links to its original source. |
+| **RSS** | Really Simple Syndication, used to discover source-linked content summaries when a feed is available. |
+| **XP** | Experience points awarded for selected self-management actions; XP is not a health outcome. |
+| **F-Droid-oriented** | A future distribution direction emphasizing open-source review and reproducible or isolated build practices. |
+
+## 1.12 Structure of the Report
+
+Chapter 1 introduces the problem, objectives, scope, relevance, and terminology. Chapter 2 reviews related scoliosis, exercise, and symptom-tracking systems and identifies the design gap addressed by SpineUp. Chapter 3 explains the methodology, requirements, architecture, logical designs, security concepts, and chosen software process. Chapter 4 describes implementation, integration, testing, and results. Chapter 5 presents findings, conclusions, challenges, lessons learned, and recommendations for future work.
+
+# Chapter 2: Review of Related Systems
+
+## 2.1 Introduction
+
+Related systems were reviewed to understand how existing tools handle measurement, education, exercise guidance, symptom tracking, reminders, progress review, privacy, and user motivation. The review uses a small set of representative systems rather than claiming that any one product is a clinical standard. A published review of scoliosis applications provides a broader comparison framework covering technology, measurements, availability, functions, usability, advantages, and disadvantages [1].
+
+## 2.2 Review of System 1: ScoliFocus
+
+### 2.2.1 Description of the System
+
+ScoliFocus is a specialist scoliosis and posture rehabilitation service that provides educational material, guided exercise progressions, posture and breathing concepts, curve-related corrections, video demonstrations, tracking, and community support. Its published feature description emphasizes personalized exercise plans, a large video library, posture awareness, and continued guidance beyond a clinic visit [2].
+
+The system uses a service-led model in which specialist-created programmes and instructional content are delivered through an account-based app and associated courses. Its development environment is not documented in the public product description, so this project does not assume a particular implementation framework.
+
+### 2.2.2 Review of Good Features
+
+ScoliFocus demonstrates the value of moving beyond a static list of exercises. It presents learning, practice, and progress as connected stages and makes video demonstrations central to movement confidence. Its emphasis on specialist guidance, posture, breathing, progression, and adaptation is particularly relevant when designing any exercise-related feature.
+
+### 2.2.3 Review of Bad Features or Risks
+
+The product’s public description includes paid membership, account creation, specialist programmes, and community support [2]. Those features can be valuable, but they also introduce dependency on a provider, online access, identity management, and subscription availability. A general self-management school project should not imply that it can reproduce specialist personalization or guarantee that an exercise is clinically appropriate.
+
+### 2.2.4 Summary of the Review
+
+SpineUp adopts the useful ideas of staged learning, source-linked video practice, routine progression, and clear safety language. It does not copy the specialist-treatment claim, account requirement, subscription model, or curve-specific prescription model.
+
+## 2.3 Review of System 2: Scoliosis Tracker
+
+### 2.3.1 Description of the System
+
+Scoliosis Tracker is described as an app for measuring, recording, and tracking childhood scoliosis in children or patients. Its listed features include a digital scoliometer, growth and curve tracking, a care-compliance checklist, educational content, frequently asked questions, and appointment reminders [3].
+
+The system is measurement- and appointment-oriented. Its published product details identify a mobile application for iPhone and iPad, while SpineUp’s implementation targets Android and Web and avoids claiming that a phone can replace a clinical measurement process.
+
+### 2.3.2 Review of Good Features
+
+The system shows that appointment reminders, educational material, checklists, and longitudinal records can be valuable when they are placed around the user’s care journey. It also confirms that a caregiver-facing design is important for childhood scoliosis, because the person using the app may not be the person whose records are stored.
+
+### 2.3.3 Review of Bad Features or Risks
+
+Measurement tools can create a risk of false confidence if users treat a home measurement as a diagnosis or progression verdict. A product focused on childhood patients may also not model the needs of an adult user or a caregiver managing multiple separate care spaces. SpineUp therefore records user-entered values, labels them as records, and separates self and ward data.
+
+### 2.3.4 Summary of the Review
+
+SpineUp adopts caregiver support, appointments, checklists, education, and longitudinal review. It intentionally excludes automatic screening claims and places a non-diagnostic boundary around Cobb-angle records.
+
+## 2.4 Review of System 3: Scoliometer and Other Measurement Tools
+
+### 2.4.1 Description of the System
+
+The published scoliosis-app review identifies multiple smartphone and web tools that support screening, Cobb-angle-related measurement, angle of trunk rotation, posture monitoring, or other clinical and semi-clinical observations [1]. A representative Scoliometer product describes smartphone-based trunk-rotation measurement and posture monitoring [4].
+
+These systems commonly combine device sensors, measurement interfaces, image or angle capture, longitudinal records, and professional or consumer interpretation. The exact architectures differ by product, but the common design goal is to turn a phone into a measurement or screening aid.
+
+### 2.4.2 Review of Good Features
+
+Measurement systems show the value of a visual timeline and of keeping related observations in one place. They also show why a chart should use exact dates, avoid cramped labels, and provide context without pretending that different types of data share one scale.
+
+### 2.4.3 Review of Bad Features or Risks
+
+A measurement interface can be misunderstood as a diagnostic device. Accuracy, calibration, clinical context, and user technique may not be obvious to a non-specialist. For a school project without clinical validation, implementing automatic measurement would create an unsafe impression. SpineUp instead allows a user to record a known value from a professional conversation or report and repeatedly states that the app does not verify, diagnose, or predict.
+
+### 2.4.4 Summary of the Review
+
+SpineUp adopts the record-review and charting benefits of measurement tools while deliberately declining their screening and diagnostic claims. Its Journey chart is a conversation-support record, not a clinical instrument.
+
+## 2.5 Review of System 4: Bearable
+
+### 2.5.1 Description of the System
+
+Bearable is a general symptom, mood, habit, and health tracker. Its public description emphasizes quick symptom tracking, customizable factors, reports, correlations, reminders, goals, dark mode, and export/delete controls. It also presents encrypted backup and user control as privacy features [5].
+
+The system uses a broad configurable tracking model rather than a scoliosis-specific care model. It demonstrates how a user can record multiple dimensions of everyday experience and later review patterns.
+
+### 2.5.2 Review of Good Features
+
+Bearable demonstrates the value of quick entry, customizable tracking, reports, mood and symptom context, reminders, dark mode, and a user-facing privacy promise. These ideas informed SpineUp’s compact check-in, contextual Journey information, local reminders, protected archives, and theme refinement.
+
+### 2.5.3 Review of Bad Features or Risks
+
+A broad tracker can become overwhelming when every possible metric is exposed. Correlation reports can also encourage users to infer causation from personal observations. SpineUp therefore limits the main daily surface, avoids unsupported medical conclusions, and keeps pain and activity context visually separate from Cobb-angle values.
+
+### 2.5.4 Summary of the Review
+
+SpineUp adopts quick entry, contextual review, reminders, dark mode, and explicit data control. It narrows the tracking model to scoliosis-related care conversations and uses local storage rather than requiring account-based cloud backup.
+
+## 2.6 Comparative Summary of Related Systems
+
+| Criterion | ScoliFocus | Scoliosis Tracker | Measurement tools | Bearable | SpineUp |
+|---|---|---|---|---|---|
+| Main emphasis | Specialist exercise and progression | Childhood tracking and appointments | Screening or measurement | Broad symptom and habit tracking | Local-first self-management and care conversations |
+| Exercise/video guidance | Extensive guided programmes | Educational content | Usually limited or secondary | General health tracking | Source-linked videos, guided routine flow, editable routine |
+| Measurement | Curve-aware guidance | Digital scoliometer and tracking | Sensors, angles, or images | General user-entered metrics | User-entered Cobb-angle records only |
+| Caregiver support | Supported in public description | Strong childhood focus | Varies | General individual tracking | Separate self and ward care subjects |
+| Privacy model | Account/service model | Product-specific | Product-specific | Encrypted backup and export claims | No account or cloud required; encrypted deliberate export/import |
+| Motivation | Guided progression and community | Checklists and reminders | Progress records | Goals, reports, and habits | XP, streaks, milestones, and restrained feedback |
+| Main design lesson | Make practice structured | Support caregivers and appointments | Do not hide measurement limitations | Make tracking quick and reviewable | Combine useful patterns without clinical overclaiming |
+
+## 2.7 Conceptual Design of the Proposed Project
+
+The conceptual model for SpineUp is a local care loop:
+
+> **Choose a care subject → record an everyday experience → learn or practise safely → review the local record → prepare for a professional conversation.**
+
+The user does not have to follow a linear clinical programme. Today is the action surface, My Journey is the review surface, Learn is the education and source surface, and Me is the ownership, identity, progress, and Settings surface. The four surfaces are connected by the active care subject rather than by a cloud account.
+
+# Chapter 3: Methodology
+
+## 3.1 Introduction
+
+SpineUp was developed through iterative, user-centred software design. The methodology combined requirements analysis, architecture design, incremental implementation, visual review, targeted safety review, automated testing, and CI validation. Because this is a school project and not a clinical trial, the evaluation focuses on software correctness, usability intent, privacy boundaries, and consistency with the stated product scope rather than clinical efficacy.
+
+## 3.2 Architecture of the Proposed Project
+
+SpineUp uses a small layered Flutter architecture. Widgets and screens compose the interface. Services centralise persistence, domain rules, reminders, archives, routines, content, sessions, and gamification. Models represent structured records and serializable state. `DatabaseHelper` owns SQLite access and migrations. Shared theme and widget layers provide common visual and interaction behavior.
+
+```mermaid
+flowchart TB
+    UI[Flutter Screens and Shared Widgets]
+    NAV[NavigationShell and Session Boundary]
+    SERVICES[Domain Services]
+    DATA[DatabaseHelper and SharedPreferences]
+    MODELS[Serializable Domain Models]
+    PLATFORM[Android and Web Platform Services]
+
+    UI --> NAV
+    UI --> SERVICES
+    SERVICES --> MODELS
+    SERVICES --> DATA
+    SERVICES --> PLATFORM
+    NAV --> SERVICES
 ```
 
-### 4.1 Startup and routing
+The main implementation areas are `lib/screens/`, `lib/widgets/`, `lib/services/`, `lib/models/`, `lib/data/`, and `lib/theme/`. Android-specific notification, launcher, manifest, and build behavior is held under `android/`; web metadata and PWA assets are under `web/`.
 
-`SpineUpApp` creates the `MaterialApp`, configures light/dark themes, keeps the cream canvas behind route transitions, and starts at `SplashScreen`. The splash checks local care-subject state and routes either to onboarding or the main navigation shell. The current session layer is provider-ready but intentionally local/mock; no external identity provider is wired into the app.
+## 3.3 Requirements Elicitation Process
 
-`NavigationShell` provides the active four-tab experience: Today, My Journey, Learn, and Me. It keeps a per-subject tutorial registry, switches the active care subject through `SessionService`, and restores a pending external-content return when Android activity recreation occurs.
+Requirements were elicited from the project brief, iterative product discussions, review of the existing repository, interface critique, and explicit decisions about local-only operation, caregiver profiles, external content, portability, and the F-Droid direction. The process first separated settled requirements from deferred ideas, then converted them into screen responsibilities, data ownership rules, service responsibilities, and testable acceptance conditions.
 
-### 4.2 Service responsibilities
+The most important elicitation decisions were that no account or cloud sync should be required, a caregiver must be able to manage separate ward profiles, YouTube playback should remain available, Community should remain hidden for now, the app should avoid diagnosis and treatment claims, and Android should be prioritized over iOS.
 
-| Service | Responsibility |
-| --- | --- |
-| `SessionService` | Holds the current local owner, active care subject, display name, and active-subject notifier. Enforces that a subject belongs to the current owner. |
-| `DatabaseHelper` | Opens `spineup.db`, creates and upgrades SQLite tables, scopes records, and provides event/profile/appointment/care-subject queries. |
-| `ProfileStore` | Reads and writes structured `ProfileData` JSON for a care subject. |
-| `ProfileMapper` | Maps structured setup data to care-subject rows and runtime display-profile fields. |
-| `GamificationService` | Logs events, calculates XP, levels, streaks, milestones, and runtime profile snapshots. |
-| `RoutineService` | Stores the active routine per owner and care subject and provides the built-in exercise catalog/templates. |
-| `ExternalContentService` | Loads curated content, refreshes RSS feeds, caches feed items, stores saved content, and stores routine-video selections. |
-| `PortableArchiveService` | Creates, previews, decrypts, validates, and imports protected owner-scoped archives. |
-| `ReminderService` | Stores and schedules one owner-scoped Android daily reminder with timezone-aware local notifications. |
-| `QuickTourService` | Tracks page-guide completion in local preferences and drives page-aware focus overlays. |
+## 3.4 Functional Requirements
 
-## 5. Local data model
+| ID | Functional requirement |
+|---|---|
+| FR-01 | The system shall show branded splash and onboarding experiences on first launch. |
+| FR-02 | The system shall allow a user to create a self profile or a ward profile. |
+| FR-03 | The system shall isolate care-subject records by local owner and active care subject. |
+| FR-04 | The system shall allow users to record check-ins, events, appointments, and user-entered Cobb-angle values. |
+| FR-05 | The system shall display Journey records with dates, contextual information, and non-diagnostic wording. |
+| FR-06 | The system shall provide local topics, source-linked articles, RSS summaries, and optional YouTube playback. |
+| FR-07 | The system shall allow exercise videos to be saved and added to a personal routine. |
+| FR-08 | The system shall provide built-in routines, editable routines, guided steps, timers, and completion events. |
+| FR-09 | The system shall provide Avatar Studio with curated local styles, controlled options, randomisation, and optional local photo selection. |
+| FR-10 | The system shall provide local Android reminders that can be enabled, scheduled, edited, or disabled. |
+| FR-11 | The system shall provide protected owner-scoped export and import with explicit import modes. |
+| FR-12 | The system shall provide Settings for appearance, help, privacy, portability, and destructive local deletion. |
+| FR-13 | The system shall provide XP, levels, streaks, milestones, and restrained action feedback. |
+| FR-14 | The system shall keep Community hidden from the active navigation in the current scope. |
 
-### 5.1 SQLite database
+## 3.5 Non-Functional Requirements
 
-The database is created at the platform database path as `spineup.db`. The current schema version is **6**. Migrations preserve older single-user data by creating a self care subject for the historic owner identifier before the current multi-subject flow is used.
+| ID | Non-functional requirement |
+|---|---|
+| NFR-01 | The core record experience shall work without an online account or cloud database. |
+| NFR-02 | Health-related records shall remain local unless the user deliberately exports them. |
+| NFR-03 | Care-subject boundaries shall be enforced consistently across screens and services. |
+| NFR-04 | Protected archives shall use authenticated encryption and a password-derived key. |
+| NFR-05 | The interface shall be readable, warm, accessible, and usable in light and dark modes. |
+| NFR-06 | Important controls shall have semantic labels, tooltips, focus treatment, or clear text alternatives. |
+| NFR-07 | Network failure for optional external content shall not make the core local experience unusable. |
+| NFR-08 | The application shall avoid diagnostic, predictive, or treatment-prescriptive claims. |
+| NFR-09 | The project shall support Android and Web builds with a shared Flutter codebase. |
+| NFR-10 | The repository shall pass formatting, analysis, automated tests, and the configured Android build gate. |
 
-| Table | Scope and purpose | Important fields |
-| --- | --- | --- |
-| `care_subjects` | Owner-scoped self and ward profiles | `id`, `owner_user_id`, `subject_type`, `display_name`, `relationship`, timestamps |
-| `events` | Timeline records and XP-bearing actions | `id`, `user_id` (care-subject ID), `type`, `timestamp`, JSON `payload`, `xp_value` |
-| `user_profiles` | Runtime profile and avatar display state | `user_id`, preset, optional photo path, display name, diagnosis text, brace status, age range, avatar style/options/seed/mode |
-| `appointments` | Scheduled or attended visit records | `id`, `user_id`, title, scheduled date/time, notes, status, completed event ID |
+## 3.6 UML and Logical Interaction Diagrams
 
-The event enum currently includes `stretchCompleted`, `journalEntry`, `appointmentAttended`, `angleLogged`, and `profileCompleted`. The user-facing app treats the `user_id` column as the active **care-subject ID**, not as a claim that a cloud account exists.
+### 3.6.1 Use-Case Diagram for Front-End Models
 
-### 5.2 SharedPreferences
+```mermaid
+flowchart LR
+    User((User))
+    Caregiver((Parent or caregiver))
+    User --> Onboard[Complete onboarding]
+    User --> Profile[Create or edit care profile]
+    User --> Today[Complete daily check-in]
+    User --> Routine[Practise or edit routine]
+    User --> Journey[Review journey]
+    User --> Learn[Read or watch content]
+    User --> Me[Manage active care space]
+    User --> Settings[Manage privacy and preferences]
+    Caregiver --> Ward[Create or switch ward profile]
+    Ward --> Profile
+    Learn --> Save[Save content or add video to routine]
+    Settings --> Export[Export or import protected archive]
+```
 
-SharedPreferences is used for small local settings and indexes rather than the main timeline database. Current keys cover the selected active subject, active routine, cached external content, saved content IDs, routine-video IDs, pending external-content return IDs, reminder settings, page-tour completion, and appearance preferences.
+### 3.6.2 Use-Case Diagram for Back-End Models
 
-Routines and saved content are scoped by both the local owner and active care subject. This prevents switching to a ward profile from showing the caregiver’s saved videos or active routine.
+```mermaid
+flowchart LR
+    Shell[Navigation shell] --> Session[SessionService]
+    Session --> Subjects[Care subjects]
+    Screens[Feature screens] --> Services[Domain services]
+    Services --> DB[(SQLite database)]
+    Services --> Prefs[(SharedPreferences)]
+    Services --> Archive[PortableArchiveService]
+    Services --> Reminder[ReminderService]
+    Services --> External[ExternalContentService]
+    External --> RSS[RSS sources]
+    External --> YouTube[YouTube or source pages]
+```
 
-### 5.3 Attachments
+### 3.6.3 Activity Diagram
 
-A custom avatar photo is selected from the device and referenced by local path. The protected archive intentionally omits photo attachments. The export preview exposes omitted attachments so the user can make an informed portability decision.
+```mermaid
+flowchart TD
+    Start([Open SpineUp]) --> Splash[Show splash]
+    Splash --> Existing{Local care subject exists?}
+    Existing -- No --> Onboard[Onboarding and local-first welcome]
+    Onboard --> Setup[Six-step profile setup]
+    Setup --> Shell[Navigation shell]
+    Existing -- Yes --> Shell
+    Shell --> Select[Use active care subject]
+    Select --> Action[Check in, practise, learn, review, or manage]
+    Action --> Store[Persist locally]
+    Store --> Feedback[Show contextual feedback]
+    Feedback --> Shell
+```
 
-## 6. Privacy, ownership, and portability
+### 3.6.4 Sequence Diagram: Daily Check-In
 
-### 6.1 No-account operating model
+```mermaid
+sequenceDiagram
+    actor User
+    participant Today as TodayScreen
+    participant Service as GamificationService
+    participant DB as DatabaseHelper
+    participant Feedback as ActionRewardFeedback
 
-The shipped product direction does not require sign-up, sign-in, cloud sync, analytics, or a hosted backend. `SessionService` currently supplies one local development session and keeps the owner/subject boundary in one place so a future identity provider would not require every screen to invent its own identity state.
+    User->>Today: Open Daily Check-in
+    Today->>User: Show local check-in fields
+    User->>Today: Submit selected values
+    Today->>Service: Log journal/check-in event
+    Service->>DB: Insert owner- and subject-scoped event
+    DB-->>Service: Return saved event
+    Service-->>Today: Return XP result and updated snapshot
+    Today->>Feedback: Show compact action reward
+```
 
-This means that uninstalling the app, clearing app data, or losing the device can remove access to local records unless the user has made and safely retained a protected export. The app cannot recover a forgotten archive passphrase.
+### 3.6.5 Class and Service Diagram
 
-### 6.2 Care-subject isolation
+```mermaid
+classDiagram
+    class CareSubject {
+      +String id
+      +String ownerUserId
+      +SubjectType subjectType
+      +String displayName
+    }
+    class ProfileData {
+      +BasicsData basics
+      +CurveData curve
+      +CareData care
+      +GoalsData goals
+    }
+    class Event {
+      +String id
+      +String userId
+      +EventType type
+      +DateTime timestamp
+      +Map payload
+      +int xpValue
+    }
+    class Appointment {
+      +String id
+      +String userId
+      +String title
+      +DateTime scheduledDateTime
+      +AppointmentStatus status
+    }
+    class SessionService
+    class DatabaseHelper
+    class ProfileStore
+    class GamificationService
+    class RoutineService
+    class PortableArchiveService
 
-A session owner may have a self profile and one or more ward profiles. All event, appointment, profile, routine, saved-content, and reminder access is intended to use the active care-subject scope. Database operations validate owner membership before activating, clearing, deleting, or replacing a subject.
+    CareSubject "1" --> "1" ProfileData
+    CareSubject "1" --> "many" Event
+    CareSubject "1" --> "many" Appointment
+    SessionService --> CareSubject
+    DatabaseHelper --> CareSubject
+    DatabaseHelper --> Event
+    DatabaseHelper --> Appointment
+    ProfileStore --> ProfileData
+    GamificationService --> Event
+    RoutineService --> CareSubject
+    PortableArchiveService --> CareSubject
+```
 
-Account-wide deletion clears the owner’s records, runtime profiles, appointments, and care-subject rows inside a transaction. Deleting a ward profile removes that ward’s records while retaining the owner’s other care spaces. The UI requires confirmation before destructive operations.
+## 3.7 Users of the Proposed System and User Characteristics
 
-### 6.3 Protected archives
+The primary user is a person who wants to record their own scoliosis-related care experiences, routines, appointments, and questions. A second user type is a parent or caregiver who needs to manage one or more ward profiles while keeping each person’s records separate. A supporting user may be a family member or trusted helper assisting with setup or export. The application does not assume that the user has medical knowledge, so labels, question prompts, safety notes, and source links should be understandable without specialist vocabulary.
 
-`PortableArchiveService` exports an owner’s care subjects, structured profiles, runtime profiles, events, and appointments as an authenticated encrypted envelope. The current format is:
+## 3.8 Security Concepts of the System
 
-| Property | Current value |
-| --- | --- |
-| Archive format | `spineup.protected-archive` |
-| Schema version | `1` |
+SpineUp uses privacy by minimisation, local ownership, care-subject isolation, protected archives, explicit destructive confirmation, and source transparency. The main database and preferences remain on the device. `SessionService` centralises the active owner and subject boundary. Database operations validate subject ownership before activation, deletion, or replacement.
+
+The protected archive uses an authenticated encrypted envelope with AES-256-GCM and an Argon2id-derived key. The minimum passphrase length is twelve characters. The archive can be decrypted only with the passphrase; SpineUp cannot recover a forgotten passphrase. Custom photo attachments are omitted and reported in the export preview because a local file path does not guarantee that the referenced file can be moved to a new device.
+
+Security is not treated as a claim that the entire device is secure. A compromised device, a lost passphrase, or an unsafe exported file can still expose information. The design therefore gives users clear control and avoids silently transmitting health records.
+
+## 3.9 Project Methodology
+
+The project used an iterative incremental methodology. Each increment began with a focused problem statement, continued through design and implementation, and ended with visual or automated verification. This approach was suitable because the project’s interaction details changed as the interface was reviewed, while core constraints such as local-first operation and non-diagnostic wording remained stable.
+
+The process was not a waterfall sequence in which all interface decisions were frozen before implementation. Navigation, charts, onboarding, profile setup, settings, typography, icons, tutorials, and dark mode were refined through repeated inspection. The repository’s CI workflow provided a consistent technical gate after implementation changes.
+
+## 3.10 Software Process Model and Justification
+
+The chosen process model is **iterative and incremental development**. A pure waterfall model would be unsuitable because the project required repeated usability and visual refinement. A fully open-ended prototype model would be unsuitable because data ownership, encryption, testing, and release limitations require deliberate design. Iterative development provides a balance: the team can refine one feature at a time while preserving a growing architecture and a repeatable validation process.
+
+## 3.11 Chosen Model and Justification
+
+The project uses Flutter’s widget-based UI model, service-oriented domain structure, SQLite local persistence, and SharedPreferences for small local settings. This model was chosen because Flutter supports Android and Web from one codebase, widgets allow reusable responsive components, and a small service layer is easier to understand for a school project than a large state-management framework.
+
+The application does not use mandatory cloud identity or a remote backend. This keeps the core system understandable and supports the local-first privacy requirement. Optional external content is isolated inside `ExternalContentService`, so the network path is not confused with the local record path.
+
+## 3.12 Project Design Considerations and Logical Designs
+
+### 3.12.1 User Interface Design
+
+The interface uses a warm cream canvas, sage primary actions, coral active states, lavender supporting accents, rounded cards, hand-drawn separators, expressive illustrations, and restrained motion. The visual direction avoids a cold clinical dashboard and avoids excessive gamification. The same design language is adapted for dark mode through semantic ColorScheme surfaces, text, outlines, controls, and selected states.
+
+The four-tab information architecture follows user intent. Today is short and action-oriented. My Journey is for review and conversation preparation. Learn is for education and source-linked media. Me is for identity, active care spaces, progress, avatar customisation, and Settings. Page-aware quick tours dim irrelevant content and focus the actual target widget rather than using inaccurate pointer arrows.
+
+### 3.12.2 Database Design
+
+The current SQLite schema version is 6. Its principal tables are:
+
+| Table | Purpose |
+|---|---|
+| `care_subjects` | Stores owner-scoped self and ward care subjects. |
+| `events` | Stores check-ins, stretches, appointments, angle logs, and other timeline events. |
+| `user_profiles` | Stores runtime profile and avatar display state. |
+| `appointments` | Stores scheduled, attended, and cancelled visit records. |
+
+The `events.user_id` field represents the active care-subject ID in the current local model. SharedPreferences stores small settings and indexes such as active subject, routine selection, feed cache, saved content identifiers, reminder state, appearance preferences, and tour completion.
+
+### 3.12.3 Protected Archive Design
+
+| Property | Design |
+|---|---|
+| Format | `spineup.protected-archive` |
+| Archive schema | Version 1 |
 | Encryption | AES-256-GCM |
-| Password-based key derivation | Argon2id |
-| Payload | UTF-8, indented JSON after successful decryption |
+| Key derivation | Argon2id from a user passphrase |
 | Minimum passphrase | 12 characters |
-| Attachments | Local custom photo paths are omitted |
+| Payload | UTF-8 indented JSON after successful decryption |
+| Import modes | Separate subjects or replace one selected subject |
+| Attachments | Local custom photos omitted and reported |
 
-Import supports two explicit modes. **Separate subjects** creates new local IDs and refuses to silently merge an archived self profile with an existing local self profile. **Replace selected subject** requires exactly one archived profile and a user-selected local target, then clears that target’s records before restoring the archive. Import validates the passphrase and envelope before writing data.
+# Chapter 4: Implementation, Testing, and Results
 
-The archive is designed to be human-readable after correct decryption, but its ciphertext and authenticated envelope do not expose health data without the passphrase. The passphrase is never recoverable by SpineUp.
+## 4.1 Introduction
 
-## 7. External content and network boundaries
+The implementation maps the logical design into a Flutter Android/Web application. The main application starts in `lib/main.dart`, displays the branded splash screen, checks local state, and routes to onboarding or the main navigation shell. The repository uses bundled Fraunces and Outfit font files through `SpineFonts`, ensuring that release typography does not depend on runtime Google Fonts fetching.
 
-The application has an optional network path for Learn content and external media. The main local record experience does not depend on a remote account or cloud database.
+## 4.2 Mapping Logical Design to the Physical Platform
 
-On Android, the current `INTERNET` permission is declared in the debug and profile manifest variants, but not in `android/app/src/main/AndroidManifest.xml`. Because release builds use the main manifest, a release artifact may not be able to refresh RSS feeds, load thumbnails, open source pages, or play YouTube until the permission is added to the main manifest. This permission would only enable the already-designed optional external-content requests; it would not introduce cloud sync, accounts, or analytics.
+| Logical design | Physical implementation |
+|---|---|
+| Local care-subject model | `DatabaseHelper`, `SessionService`, `CareSubject`, and owner-scoped queries. |
+| Structured profile | `ProfileData`, profile setup steps, `ProfileStore`, and `ProfileMapper`. |
+| Daily record | `TodayScreen`, `DailyCheckInScreen`, `Event`, and `GamificationService`. |
+| Longitudinal review | `MyJourneyScreen`, `ActivityHistoryScreen`, chart widgets, and event queries. |
+| Education and media | `LearnScreen`, `ExternalContentScreen`, `ExternalContentService`, RSS parsing, and YouTube iframe playback. |
+| Routine practice | `RoutineService`, `RoutineLibraryScreen`, guided steps, timers, and routine-video selections. |
+| Care-space management | `MeScreen`, `CareSubjectManager`, and active-subject switching. |
+| Portability | `PortableArchiveService` and portable archive dialogs. |
+| Reminders | `ReminderService` and Android local notification integration. |
+| Branding | Splash painter, SVG mark, Android adaptive icon, Web favicon/PWA icons, and bundled fonts. |
 
-### 7.1 RSS sources
+## 4.3 System Modules Implementation
 
-The refresh path currently requests these RSS endpoints:
+### 4.3.1 Startup, Onboarding, and Profile Setup
 
-| Source label in the app | Feed URL | Category |
-| --- | --- | --- |
-| MedlinePlus · Scoliosis | `https://medlineplus.gov/feeds/topics/scoliosis.xml` | Scoliosis education |
-| MedlinePlus · Spine | `https://medlineplus.gov/feeds/topics/spineinjuriesanddisorders.xml` | Spine and back |
-| MedlinePlus · Back pain | `https://medlineplus.gov/feeds/topics/backpain.xml` | Pain and movement |
-| Patient.info · Health guides | `https://patient.info/health/rss` | Health guides |
-| Patient.info · Wellbeing | `https://patient.info/rss` | Mindfulness and wellbeing |
+The startup module displays the splash-derived SpineUp mark and checks whether a local care subject exists. New users proceed through three onboarding screens and a local-first welcome explanation before entering a six-step profile setup flow. The setup flow captures ownership, privacy consent, basics, optional curve details, care context, and goals. When a user changes from self to ward ownership during setup, health fields are cleared rather than copied across subjects.
 
-The service requests up to 20 items per feed, strips basic markup from descriptions, filters for relevant keywords, assigns a stable ID derived from the source URL, and caches at most 60 fetched items locally. Feed failure is intentionally non-fatal: curated content remains available when a source is offline, blocked, malformed, or unavailable.
+### 4.3.2 Today Module
 
-### 7.2 Curated source-linked content
+Today shows the current greeting, active avatar, daily check-in, routine entry, compact progress information, current level, and next appointment. A user can open an active routine, review exercises, read safety labels, start a guided flow, use timers, move between steps, finish early, and record completion locally. The action-reward component reports the completed action and XP without taking over the screen.
 
-Curated content is compiled into the app as source-linked briefs or video references. The current set includes scoliosis education, posture, movement, back discomfort, mindfulness, breathing, sleep, mental wellbeing, and general activity. Each item carries a source URL, safety label, category, and, for reading briefs, key takeaways, sections, limitations, estimated reading time, and review date.
+### 4.3.3 My Journey Module
 
-Curated briefs are not presented as full copies of the linked external pages. The detail view labels them as SpineUp reading briefs and keeps the original source action visible.
+My Journey displays user-entered Cobb-angle history with adaptive date labels, exact-date tooltips, selectable ranges, and contextual pain or activity information. The interface avoids placing pain or stretch values on the same apparent clinical scale as Cobb-angle records. Recent records and full activity history remain available, while logging actions are reachable through a compact action control.
 
-### 7.3 YouTube and external pages
+### 4.3.4 Learn and External Content Module
 
-Recognized YouTube items use `youtube_player_iframe` for embedded playback. A privacy-enhanced player is configured with controls, captions, and fullscreen support. Other external pages are opened through an in-app browser view when available, with a fallback to an external application. A pending-return marker lets the shell restore the user to the relevant SpineUp detail page after Android activity recreation.
+Learn contains Topics, Articles, Videos, and Saved content. Local topic guides provide short explanations and contextual help. Curated reading briefs contain source information, key points, sections, limitations, reading time, and review date. RSS items are source-linked summaries rather than copied third-party articles. YouTube items with recognized IDs can use embedded playback with controls, captions, fullscreen support, and privacy-enhanced mode. Exercise videos can be saved and added to My Routine.
 
-The content layer is deliberately source-transparent. Users can see the source name, open the original link, select and copy the URL, and review the item’s safety boundary.
+The current RSS source set includes MedlinePlus scoliosis, spine, and back-pain feeds and Patient.info health and wellbeing feeds. Feed failures are non-fatal because curated content remains available. On Android, network-backed release behavior also depends on the main manifest declaring the `INTERNET` permission.
 
-## 8. Motivation and XP rules
+### 4.3.5 Me, Avatar Studio, and Settings Modules
 
-Gamification exists to make a repetitive self-management routine easier to return to, not to grade symptoms or reward a clinical result.
+Me provides the active care-space identity, profile summary, avatar, XP, milestones, profile editing, ward management, Avatar Studio, and Settings access. Avatar Studio supports Open Peeps, Croodles, and Line Face/Lorelei Neutral styles with controlled options and style-preserving randomisation. Selected photos remain local and are omitted from protected archives.
 
-| Event | Base XP |
-| --- | ---: |
-| Completed stretch/exercise | 30 |
-| Journal/check-in entry | 25 |
-| Cobb-angle log | 50 |
-| Appointment attended/recorded | 40 |
-| Profile completion | 0 |
-| First non-profile event of the calendar day | +5 daily bonus |
+Settings groups appearance and reminders, help and tours, privacy and portability, and the danger zone. Android reminders are scheduled locally and are not treatment adherence alarms. The current dark-mode implementation uses active ColorScheme surfaces, outlines, muted text, primary accents, sliders, cards, and controls across Settings and the rest of the ordinary app screens.
 
-The current daily target shown in the UI is 600 XP. Cobb-angle logging awards base XP only once per calendar day; subsequent angle logs that day are still recorded but do not award additional angle XP. A level starts at 100 XP and the next level threshold increases by 25 XP per level. The streak counts consecutive calendar days ending today or yesterday on which the active care subject has at least one event.
+## 4.4 System Modules Integration
 
-The XP overlay is deliberately compact and action-specific. It reports what was completed and the XP awarded rather than covering the entire screen with a celebration. Milestones can unlock from XP thresholds, event counts, or streak lengths.
+The modules integrate through the active care-subject boundary. A profile edit updates structured profile storage and runtime display state. A check-in creates an event and updates gamification. A routine completion creates a local event and updates XP. A saved content item is scoped to the owner and active subject. An archive serializes owner-scoped subjects, profiles, events, appointments, routines, and supported runtime data. Navigation restores the active subject and pending external-content return state when required.
 
-## 9. Notifications and reminders
+## 4.5 Testing Plan
 
-Reminders are Android-only because the current notification implementation uses `flutter_local_notifications`, Android notification permission, boot receivers, vibration, and timezone-aware local scheduling. The user enables one daily reminder, chooses its time, and can change or disable it from Settings.
+Testing was planned at four levels. Unit tests verify models, services, archive behavior, calculations, and ownership rules. Widget tests verify screen rendering, interactions, routing, form behavior, onboarding, settings, and feedback. Integration-oriented tests verify combinations such as profile setup with persistence, routine selection with content, and navigation with active-subject state. CI verification checks formatting, analysis, the complete Flutter test suite, and the Android debug build.
 
-The reminder title is **A small care moment**. It is not a treatment adherence instruction and does not transmit data to a server. Users must allow Android notifications for the schedule to become active.
+| Test area | Verification focus |
+|---|---|
+| Database and migrations | Schema creation, upgrades, owner boundaries, and record persistence. |
+| Profile setup | Step validation, self/ward switching, structured data, and completion behavior. |
+| Daily actions | Check-ins, routines, appointments, event creation, XP, and streaks. |
+| Learn and content | Content models, RSS fallback behavior, saving, source links, and routine-video selection. |
+| Journey | Chart records, ranges, labels, tooltips, and non-diagnostic presentation. |
+| Privacy and archives | Encryption, passphrase validation, import modes, replacement behavior, and omitted attachments. |
+| UI and navigation | Onboarding, navigation shell, Settings, Me, tutorials, avatars, reminders, and dialogs. |
+| Branding and release | Favicon generation, bundled fonts, Android resources, formatting, analysis, and build. |
 
-## 10. Design and accessibility direction
+## 4.6 Verification Testing
 
-SpineUp’s visual system is intentionally warm, expressive, and calm. The primary visual language uses cream canvases, sage primary actions, coral active states, lavender supporting accents, rounded cards, hand-drawn separators, and a branded loop-and-dot mark. The design avoids cold clinical dashboards, excessive texture, dense statistics, and childish competition mechanics.
+Verification testing asks whether the system was implemented according to the specified design. The current repository quality workflow checks Dart formatting, Flutter analysis, the complete test suite, and Android debug APK construction. The deterministic font correction added a focused regression test that ensures the registered Fraunces and Outfit families are returned by the typography helper. Android icon resources were dimension-checked, raster assets were inspected programmatically, and adaptive/vector XML resources were parsed.
 
-The application includes reduced-motion checks for top-level transitions and uses semantic labels/tooltips for important controls. Page-aware tutorials use a dimmed overlay and a glow/focus treatment on the actual target widget rather than relying on inaccurate pointer arrows. Each of Today, My Journey, Learn, Me, and Settings has its own tutorial script and completion state.
+## 4.7 Validation Testing
 
-The Web and Android surfaces share the SpineUp name, metadata, splash identity, favicon, PWA icons, adaptive launcher icon, and native launch background. The favicon and legacy launcher PNGs are generated from the visible square tile in the supplied SpineUp mark asset; transparent canvas below that tile is not carried into the final icon. The Android adaptive foreground uses the same mark at a smaller centered scale because Android launchers apply a mask and safe zone. The wordmark is omitted from tiny launcher/favicon assets because it would not remain legible at those dimensions.
+Validation testing asks whether the implemented features serve the intended user purpose. The project’s validation process used screen-by-screen visual review and interaction reasoning. It led to a shorter Today surface, a more contextual Journey chart, a clearer Learn hierarchy, a more structured Settings page, page-aware tutorials, a restrained XP overlay, a local Avatar Studio, and dark-mode semantic color corrections.
 
-Fraunces and Outfit are bundled in `assets/fonts/` at the static weights used by the app. `lib/theme/spine_fonts.dart` applies those registered Flutter families directly, so release builds do not silently fall back to a platform font when the device is offline or the release manifest does not permit network access. The `google_fonts` runtime dependency is not needed for the app’s typography. The corresponding SIL Open Font License texts are preserved beside the font files and registered with Flutter’s license registry.
+The current automated tests do not replace validation on a physical device. Real-device testing remains recommended for notification permissions, launcher masking, activity recreation after external pages, embedded media playback, keyboard insets, and release-manifest network behavior.
 
-## 11. Source map for maintainers
+## 4.8 System Security Testing
 
-| Concern | Primary implementation files |
-| --- | --- |
-| App bootstrap and routes | `lib/main.dart`, `lib/screens/splash_screen.dart` |
-| Main navigation | `lib/screens/navigation_shell.dart`, `lib/widgets/glass_nav_bar.dart` |
-| First-run onboarding | `lib/screens/onboarding_screen.dart`, `lib/screens/local_first_welcome_screen.dart` |
-| Profile setup | `lib/screens/profile_setup/profile_setup_screen.dart`, `lib/screens/profile_setup/steps/` |
-| Today and exercise flow | `lib/screens/today_screen.dart`, `lib/screens/daily_check_in_screen.dart`, `lib/services/routine_service.dart` |
-| Journey and charts | `lib/screens/my_journey_screen.dart`, `lib/screens/activity_history_screen.dart` |
-| Learn and external media | `lib/screens/learn_screen.dart`, `lib/screens/external_content_screen.dart`, `lib/services/external_content_service.dart` |
-| Me and avatars | `lib/screens/me_screen.dart`, `lib/screens/avatar_studio_screen.dart`, `lib/widgets/dicebear_avatar.dart` |
-| Settings and portability | `lib/screens/settings_screen.dart`, `lib/widgets/portable_archive_dialogs.dart`, `lib/services/portable_archive_service.dart` |
-| Storage and ownership | `lib/data/database_helper.dart`, `lib/services/session_service.dart`, `lib/services/profile_store.dart`, `lib/models/care_subject.dart` |
-| XP and milestones | `lib/services/gamification_service.dart`, `lib/models/milestone.dart`, `lib/widgets/action_reward_feedback.dart` |
-| Reminders | `lib/services/reminder_service.dart`, `android/app/src/main/AndroidManifest.xml` |
-| Theme and motion | `lib/theme/app_theme.dart`, `lib/theme/app_transitions.dart`, `lib/widgets/m3_squiggly_line.dart` |
-| Bundled typography | `lib/theme/spine_fonts.dart`, `assets/fonts/` |
-| Branding | `assets/branding/spineup_mark.svg`, `assets/branding/spineup_mark.png`, `lib/screens/splash_screen.dart`, `android/app/src/main/res/`, `web/` |
+Security testing checks that archive passphrases are required, encrypted archives cannot be imported with invalid authentication, destructive deletion requires confirmation, care-subject operations respect ownership, and omitted photo attachments are disclosed. The implementation also avoids placing cloud credentials, analytics, or mandatory identity providers in the core data path.
 
-## 12. Development and validation
+Security testing does not establish that the device operating system, file system, or exported archive location is secure. It verifies the protections implemented by SpineUp and documents the boundaries that remain the user’s responsibility.
 
-The project is managed with Flutter and Dart. The repository’s CI workflow currently uses Flutter **3.44.9 stable** and resolves dependencies with `flutter pub get`. The package environment declares Dart `^3.12.2`.
+## 4.9 Recommendations Made by Testers and Responses
 
-The standard local validation sequence is:
+| Recommendation | Response in the implementation |
+|---|---|
+| Reduce the length and density of Today. | Moved detailed routine interaction into a focused entry/sheet and kept Today action-oriented. |
+| Improve chart readability. | Added adaptive date labels, exact-date tooltips, a warmer chart surface, and contextual rather than same-scale overlays. |
+| Make tutorials point to real content. | Replaced inaccurate pointers with dimming and focus treatment on actual widgets. |
+| Improve profile and care-space separation. | Added structured care subjects, owner validation, ward switching, and profile-specific persistence. |
+| Make external content useful. | Added readable curated briefs, source links, RSS summaries, embedded YouTube playback, saving, and routine inclusion. |
+| Make typography consistent offline. | Bundled Fraunces and Outfit and replaced runtime font aliases with direct registered families. |
+| Correct dark-mode inconsistencies. | Migrated ordinary screen surfaces, text, borders, controls, cards, and accents to active ColorScheme values. |
+| Avoid generic Flutter branding. | Replaced default launcher/favicon assets with the supplied SpineUp mark and adaptive safe-zone treatment. |
 
-```bash
-flutter pub get
-dart format --output=none --set-exit-if-changed lib test
-flutter analyze
-flutter test
-flutter build apk --debug
-```
+## 4.10 Results
 
-GitHub Actions runs a changed-Dart-files formatting check, full Flutter analysis, the complete Flutter test suite, and an Android debug APK build. The workflow is defined in `.github/workflows/flutter_quality.yml` and has a 20-minute job timeout.
+The result is a functioning Flutter Android/Web school-project application with a coherent local-first product boundary. The current implementation includes the four-tab navigation shell, onboarding, profile setup, care-subject isolation, daily check-ins, events, appointments, routines, content discovery, source-linked media, avatars, reminders, archives, gamification, tutorials, responsive dark mode, branded assets, and documentation.
 
-The test suite covers local-first boundaries, database behavior, profile validation and setup, onboarding, Today additions, routines, external-content models, Learn, Journey, Settings, reminders, portable archives, splash routing, navigation, gamification, reward feedback, and favicon generation. These are widget and unit tests; a real Android device check is still valuable for launcher masking, notification behavior, WebView/source return, keyboard insets, and platform-specific media playback.
+The repository’s configured Flutter quality workflow has passed formatting, analysis, tests, and Android debug builds for the completed feature branches. The result should still be described as a strong school-project build and local-first prototype rather than a fully packaged public F-Droid release.
 
-## 13. Current release posture and known limitations
+# Chapter 5: Findings, Conclusions and Recommendations
 
-SpineUp is a strong school-project build and a coherent local-first prototype, but the icon merge should not be interpreted as full F-Droid release readiness.
+## 5.1 Introduction
 
-| Area | Current state |
-| --- | --- |
-| Android app identity | The application ID is still `com.example.spineup`, a placeholder that should be replaced before a public release. |
-| Release signing | `android/app/build.gradle.kts` currently signs the `release` build type with the debug signing configuration. This is suitable for local release-mode testing, not for distributing an official signed release. |
-| License | A recognized open-source `LICENSE` file still needs to be added and confirmed before public distribution. |
-| F-Droid metadata | Repository metadata, screenshots, version tags, dependency/license review, and an isolated F-Droid build still need to be prepared. |
-| Device QA | Real-device testing remains recommended for notifications, launcher masks, external media, and Android activity recreation. |
-| Cloud and accounts | Deliberately not implemented. This is a product constraint, not a missing defect for the current local-first direction. |
-| Community | Deliberately hidden from active navigation and deferred. |
-| iOS | Not part of the current scope. |
+This chapter presents what was learned from designing and implementing SpineUp, the conclusions supported by the current software evidence, the challenges encountered, and the work recommended before public distribution.
 
-The practical next public-release work is packaging and governance rather than adding another broad product surface: choose a permanent application ID, add the project license, set up a real release-signing process, audit dependency licenses, prepare screenshots and metadata, and test a clean source build.
+## 5.2 Findings
 
-## 14. Maintainer checklist
+The first finding is that privacy and usability can reinforce each other when local ownership is visible in the interface. The active care-subject model makes the user’s current context explicit and prevents a caregiver’s records from blending with a ward’s records.
 
-Before changing a feature, identify its active care-subject scope. Screens should use `SessionService.currentCareSubjectId` for health records and should not invent a second identity source. New persistent fields require a model serialization update, SQLite migration where applicable, protected-archive consideration, and tests for both a fresh database and an upgraded database.
+The second finding is that a health-related application benefits from a narrow, honest role. SpineUp is more credible when it records user-entered information, presents source-linked education, and supports professional conversations than if it attempted to diagnose, measure automatically, or prescribe routines without clinical validation.
 
-Before adding external content, keep the source URL visible, retain a safety label, decide whether the item is an RSS discovery or a curated brief, and provide a graceful offline/failure path. Before adding notifications, keep the behavior local, owner-scoped, permission-aware, and testable without assuming that a notification permission has already been granted.
+The third finding is that the daily surface must be short and action-oriented, while historical information belongs in a review surface. Separating Today from My Journey reduces the temptation to turn the home screen into an archive or a dense dashboard.
 
-Before publishing a build, increment the version in `pubspec.yaml`, confirm the Android package identity, use a protected signing key, run the full validation sequence, install the artifact on a clean test device, and retain the exact source commit and build number used for the artifact.
+The fourth finding is that external content is most useful when its provenance and boundaries are visible. A source label, original link, safety framing, and honest distinction between a curated brief and a full third-party article are more trustworthy than pretending that every feed item is native app content.
 
-## References
+The fifth finding is that visual consistency is an implementation concern rather than a final decoration. Typography bundling, adaptive launcher safe zones, shared transitions, semantic dark-mode colors, and reusable components directly affect whether the application feels reliable.
 
-[1]: https://docs.flutter.dev/deployment/android "Flutter: Build and release an Android app"
-[2]: https://developer.android.com/studio/publish/app-signing "Android Developers: Sign your app"
-[3]: https://docs.flutter.dev/get-started/install "Flutter: Install Flutter"
-[4]: https://docs.flutter.dev/testing/overview "Flutter: Testing Flutter apps"
+## 5.3 Conclusions
+
+SpineUp meets the main school-project objective of implementing a practical cross-platform application around a clearly defined user problem. It demonstrates local storage, structured models, service separation, encryption, responsive UI, multimedia integration, notifications, testing, and documentation in one coherent project.
+
+The project also demonstrates the importance of refusing unsafe scope. The application does not claim to replace professional care, and its most defensible value is helping users keep understandable records, practise general routines cautiously, find source-linked information, and prepare conversations.
+
+The implementation is sufficiently mature for continued school-project demonstration and controlled testing. It is not yet sufficient to claim complete public-release readiness because packaging, signing, application identity, licensing, F-Droid metadata, permission review, and real-device QA remain.
+
+## 5.4 Challenges
+
+The main challenges were balancing a warm and expressive visual identity with readability, separating caregiver data without a cloud identity system, presenting health information without diagnostic language, integrating RSS and YouTube without making network access a core dependency, and making charts informative without implying clinical certainty.
+
+Technical challenges also included Android build time, release typography fallback, adaptive-icon safe zones, activity recreation after external content, notification permissions, archive portability, and keeping Flutter formatting and analysis clean across a growing codebase.
+
+## 5.5 Lessons Learnt
+
+The project demonstrates that product constraints should be converted into architecture early. The local-only requirement led to centralised session ownership, subject-scoped queries, deliberate export/import, and the isolation of optional network services.
+
+It also demonstrates that visual review can reveal architectural problems. The apparently simple request to improve Settings and dark mode exposed hard-coded semantic colors across many screens. Similarly, the release font mismatch showed that bundling files without directly registering their families was not enough.
+
+A further lesson is that documentation should describe current behavior rather than intended behavior. The release guide therefore distinguishes a release-mode test APK from a properly signed public artifact and records the current Android network-permission limitation instead of hiding it.
+
+## 5.6 Recommendations for Future Work
+
+Before public distribution, the project should add and verify a recognized open-source `LICENSE`, replace the placeholder Android application ID, create a permanent release keystore process, move network permission into the appropriate main release manifest, perform a dependency and license audit, prepare F-Droid metadata and screenshots, and complete an isolated F-Droid build.
+
+The project should also complete real-device testing on representative Android versions. This testing should cover launcher masks, notification scheduling and permission denial, external-content return behavior, YouTube playback, keyboard and inset behavior, archive file selection, dark mode, and release-mode typography.
+
+Future product work may include a carefully governed Community feature, broader West African content and language considerations, more robust offline content management, optional attachment portability, and clinician-reviewed educational material. Such work should not weaken the current local-first, no-account, no-analytics, and non-diagnostic boundaries.
+
+## 5.7 Final Project Statement
+
+SpineUp is a thoughtful school-project implementation of a local-first scoliosis self-management companion. Its strongest qualities are its clear safety boundary, separate caregiver care spaces, deliberate portability, cohesive visual identity, and honest relationship with external health information. Its next stage is not another large feature; it is responsible release preparation, device verification, and continued documentation.
+
+# References
+
+[1]: https://pmc.ncbi.nlm.nih.gov/articles/PMC10138677/ Bottino, L., Settino, M., Promenzio, L., and Cannataro, M. “Scoliosis Management through Apps and Software Tools.” *International Journal of Environmental Research and Public Health*, 2023.
+
+[2]: https://schrothdc.com/scolifocus ScoliFocus. “ScoliFocus App: Features, Benefits, and Guided Scoliosis Practice.” Accessed for the related-systems review.
+
+[3]: https://pediatricscoliosissurgery.com/educational-resources/scoliosis-tracker-app/ Pediatric Scoliosis Surgery. “Scoliosis Tracker for iPhone and iPad.” Accessed for the related-systems review.
+
+[4]: https://scoliometer.app/ Scoliometer App. “Scoliosis Screening for iPhone and Android.” Accessed for the related-systems review.
+
+[5]: https://bearable.app/ Bearable. “Symptom and Mood Tracker App.” Accessed for the related-systems review.
+
+[6]: https://docs.flutter.dev/deployment/android Flutter. “Build and release an Android app.” Accessed for the release and platform context.
+
+[7]: https://developer.android.com/studio/publish/app-signing Android Developers. “Sign your app.” Accessed for signing and public-release context.
